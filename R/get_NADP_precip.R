@@ -32,7 +32,7 @@ get_NADP_precip<-function(start_date="04/01/2018", end_date="10/31/2018", statio
 
   precip_tbl2<-precip_tbl %>% filter(Date!='Totals:') %>% droplevels() %>%
     mutate(hour=str_sub(Hour,1,2),
-           timestamp=as.POSIXct(paste0(Date," ", hour, ":00"), format="%Y-%m-%d %H:%M"),
+           timestamp=as.POSIXct(paste0(Date," ", hour, ":00:00"), format="%Y-%m-%d %H:%M:%S", tz="America/New_York"),
            precip_in=as.numeric(`Precip (in)`), precip_cm=precip_in*2.54) %>%
     select(-`Precip (in)`,-precip_in, -Hour)
 

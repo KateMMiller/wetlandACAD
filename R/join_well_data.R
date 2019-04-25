@@ -60,45 +60,45 @@ join_well_data<-function(path, output=c('short', 'verbose')){
   shed_baro<-read.table(paste0(path,filenames[grep('shed',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
                         col.names=c('V1','Measure_Date_Time','SHED_BARO_AbsPres','SHED_BARO_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
 
-  duck <- duck %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  duck <- duck %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                           DUCK_AbsPres=as.numeric(DUCK_AbsPres), DUCK_C=as.numeric(DUCK_C)) %>% select(-Measure_Date_Time)
 
-  lihu <- lihu %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  lihu <- lihu %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                           LIHU_AbsPres=as.numeric(LIHU_AbsPres), LIHU_C=as.numeric(LIHU_C)) %>% select(-Measure_Date_Time)
 
-  gilm <- gilm %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  gilm <- gilm %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                           GILM_AbsPres=as.numeric(GILM_AbsPres), GILM_C=as.numeric(GILM_C)) %>% select(-Measure_Date_Time)
 
-  wmtn <- wmtn %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  wmtn <- wmtn %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                           WMTN_AbsPres=as.numeric(WMTN_AbsPres), WMTN_C=as.numeric(WMTN_C)) %>% select(-Measure_Date_Time)
 
-  hodg <- hodg %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  hodg <- hodg %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                           HODG_AbsPres=as.numeric(HODG_AbsPres), HODG_C=as.numeric(HODG_C)) %>% select(-Measure_Date_Time)
 
-  nemi <- nemi %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  nemi <- nemi %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                           NEMI_AbsPres=as.numeric(NEMI_AbsPres), NEMI_C=as.numeric(NEMI_C)) %>% select(-Measure_Date_Time)
 
-  hebr <- hebr %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  hebr <- hebr %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                           HEBR_AbsPres=as.numeric(HEBR_AbsPres), HEBR_C=as.numeric(HEBR_C)) %>% select(-Measure_Date_Time)
 
-  bigh <- bigh %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  bigh <- bigh %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                          timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                           BIGH_AbsPres=as.numeric(BIGH_AbsPres), BIGH_C=as.numeric(BIGH_C)) %>% select(-Measure_Date_Time)
 
-  wmtn_baro <- wmtn_baro %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                                    timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  wmtn_baro <- wmtn_baro %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                                    timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                                     WMTN_BARO_AbsPres=as.numeric(WMTN_BARO_AbsPres), WMTN_BARO_C=as.numeric(WMTN_BARO_C)) %>%
     select(-Measure_Date_Time)
 
-  shed_baro <- shed_baro %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
-                                    timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"),
+  shed_baro <- shed_baro %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
+                                    timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
                                     SHED_BARO_AbsPres=as.numeric(SHED_BARO_AbsPres), SHED_BARO_C=as.numeric(SHED_BARO_C)) %>%
     select(-Measure_Date_Time)
 
