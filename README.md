@@ -1,0 +1,2 @@
+# wetlandACAD
+This package was developed to analyze freshwater wetland data collected in the 8 sentinel sites in Acadia National Park by the Northeast Temperate Network. Current functions pull in well data from csvs that were exported from hobo files for each of the 8 sites plus 2 barometric pressure correction loggers. More generalized functions are in the works that do not require specific files with specific names. This package also has a function for downloading hourly precipitation data from NADP for a specified period and weather station.
