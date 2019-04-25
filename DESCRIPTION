@@ -11,7 +11,7 @@ LazyData: true
 RoxygenNote: 6.1.1
 Collate:
     'get_NADP_precip.R'
-    'well_data_combine.R'
+    'bind_well_data.R'
 Imports:
     dplyr,
     magrittr,
