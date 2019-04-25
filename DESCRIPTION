@@ -10,13 +10,15 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
 Collate:
-    'get_NADP_precip.R'
-    'bind_well_data.R'
+    'bind_well_data.R',
+    'get_NADP_precip.R',
+    'join_well_data.R'
 Imports:
     dplyr,
     magrittr,
     lubridate,
-    stringr
-Suggests:
-    ggplot2,
+    stringr,
+    purrr,
     XML
+Suggests:
+    ggplot2

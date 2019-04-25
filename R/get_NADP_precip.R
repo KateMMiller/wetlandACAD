@@ -11,12 +11,10 @@
 #' used to download the NADP data was generated for station: ME98.
 #'
 #' @param start_date Quoted date for first day of period (eg "04/01/2018")
-#'
 #' @param end_date Quoted date for last day of period (eg "10/31/2018")
 #' @param stationID Quoted name of station to pull data from (eg "ME98" is ACAD's weather station)
 #'
 #' @examples
-#'
 #' precip_2018<- get_NADP_precip(start_date='04/01/2018', end_date='10/31/2018', stationID='ME98')
 #'
 #' @return Returns a data frame with Date, hour (0-23), timestamp (Y-M-D H:M:S), and precip_cm
