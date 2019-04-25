@@ -2,9 +2,12 @@
 
 export(bind_well_data)
 export(get_NADP_precip)
+export(join_well_data)
 importFrom(XML,readHTMLTable)
 importFrom(dplyr,filter)
+importFrom(dplyr,full_join)
 importFrom(dplyr,mutate)
 importFrom(dplyr,select)
 importFrom(magrittr,"%>%")
+importFrom(purrr,reduce)
 importFrom(stringr,str_sub)

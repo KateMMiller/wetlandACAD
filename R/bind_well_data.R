@@ -1,5 +1,5 @@
-#' @title bind_well_data: Binds well data using data files that are exported from
-#' HoboWare as .csv files.
+#' @title bind_well_data: Binds sentinal well data using data files that are exported from
+#' HoboWare as .csv files (for internal use).
 #'
 #' @description This function finds the well data files based on a specified path
 #' and partial matching of files based on site name, reads these files into R,
@@ -8,7 +8,8 @@
 #' If appending to the Access table is not needed, then drop the first column 'ID',
 #' which is left blank so that Access can assign an auto number for the primary key.
 #' This function is mostly for internal use to generate a long format of the data
-#' to append to the MS Access table.
+#' to append to the MS Access table. Function requires all 8 sites and 2 barometric
+#' loggers to run. Mostly for internal use.
 #'
 #' @param path Quoted path of the folder where the exported Hobo tables are located.
 #'

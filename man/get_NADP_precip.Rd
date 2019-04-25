@@ -24,7 +24,6 @@ some stations may have different download links, and may not always work. The li
 used to download the NADP data was generated for station: ME98.
 }
 \examples{
-
 precip_2018<- get_NADP_precip(start_date='04/01/2018', end_date='10/31/2018', stationID='ME98')
 
 }

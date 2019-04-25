@@ -2,8 +2,8 @@
 % Please edit documentation in R/bind_well_data.R
 \name{bind_well_data}
 \alias{bind_well_data}
-\title{bind_well_data: Binds well data using data files that are exported from
-HoboWare as .csv files.}
+\title{bind_well_data: Binds sentinal well data using data files that are exported from
+HoboWare as .csv files (for internal use).}
 \usage{
 bind_well_data(path)
 }
@@ -11,8 +11,8 @@ bind_well_data(path)
 \item{path}{Quoted path of the folder where the exported Hobo tables are located.}
 }
 \value{
-Returns a tdata frame with ID (blank for Access to assign autonumber), Well_ID,
-Measure_Date_Time, Absolute_Pressure_kPa, Degrees_C, and site.
+Returns a long data frame with ID (blank for Access to assign autonumber), Well_ID,
+timestamp, Absolute_Pressure_kPa, Degrees_C, and site.
 }
 \description{
 This function finds the well data files based on a specified path
@@ -21,6 +21,9 @@ adds Well_ID and site name to each file, then binds them together and prepares
 the data to be imported into the MS Access RAM backend table: tbl_Water_Level.
 If appending to the Access table is not needed, then drop the first column 'ID',
 which is left blank so that Access can assign an auto number for the primary key.
+This function is mostly for internal use to generate a long format of the data
+to append to the MS Access table. Function requires all 8 sites and 2 barometric
+loggers to run. Mostly for internal use.
 }
 \examples{
 path='D:/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2018'

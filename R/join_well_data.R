@@ -1,4 +1,5 @@
-#' @title join_well_data: Joins well data using data files that are exported from HoboWare as .csv files.
+#' @title join_well_data: Joins sentinal well data using data files that are exported from HoboWare
+#' as .csv files (for internal use).
 #'
 #' @importFrom dplyr select filter mutate full_join
 #' @importFrom magrittr %>%
@@ -7,7 +8,8 @@
 #' @description This function finds the well data files based on a specified path
 #' and partial matching of files based on site name, reads these files into R,
 #' adds Well_ID and site name to each file, then joins the data to create a wide
-#' format of the data with the timestamp as the joining column
+#' format of the data with the timestamp as the joining column. Function requires
+#' all 8 sites and 2 barometric loggers to run. Mostly for internal use.
 #'
 #' @param path Quoted path of the folder where the exported Hobo tables are located.
 #'
@@ -18,6 +20,7 @@
 #' @return Returns a wide data frame with timestamp, SITENAME_AbsPres, SITENAME_C.
 #'
 #' @export
+#'
 
 join_well_data<-function(path, output=c('short', 'verbose')){
 
@@ -103,14 +106,13 @@ join_well_data<-function(path, output=c('short', 'verbose')){
 
   combdata1<-if (output=='short'){combdata %>% select(timestamp, WMTN_BARO_AbsPres, SHED_BARO_AbsPres, BIGH_AbsPres,
                                                      DUCK_AbsPres, GILM_AbsPres, HEBR_AbsPres, HODG_AbsPres,
-                                                     LIHU_AbsPres, NEMI_AbsPres, WMTN_AbsPres)
-
+                                                    LIHU_AbsPres, NEMI_AbsPres, WMTN_AbsPres)
              } else if (output=='verbose') {combdata %>% select(timestamp, WMTN_BARO_AbsPres, SHED_BARO_AbsPres,
                                                                 BIGH_AbsPres, DUCK_AbsPres, GILM_AbsPres, HEBR_AbsPres,
                                                                 HODG_AbsPres, LIHU_AbsPres, NEMI_AbsPres, WMTN_AbsPres,
-                                                                WMTN_BARO_C, SHED_BARO_C, BIGH_C, DUCK_C, GILM_C, HEBR_C,
+                                                               WMTN_BARO_C, SHED_BARO_C, BIGH_C, DUCK_C, GILM_C, HEBR_C,
                                                                 HODG_C, LIHU_C, NEMI_C,WMTN_C
                )}
 
-  return(combdata1)
-  }
+  return(combdata)
+}

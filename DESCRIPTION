@@ -10,8 +10,8 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.1
 Collate:
-    'bind_well_data.R',
-    'get_NADP_precip.R',
+    'bind_well_data.R'
+    'get_NADP_precip.R'
     'join_well_data.R'
 Imports:
     dplyr,
