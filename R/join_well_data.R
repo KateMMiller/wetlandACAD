@@ -112,7 +112,7 @@ join_well_data<-function(path, output=c('short', 'verbose')){
              } else if (output=='verbose') {combdata %>% select(timestamp, doy, WMTN_BARO_AbsPres, SHED_BARO_AbsPres,
                                                                 BIGH_AbsPres, DUCK_AbsPres, GILM_AbsPres, HEBR_AbsPres,
                                                                 HODG_AbsPres, LIHU_AbsPres, NEMI_AbsPres, WMTN_AbsPres,
-                                                               WMTN_BARO_C, SHED_BARO_C, BIGH_C, DUCK_C, GILM_C, HEBR_C,
+                                                                WMTN_BARO_C, SHED_BARO_C, BIGH_C, DUCK_C, GILM_C, HEBR_C,
                                                                 HODG_C, LIHU_C, NEMI_C,WMTN_C
                )}
 
