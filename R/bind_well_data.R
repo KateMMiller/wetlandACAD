@@ -1,6 +1,8 @@
 #' @title bind_well_data: Binds sentinal well data using data files that are exported from
 #' HoboWare as .csv files (for internal use).
 #'
+#' @importFrom dplyr mutate select
+#'
 #' @description This function finds the well data files based on a specified path
 #' and partial matching of files based on site name, reads these files into R,
 #' adds Well_ID and site name to each file, then binds them together and prepares

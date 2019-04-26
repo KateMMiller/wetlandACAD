@@ -4,12 +4,12 @@
 \alias{conv_kpa_cm}
 \title{conv_kpa_cm: converts absolute pressure to cm of water above the logger}
 \usage{
-conv_kpa_cm(df, site_code, baro)
+conv_kpa_cm(df, pres, baro)
 }
 \arguments{
 \item{df}{data frame with pressure data}
 
-\item{site_code}{Quoted code for site name that corresponds to a field in the data frame}
+\item{pres}{Quoted field name that corresponds absolute pressure from a water level logger}
 
 \item{baro}{Quoted field name of the atmostpheric barometric pressure correction field}
 }
@@ -18,12 +18,10 @@ Returns a data frame with a new column labeled with SITECODE_cm, which represent
 cm of water above the logger.
 }
 \description{
-This function converts absolute pressure in kPa to cm of water. For this
-function to work, you must have your pressure field named: SITECODE_AbsPres. The SITECODE
-then needs to be defined in the function arguments.
+This function converts absolute pressure in kPa to cm of water.
 }
 \examples{
 df <- data.frame(BIGH_AbsPres = c(100, 99, 98), BARO_AbsPres = c(99, 96, 94))
-df2 <- conv_kpa_cm(df, site_code = 'BIGH', baro = 'BARO_AbsPres')
+df2 <- conv_kpa_cm(df, pres = 'BIGH_AbsPres', baro = 'BARO_AbsPres')
 
 }

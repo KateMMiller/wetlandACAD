@@ -4,12 +4,12 @@
 \alias{conv_WL}
 \title{conv_WL: converts cm of water above the logger to water level relative to surface}
 \usage{
-conv_WL(df, site_code, ground, corfac)
+conv_WL(df, cm_water, ground, corfac)
 }
 \arguments{
 \item{df}{data frame with pressure data}
 
-\item{site_code}{Quoted code for site name that corresponds to a field in the data frame}
+\item{cm_water}{Quoted field name containing cm of water above logger}
 
 \item{ground}{numeric distance between the logger and the surface of the wetland
 (Logger Length + Measuring Point to Bold - Stick Up Height).}
@@ -30,7 +30,7 @@ for that site by hand. The SITECODE also needs to be defined in the function arg
 }
 \examples{
 df <- data.frame(BIGH_AbsPres = c(110.1, 111.3, 110.4), BARO_AbsPres = c(102.1, 103.1, 102.8))
-df <- conv_kpa_cm(df, site_code = 'BIGH', baro = 'BARO_AbsPres')
-df <- conv_WL(df, site_code = 'BIGH', ground = 88.9, cor = 5.004)
+df <- conv_kpa_cm(df, pres = 'BIGH_AbsPres', baro = 'BARO_AbsPres')
+df <- conv_WL(df, cm_water = 'BIGH_cm', ground = 88.9, cor = 5.004)
 
 }
