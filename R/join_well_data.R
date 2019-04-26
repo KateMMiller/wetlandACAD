@@ -4,6 +4,7 @@
 #' @importFrom dplyr select filter mutate full_join
 #' @importFrom magrittr %>%
 #' @importFrom purrr reduce
+#' @importFrom lubridate yday
 #'
 #' @description This function finds the well data files based on a specified path
 #' and partial matching of files based on site name, reads these files into R,
@@ -103,16 +104,17 @@ join_well_data<-function(path, output=c('short', 'verbose')){
     select(-Measure_Date_Time)
 
   combdata<-list(wmtn_baro, shed_baro, duck, lihu, gilm, wmtn, hodg, nemi, hebr, bigh) %>% reduce(full_join, by='timestamp')
+  combdata<-combdata %>% mutate(doy=yday(timestamp))
 
-  combdata1<-if (output=='short'){combdata %>% select(timestamp, WMTN_BARO_AbsPres, SHED_BARO_AbsPres, BIGH_AbsPres,
+  combdata1<-if (output=='short'){combdata %>% select(timestamp, doy, WMTN_BARO_AbsPres, SHED_BARO_AbsPres, BIGH_AbsPres,
                                                      DUCK_AbsPres, GILM_AbsPres, HEBR_AbsPres, HODG_AbsPres,
                                                     LIHU_AbsPres, NEMI_AbsPres, WMTN_AbsPres)
-             } else if (output=='verbose') {combdata %>% select(timestamp, WMTN_BARO_AbsPres, SHED_BARO_AbsPres,
+             } else if (output=='verbose') {combdata %>% select(timestamp, doy, WMTN_BARO_AbsPres, SHED_BARO_AbsPres,
                                                                 BIGH_AbsPres, DUCK_AbsPres, GILM_AbsPres, HEBR_AbsPres,
                                                                 HODG_AbsPres, LIHU_AbsPres, NEMI_AbsPres, WMTN_AbsPres,
                                                                WMTN_BARO_C, SHED_BARO_C, BIGH_C, DUCK_C, GILM_C, HEBR_C,
                                                                 HODG_C, LIHU_C, NEMI_C,WMTN_C
                )}
 
-  return(combdata)
+  return(combdata1)
 }
