@@ -9,7 +9,7 @@ plot_hydro_site_year(df, yvar, site)
 \arguments{
 \item{df}{the name of the data frame}
 
-\item{yvar}{Quote name of the water level field}
+\item{yvar}{Quoted name of the water level field}
 
 \item{site}{Quoted name of the site for the title}
 }

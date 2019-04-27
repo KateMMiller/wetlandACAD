@@ -10,7 +10,7 @@
 #' Year is a 4 digit number which is a group variable and used for facet wrap.
 #'
 #' @param df the name of the data frame
-#' @param yvar Quote name of the water level field
+#' @param yvar Quoted name of the water level field
 #' @param site Quoted name of the site for the title
 #'
 #' @examples
