@@ -16,6 +16,7 @@ Collate:
     'compile_sent_WL.R'
     'get_NADP_precip.R'
     'join_well_data.R'
+    'plot_hydro_site_year.R'
 Imports:
     dplyr,
     magrittr,

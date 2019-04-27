@@ -1,0 +1,36 @@
+#' @title plot_hydro_site_year: Plots a hydrograph by each year within a site
+#'
+#' @importFrom dplyr select
+#' @importFrom magrittr %>%
+#' @import ggplot2
+#'
+#' @description This function creates hydrographs of each year within a site. This function
+#' requires a data frame with the following fields: doy_h, year, and water level field.
+#' The doy_h field is the day of year with a decimal point for hour (eg 173.09 is June 22 at 9am).
+#' Year is a 4 digit number which is a group variable and used for facet wrap.
+#'
+#' @param df the name of the data frame
+#' @param yvar Quote name of the water level field
+#' @param site Quoted name of the site for the title
+#'
+#' @examples
+#' welld<-read.csv('./Analysis/FINAL_DATA/well_prec_data_2013-2018.csv')
+#' plot_hydro_site_year(df=welld,yvar='BIGH_WL',site='Big Heath')
+#' plot_hydro_site_year(df=welld,yvar='DUCK_WL',site='Duck Pond')
+#'
+#' @return Returns a panel of hydrographs during the growing season for each year
+#' in the data frame.
+#'
+#' @export
+
+plot_hydro_site_year<-function(df,yvar,site){
+  df<-df %>% select(doy_h,yvar,year)
+  colnames(df)<-c('doy_h','WL','year')
+  print(ggplot(df,aes(x=doy_h,y=WL,group=year))+
+          geom_line(col='black')+facet_wrap(~year,nrow=length(unique(df$year)))+
+          geom_hline(yintercept=0,col='brown')+theme_bw()+
+          theme(plot.title = element_text(hjust = 0.5))+
+          labs(title=site,y='Water Level (cm)',x='Date')+
+          scale_x_continuous(breaks=c(121,152,182,213,244,274),
+                             labels=c('May-01','Jun-01','Jul-01','Aug-01','Sep-01','Oct-01')))
+}
