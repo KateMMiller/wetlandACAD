@@ -1,7 +1,7 @@
 #' @include conv_kpa_cm.R
 #' @include conv_WL.R
 #'
-#' @title comb_sent_WL: Calculates water level from raw sentinal well data
+#' @title compile_sent_WL: Calculates water level from raw sentinal well data
 #'
 #' @description This function uses (and requires) the output from join_well_data() to
 #' calculate the water level relative to the wetland surface for each sentinal site.
@@ -28,7 +28,7 @@
 #'
 #' @export
 
-comb_sent_WL<-function(df, conv_table){
+compile_sent_WL<-function(df, conv_table){
   conv_table=conv_table
   df<-conv_kpa_cm(df, pres=as.character(conv_table[1, 2]),baro=as.character(conv_table[1, 5]))
   df<-conv_kpa_cm(df, pres=as.character(conv_table[2, 2]),baro=as.character(conv_table[2, 5]))
@@ -57,4 +57,5 @@ comb_sent_WL<-function(df, conv_table){
               ground=conv_table[8, 3], corfac=conv_table[8,4])
   df<-df[,c('timestamp','doy','BIGH_WL','DUCK_WL','GILM_WL','HEBR_WL','HODG_WL','LIHU_WL','NEMI_WL','WMTN_WL')]
   # I know this function is fugly- just can't figure out how to iterate through each site
+  # for both the conv_kpa_cm and conv_WL functions with mapply.
   }

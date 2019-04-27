@@ -17,7 +17,6 @@
 
 conv_kpa_cm<-function(df, pres, baro){
   site_code<-substr(pres, 1, 4)
- # if(!is.numeric(df[,pres]) | !is.numeric(df[,baro])) stop('fields must be numeric')
   df$cm<-NA
   df$cm<-ifelse(!(is.na(df[,pres]) & is.na(df[,baro])),(df[,pres]-df[,baro])*10.197, NA)
   names(df)[names(df)=='cm']<-paste0(site_code,'_cm')

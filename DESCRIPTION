@@ -13,7 +13,7 @@ Collate:
     'bind_well_data.R'
     'conv_WL.R'
     'conv_kpa_cm.R'
-    'comb_sent_WL.R'
+    'compile_sent_WL.R'
     'get_NADP_precip.R'
     'join_well_data.R'
 Imports:
