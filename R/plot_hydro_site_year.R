@@ -39,7 +39,7 @@ plot_hydro_site_year<-function(df, yvar, site, years=2013:2018){
           labs(title=site,y='Water Level (cm)\n',x='Date')+
           scale_x_continuous(breaks=c(121,152,182,213,244,274),
                              labels=c('May-01','Jun-01','Jul-01','Aug-01','Sep-01','Oct-01'))+
-          scale_y_continuous(sec.axis = sec_axis(~., breaks=c(minWL,minWL+5,minWL+10), name='Hourly Precip. (cm)\n',
-                                                 labels=c('0', '2', '4')))
+          scale_y_continuous(sec.axis = sec_axis(~., breaks=c(minWL,minWL+10), name='Hourly Precip. (cm)\n',
+                                                 labels=c('0', '2')))
   )
 }
