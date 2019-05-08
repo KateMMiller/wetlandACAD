@@ -4,7 +4,7 @@
 \alias{plot_hydro_site_year}
 \title{plot_hydro_site_year: Plots a hydrograph by each year within a site}
 \usage{
-plot_hydro_site_year(df, yvar, site)
+plot_hydro_site_year(df, yvar, site, years = 2013:2018)
 }
 \arguments{
 \item{df}{the name of the data frame}
@@ -12,6 +12,8 @@ plot_hydro_site_year(df, yvar, site)
 \item{yvar}{Quoted name of the water level field}
 
 \item{site}{Quoted name of the site for the title}
+
+\item{years}{years to plot}
 }
 \value{
 Returns a panel of hydrographs during the growing season for each year
