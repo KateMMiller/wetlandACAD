@@ -32,34 +32,34 @@ join_well_data<-function(path, output=c('short', 'verbose')){
   filenames<-list.files(path = path, pattern =".csv")
 
   duck<-read.table(paste0(path,filenames[grep('Duck',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','DUCK_AbsPres','DUCK_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','DUCK_AbsPres','DUCK_C'))[-1,2:4]
 
   lihu<-read.table(paste0(path,filenames[grep('LittleHunter',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','LIHU_AbsPres','LIHU_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','LIHU_AbsPres','LIHU_C'))[-1,2:4]
 
   gilm<-read.table(paste0(path,filenames[grep('Gilmore',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','GILM_AbsPres','GILM_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','GILM_AbsPres','GILM_C'))[-1,2:4]
 
   wmtn<-read.table(paste0(path,filenames[grep('WMTN_well',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','WMTN_AbsPres','WMTN_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','WMTN_AbsPres','WMTN_C'))[-1,2:4]
 
   hodg<-read.table(paste0(path,filenames[grep('Hodgdon',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','HODG_AbsPres','HODG_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','HODG_AbsPres','HODG_C'))[-1,2:4]
 
   nemi<-read.table(paste0(path,filenames[grep('NewMills',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','NEMI_AbsPres','NEMI_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','NEMI_AbsPres','NEMI_C'))[-1,2:4]
 
   hebr<-read.table(paste0(path,filenames[grep('Heath_Brook',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','HEBR_AbsPres','HEBR_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','HEBR_AbsPres','HEBR_C'))[-1,2:4]
 
   bigh<-read.table(paste0(path,filenames[grep('Big_Heath',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','BIGH_AbsPres','BIGH_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','BIGH_AbsPres','BIGH_C'))[-1,2:4]
 
   wmtn_baro<-read.table(paste0(path,filenames[grep('westmtnswmp',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                        col.names=c('V1','Measure_Date_Time','WMTN_BARO_AbsPres','WMTN_BARO_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                        col.names=c('V1','Measure_Date_Time','WMTN_BARO_AbsPres','WMTN_BARO_C'))[-1,2:4]
 
   shed_baro<-read.table(paste0(path,filenames[grep('shed',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                        col.names=c('V1','Measure_Date_Time','SHED_BARO_AbsPres','SHED_BARO_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                        col.names=c('V1','Measure_Date_Time','SHED_BARO_AbsPres','SHED_BARO_C'))[-1,2:4]
 
   duck <- duck %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p", tz="America/New_York"),
                           timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S", tz="America/New_York"),
