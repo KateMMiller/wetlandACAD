@@ -30,34 +30,34 @@ bind_well_data<-function(path){
   filenames<-list.files(path = path, pattern =".csv")
 
   duck<-read.table(paste0(path,filenames[grep('Duck',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   lihu<-read.table(paste0(path,filenames[grep('LittleHunter',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   gilm<-read.table(paste0(path,filenames[grep('Gilmore',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   wmtn<-read.table(paste0(path,filenames[grep('WMTN_well',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   hodg<-read.table(paste0(path,filenames[grep('Hodgdon',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   nemi<-read.table(paste0(path,filenames[grep('NewMills',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   hebr<-read.table(paste0(path,filenames[grep('Heath_Brook',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   bigh<-read.table(paste0(path,filenames[grep('Big_Heath',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                   col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   wmtn_baro<-read.table(paste0(path,filenames[grep('westmtnswmp',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                        col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                        col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   shed_baro<-read.table(paste0(path,filenames[grep('shed',filenames)]), skip=1, sep=',', stringsAsFactors = FALSE,
-                        col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C', 'V5','V6','V7','V8','V9'))[-1,2:4]
+                        col.names=c('V1','Measure_Date_Time','Absolute_Pressure_kPa','Degrees_C'))[-1,2:4]
 
   duck <- duck %>% mutate(site = 'duck', Well_ID = 9, ID = NA)
   lihu <- lihu %>% mutate(site = 'lihu', Well_ID = 13, ID = NA)
