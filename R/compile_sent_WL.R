@@ -33,6 +33,7 @@ compile_sent_WL<-function(df, conv_table){
   df<-conv_kpa_cm(df, pres=as.character(conv_table[1, 2]),baro=as.character(conv_table[1, 5]))
   df<-conv_kpa_cm(df, pres=as.character(conv_table[2, 2]),baro=as.character(conv_table[2, 5]))
   df<-conv_kpa_cm(df, pres=as.character(conv_table[3, 2]),baro=as.character(conv_table[3, 5]))
+
   df<-conv_kpa_cm(df, pres=as.character(conv_table[4, 2]),baro=as.character(conv_table[4, 5]))
   df<-conv_kpa_cm(df, pres=as.character(conv_table[5, 2]),baro=as.character(conv_table[5, 5]))
   df<-conv_kpa_cm(df, pres=as.character(conv_table[6, 2]),baro=as.character(conv_table[6, 5]))

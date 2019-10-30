@@ -24,7 +24,7 @@
 #'
 #' @export
 
-plot_hydro_site_year<-function(df, yvar, site, years=2013:2018){
+plot_hydro_site_year<-function(df, yvar, site, years=2013:2019){
   minWL<-min(df[,yvar],na.rm=T)
   df<-df %>% select(doy_h, yvar, year, lag.precip) %>% filter(year %in% years) %>% droplevels()
   colnames(df)<-c('doy_h', 'WL', 'year', 'lag.precip')
