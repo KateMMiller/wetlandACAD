@@ -72,7 +72,7 @@ bind_well_data<-function(path){
 
   combdata<-rbind(duck, lihu, gilm, wmtn, hodg, nemi, hebr, bigh, wmtn_baro, shed_baro)
 
-  combdata<-combdata %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %H:%M:%S"),
+  combdata<-combdata %>% mutate(Measure_Date_Time=as.POSIXct(Measure_Date_Time, format="%m/%d/%y %I:%M:%S %p"),
                                 timestamp= as.POSIXct(Measure_Date_Time, format= "%Y-%m-%d %H:%M:%S"))
 
   combdata<-combdata %>% select(ID, Well_ID, timestamp, Absolute_Pressure_kPa, Degrees_C, site)
