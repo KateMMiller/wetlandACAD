@@ -26,7 +26,7 @@
 
 plot_hydro_site_year<-function(df, yvar, site, years=2013:2019){
   minWL<-min(df[,yvar],na.rm=T)
-  df<-df %>% select(doy_h, yvar, year, lag.precip) %>% filter(year %in% years) %>% droplevels()
+  df<-df %>% filter(year %in% years) %>% filter(doy>134 & doy<275) %>% select(doy_h, yvar, year, lag.precip) %>% droplevels()
   colnames(df)<-c('doy_h', 'WL', 'year', 'lag.precip')
   print(ggplot(df,aes(x=doy_h,y=WL,group=year))+
           geom_line(col='black')+ geom_line(aes(x=doy_h,y=lag.precip*5+minWL, group=year),col='blue')+

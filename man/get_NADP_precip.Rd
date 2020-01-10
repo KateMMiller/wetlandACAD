@@ -4,8 +4,11 @@
 \alias{get_NADP_precip}
 \title{get_NADP_precip: Downloads and cleans hourly precipitation data from NADP}
 \usage{
-get_NADP_precip(start_date = "04/01/2018", end_date = "10/31/2018",
-  stationID = "ME98")
+get_NADP_precip(
+  start_date = "04/01/2018",
+  end_date = "10/31/2018",
+  stationID = "ME98"
+)
 }
 \arguments{
 \item{start_date}{Quoted date for first day of period (eg "04/01/2018")}
