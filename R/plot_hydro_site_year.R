@@ -28,7 +28,7 @@ plot_hydro_site_year<-function(df, yvar, site, years=2013:2019){
   minWL<-min(df[,yvar],na.rm=T)
   df<-df %>% filter(year %in% years) %>% filter(doy>134 & doy<275) %>% select(doy_h, yvar, year, lag.precip) %>% droplevels()
   colnames(df)<-c('doy_h', 'WL', 'year', 'lag.precip')
-  print(ggplot(df,aes(x=doy_h,y=WL,group=year))+
+  p<-ggplot(df,aes(x=doy_h,y=WL,group=year))+
           geom_line(col='black')+ geom_line(aes(x=doy_h,y=lag.precip*5+minWL, group=year),col='blue')+
           facet_wrap(~year,nrow=length(unique(df$year)))+
           geom_hline(yintercept=0,col='brown')+theme_bw()+
@@ -41,5 +41,5 @@ plot_hydro_site_year<-function(df, yvar, site, years=2013:2019){
                              labels=c('May-01','Jun-01','Jul-01','Aug-01','Sep-01','Oct-01'))+
           scale_y_continuous(sec.axis = sec_axis(~., breaks=c(minWL,minWL+10), name='Hourly Precip. (cm)\n',
                                                  labels=c('0', '2')))
-  )
+  return(p)
 }
