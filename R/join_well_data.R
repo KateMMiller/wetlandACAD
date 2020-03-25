@@ -11,6 +11,7 @@
 #' adds Well_ID and site name to each file, then joins the data to create a wide
 #' format of the data with the timestamp as the joining column. Function requires
 #' all 8 sites and 2 barometric loggers to run. Mostly for internal use.
+#' This function is now replaced by prep_well_data(), which uses the MS database.
 #'
 #' @param path Quoted path of the folder where the exported Hobo tables are located.
 #'
