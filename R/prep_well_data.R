@@ -1,23 +1,22 @@
 #' @title prep_well_data: Prepares sentinel well data for conversion to water level using data tables stored in the NETN RAM database
 #' (for internal use).
 #'
-#' @importFrom dplyr between case_when rename
+#' @importFrom dplyr filter rename rename_at select
 #' @importFrom magrittr %>%
 #' @importFrom lubridate year yday
 #' @importFrom odbc odbc odbcListDataSources
 #' @importFrom DBI dbConnect dbReadTable dbDisconnect
-#' @importFrom tidyr pivot_wider
+#' @importFrom tidyr spread
 #'
 #' @description This function pulls in the water level data from the NETN RAM database,
 #' joins the location, well visit and water level data together into a wide
 #' format of the data with the timestamp as the joining column. Function requires
 #' all 8 sites and 2 barometric loggers to run, and only includes data between the
-#' spring and fall well visit per year. Must have a the NETN RAM backend database named
-#' as a DSN.Function is primarily for internal use.
+#' spring and fall well visit per year. \strong {Must have a the NETN RAM backend
+#' database named as a DSN.Function is primarily for internal use.}
 #'
 #' @param path Quoted path of the folder where the exported Hobo tables are located.
-#' @param from First year to start joining the data
-#' @param to Last year to end the join
+#' @param year Numeric. The year you are preparing the data for. Function will only run 1 year at a time.
 #' @param rejected \code{TRUE} or \code{FALSE}. If \code{TRUE} will include flagged rejected records.
 #' If \code{FALSE} will replace the rejected flagged records with NA. Defaults to \code{FALSE}.
 #' @param growing_season \code{TRUE} or \code{FALSE}. If \code{TRUE} will include only growing season
@@ -31,19 +30,21 @@
 #' @examples
 #' # Export growing season only data to a table
 #' dir='D:/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2019'
-#' prep_well_data(path = dir, from = 2019, to = 2019, export = TRUE, growing_season = TRUE)
+#' prep_well_data(path = dir, year = 2019, export = TRUE, growing_season = TRUE)
 #'
-#' # Assign output from all 2018 data to global environment
-#' welld_2018 <- prep_well_data(from = 2018, to = 2018, export = FALSE, growing_season = FALSE)
+#' # Assign output from all 2018 data, including flagged records, to global environment
+#' welld_2018 <- prep_well_data(year = 2018, rejected = TRUE, growing_season = FALSE,
+#'                              export = FALSE)
 #'
-#' # Run without printing messages in the console
-#' welld_2018 <- prep_well_data(from = 2018, to = 2018, export = FALSE, quietly = TRUE)
+#' # Run for 2019 growing season data without printing messages in the console, and save output to file
+#' welld_2018 <- prep_well_data(year = 2019, growing_season = TRUE, export = TRUE,
+#'                              quietly = TRUE)
 #'
-#' @return Returns a wide data frame with timestamp, SITENAME_AbsPres, SITENAME_C.
+#' @return Returns a wide data frame with timestamp, SITENAME_AbsPres.
 #'
 #' @export
 
-prep_well_data<-function(path = NULL, from = 2013, to = 2019, rejected = FALSE, growing_season = TRUE,
+prep_well_data<-function(path = NULL, year = 2019, rejected = FALSE, growing_season = TRUE,
                          export = TRUE, quietly = FALSE){
 
   #----------------
@@ -69,18 +70,24 @@ prep_well_data<-function(path = NULL, from = 2013, to = 2019, rejected = FALSE, 
   } else {(paste0(path))}
 
   # Check that RAM_BE is a named user or system DSN
-  if(dim(odbc::odbcListDataSources() %>% filter(name == "RAM_BE"))[1] == 0)
-    stop ('Compile function failed. There is no DSN named "RAM_BE".')
+  if(dim(odbc::odbcListDataSources() %>% filter(name == "RAM_BE"))[1] == 0){
+    stop('Compile function failed. There is no DSN named "RAM_BE".')}
+
+  if(length(year) != 1){
+    stop("Too many years specified. Function will only run for 1 year at a time.")
+  }
 
   #----------------
   # Import data from Access database
   #----------------
   if(quietly == FALSE) {cat("Importing tbl_Water_Level from NETN RAM database.")}
-  db <- DBI::dbConnect(drv=odbc::odbc(), dsn="RAM_BE")
-  assign("raw_wl", DBI::dbReadTable(db, "tbl_Water_Level"), envir=.GlobalEnv)
-  if(quietly == FALSE) {cat("....")}
+  db <- DBI::dbConnect(drv = odbc::odbc(), dsn = "RAM_BE")
+  assign("raw_wl", DBI::dbReadTable(db, "tbl_Water_Level"), envir = .GlobalEnv)
+  if(quietly == FALSE) {cat("..")}
+  assign("well_loc", DBI::dbReadTable(db, "tbl_Well"), envir = .GlobalEnv)
+  if(quietly == FALSE) {cat("..")}
   DBI::dbDisconnect(db)
-  if(quietly == FALSE) {cat("Done.", sep="\n")}
+  if(quietly == FALSE) {cat("Done.", sep = "\n")}
 
   #----------------
   # Combining tables
@@ -88,71 +95,68 @@ prep_well_data<-function(path = NULL, from = 2013, to = 2019, rejected = FALSE, 
   # Add site code and join location to water level data
   if(quietly == FALSE) {cat("Preparing and reshaping data from long to wide.")}
 
-  raw_wl2 <- raw_wl %>% mutate(code = as.factor(case_when(Well_ID == 9  ~ "DUCK",
-                                                Well_ID == 10 ~ "WMTN",
-                                                Well_ID == 11 ~ "BIGH",
-                                                Well_ID == 12 ~ "GILM",
-                                                Well_ID == 13 ~ "LIHU",
-                                                Well_ID == 14 ~ "NEMI",
-                                                Well_ID == 15 ~ "HEBR",
-                                                Well_ID == 16 ~ "HODG",
-                                                Well_ID == 17 ~ "WMTN.BARO",
-                                                Well_ID == 18 ~ "MARS.BARO",
-                                                Well_ID == 19 ~ "SHED.BARO")),
-                               year = year(Measure_Date_Time),
-                               doy = yday(Measure_Date_Time)) %>%
-    select(-ID, -Well_ID) %>% rename(AbsPres = Absolute_Pressure_kPa, C = Degrees_C)
+  raw_wl2 <- merge(well_loc[ , c("ID", "Site_Code")], raw_wl, by.x = "ID", by.y = "Well_ID", all.x = FALSE, all.y = TRUE)
+
+
+  raw_wl3 <- raw_wl2 %>% mutate(Year = year(Measure_Date_Time),
+                                doy  = yday(Measure_Date_Time)) %>%
+                         select(-ID, -ID.y, -Degrees_C) %>%
+                         rename(AbsPres = Absolute_Pressure_kPa)
 
   # Check for duplicate timestamps, which will cause an error in pivot_wider
-  dups<-raw_wl2[(which(duplicated(raw_wl2[,c("Measure_Date_Time", "code")]))),]
+  dups<-raw_wl3[(which(duplicated(raw_wl3[,c("Measure_Date_Time", "Site_Code")]))),]
 
   if(dim(dups)[1]>0){
-    assign("dup_records", dups, envir=.GlobalEnv)
+    assign("dup_records", dups, envir = .GlobalEnv)
     }
 
   if(dim(dups)[1]>0){
-    stop(paste0("Error: There are ",dim(dups)[1], " duplicate records in MS Access tbl_Water_Level. ",
+    stop(paste0("Error: There are ", dim(dups)[1], " duplicate records in MS Access tbl_Water_Level. ",
                  "The data frame of duplicate records is named dup_records in the global environment"))
   }
 
   # Filter data based on function arguments
-  raw_wl3 <- raw_wl2 %>% filter(between(year, from, to))
+  raw_wl4 <- raw_wl3 %>% filter(Year == year)
 
-  raw_wl4 <- if(rejected == FALSE){
-    raw_wl3 %>% filter(Flag != "R") %>% select(-Flag, -Flag_Note)
-  } else if(rejected == TRUE) {raw_wl3 %>% select(-Flag, -Flag_Note)}
+  raw_wl5 <- if(rejected == FALSE){
+    raw_wl4 %>% filter(Flag != "R") %>% select(-Flag, -Flag_Note)
+  } else if(rejected == TRUE) {raw_wl4 %>% select(-Flag, -Flag_Note)}
 
-  raw_wl5 <- if(growing_season == TRUE){
-    raw_wl4 %>% filter(doy > 134 & doy < 275)
-  } else {raw_wl4}
-
-  if(quietly == FALSE) {cat("..")}
-
-  wl_wide <- raw_wl5 %>% pivot_wider(names_from = c(code), values_from = c(AbsPres, C)) # names are AbsPres_SITE
+  raw_wl6 <- if(growing_season == TRUE){
+    raw_wl5 %>% filter(doy > 134 & doy < 275)
+  } else {raw_wl5}
 
   if(quietly == FALSE) {cat("..")}
 
-  wl_wide2 <- wl_wide %>% setNames((nm = sub("(.*)_(.*)", "\\2_\\1", names(.)))) %>% # Change name order to SITE_AbsPres.
-    setNames(nm=sub("\\.", "_", names(.))) %>% # extra step for BARO loggers
-    select(-year) %>%
-    rename(timestamp = Time_Measure_Date)
+  #wl_wide <- raw_wl6 %>% pivot_wider(names_from = c(Site_Code), values_from = c(AbsPres)) # names are AbsPres_SITE
+  wl_wide <- raw_wl6 %>% spread(Site_Code, AbsPres) # spread is retired but system.time showed it's much faster than pivot_wider
 
-  if(quietly == FALSE) {cat("Done.", sep="\n")}
+  if(quietly == FALSE) {cat("..")}
+
+  cols<-names(wl_wide[,4:13])
+
+  wl_wide2 <- wl_wide %>% rename_at(cols, list(~paste0(.,"_AbsPres"))) %>%
+    rename(timestamp = Measure_Date_Time)
+
+  col_order <- c("timestamp", "doy", "WMTN_BARO_AbsPres", "SHED_BARO_AbsPres", "BIGH_AbsPres",
+                 "DUCK_AbsPres", "GILM_AbsPres", "HEBR_AbsPres", "HODG_AbsPres", "LIHU_AbsPres",
+                 "NEMI_AbsPres", "WMTN_AbsPres")
+
+  wl_wide3 <- wl_wide2[, col_order] # setting column order so easier to assume in later functions
+
+  if(quietly == FALSE) {cat("Done.", sep = "\n")}
 
   if(export == TRUE){
-    filename1 <- if(from != to) {
-      paste0("raw_well_data_", from, "-", to)
-    } else {paste0("raw_well_data_", to)}
-
     filename <- if(growing_season == TRUE){
-      paste0(filename1, "_GS.csv")} else {paste0(filename1, ".csv")}
+      paste0("raw_well_data", year, "_GS.csv")
+      } else {paste0("raw_well_data_", year, ".csv")}
 
-    write.csv(wl_wide2, paste0(path, filename), row.names = FALSE)
+    write.csv(wl_wide3, paste0(path, filename), row.names = FALSE)
 
     if(quietly == FALSE){cat(paste0("File: ", filename, " saved to: ", "\n", "\t",
                path))}
   }
 
-  return(wl_wide2)
+  return(wl_wide3)
 
 }

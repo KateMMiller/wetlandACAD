@@ -7,8 +7,7 @@
 \usage{
 prep_well_data(
   path = NULL,
-  from = 2013,
-  to = 2019,
+  year = 2019,
   rejected = FALSE,
   growing_season = TRUE,
   export = TRUE,
@@ -18,9 +17,7 @@ prep_well_data(
 \arguments{
 \item{path}{Quoted path of the folder where the exported Hobo tables are located.}
 
-\item{from}{First year to start joining the data}
-
-\item{to}{Last year to end the join}
+\item{year}{Numeric. The year you are preparing the data for. Function will only run 1 year at a time.}
 
 \item{rejected}{\code{TRUE} or \code{FALSE}. If \code{TRUE} will include flagged rejected records.
 If \code{FALSE} will replace the rejected flagged records with NA. Defaults to \code{FALSE}.}
@@ -36,25 +33,27 @@ Defaults to \code{TRUE}.}
 Defaults to \code{FALSE}}
 }
 \value{
-Returns a wide data frame with timestamp, SITENAME_AbsPres, SITENAME_C.
+Returns a wide data frame with timestamp, SITENAME_AbsPres.
 }
 \description{
 This function pulls in the water level data from the NETN RAM database,
 joins the location, well visit and water level data together into a wide
 format of the data with the timestamp as the joining column. Function requires
 all 8 sites and 2 barometric loggers to run, and only includes data between the
-spring and fall well visit per year. Must have a the NETN RAM backend database named
-as a DSN.Function is primarily for internal use.
+spring and fall well visit per year. \strong {Must have a the NETN RAM backend
+database named as a DSN.Function is primarily for internal use.}
 }
 \examples{
 # Export growing season only data to a table
 dir='D:/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2019'
-prep_well_data(path = dir, from = 2019, to = 2019, export = TRUE, growing_season = TRUE)
+prep_well_data(path = dir, year = 2019, export = TRUE, growing_season = TRUE)
 
-# Assign output from all 2018 data to global environment
-welld_2018 <- prep_well_data(from = 2018, to = 2018, export = FALSE, growing_season = FALSE)
+# Assign output from all 2018 data, including flagged records, to global environment
+welld_2018 <- prep_well_data(year = 2018, rejected = TRUE, growing_season = FALSE,
+                             export = FALSE)
 
-# Run without printing messages in the console
-welld_2018 <- prep_well_data(from = 2018, to = 2018, export = FALSE, quietly = TRUE)
+# Run for 2019 growing season data without printing messages in the console, and save output to file
+welld_2018 <- prep_well_data(year = 2019, growing_season = TRUE, export = TRUE,
+                             quietly = TRUE)
 
 }

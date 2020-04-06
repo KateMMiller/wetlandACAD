@@ -29,8 +29,8 @@ To get this field, should either run the conv_kpa_cm() function first, or calcul
 for that site by hand. The SITECODE also needs to be defined in the function arguments.
 }
 \examples{
-df <- data.frame(BIGH_AbsPres = c(110.1, 111.3, 110.4), BARO_AbsPres = c(102.1, 103.1, 102.8))
-df <- conv_kpa_cm(df, pres = 'BIGH_AbsPres', baro = 'BARO_AbsPres')
+df <- data.frame(BIGH_AbsPres = c(110.1, 111.3, 110.4), WMTN_BARO_AbsPres = c(102.1, 103.1, 102.8))
+df <- conv_kpa_cm(df, pres = 'BIGH_AbsPres', baro = 'WMTN_BARO_AbsPres')
 df <- conv_WL(df, cm_water = 'BIGH_cm', ground = 88.9, cor = 5.004)
 
 }
