@@ -40,12 +40,12 @@ This function pulls in the water level data from the NETN RAM database,
 joins the location, well visit and water level data together into a wide
 format of the data with the timestamp as the joining column. Function requires
 all 8 sites and 2 barometric loggers to run, and only includes data between the
-spring and fall well visit per year. \strong {Must have a the NETN RAM backend
-database named as a DSN.Function is primarily for internal use.}
+spring and fall well visit per year. \strong{Must have a the NETN RAM backend
+database named as a DSN.} Function is primarily for internal use.
 }
 \examples{
 # Export growing season only data to a table
-dir='D:/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2019'
+dir = c('C:/Water_level_data/growing_season_2019')
 prep_well_data(path = dir, year = 2019, export = TRUE, growing_season = TRUE)
 
 # Assign output from all 2018 data, including flagged records, to global environment

@@ -3,7 +3,7 @@
 #'
 #' @importFrom dplyr filter rename rename_at select
 #' @importFrom magrittr %>%
-#' @importFrom lubridate year yday
+#' @importFrom lubridate year yday force_tz
 #' @importFrom odbc odbc odbcListDataSources
 #' @importFrom DBI dbConnect dbReadTable dbDisconnect
 #' @importFrom tidyr spread
@@ -12,8 +12,8 @@
 #' joins the location, well visit and water level data together into a wide
 #' format of the data with the timestamp as the joining column. Function requires
 #' all 8 sites and 2 barometric loggers to run, and only includes data between the
-#' spring and fall well visit per year. \strong {Must have a the NETN RAM backend
-#' database named as a DSN.Function is primarily for internal use.}
+#' spring and fall well visit per year. \strong{Must have a the NETN RAM backend
+#' database named as a DSN.} Function is primarily for internal use.
 #'
 #' @param path Quoted path of the folder where the exported Hobo tables are located.
 #' @param year Numeric. The year you are preparing the data for. Function will only run 1 year at a time.
@@ -29,7 +29,7 @@
 #'
 #' @examples
 #' # Export growing season only data to a table
-#' dir='D:/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2019'
+#' dir = c('C:/Water_level_data/growing_season_2019')
 #' prep_well_data(path = dir, year = 2019, export = TRUE, growing_season = TRUE)
 #'
 #' # Assign output from all 2018 data, including flagged records, to global environment
@@ -43,6 +43,7 @@
 #' @return Returns a wide data frame with timestamp, SITENAME_AbsPres.
 #'
 #' @export
+#'
 
 prep_well_data<-function(path = NULL, year = 2019, rejected = FALSE, growing_season = TRUE,
                          export = TRUE, quietly = FALSE){
@@ -58,8 +59,6 @@ prep_well_data<-function(path = NULL, year = 2019, rejected = FALSE, growing_sea
   }
 
   # Check that specified path exists on computer
-  if(missing(path)) {path = "C:/Temp"}
-
   if(export == TRUE & dir.exists(path) == FALSE){
     stop(paste0("The specified path: ", path, " does not exist"))
   }
@@ -101,9 +100,10 @@ prep_well_data<-function(path = NULL, year = 2019, rejected = FALSE, growing_sea
   raw_wl3 <- raw_wl2 %>% mutate(Year = year(Measure_Date_Time),
                                 doy  = yday(Measure_Date_Time)) %>%
                          select(-ID, -ID.y, -Degrees_C) %>%
-                         rename(AbsPres = Absolute_Pressure_kPa)
+                         rename(AbsPres = Absolute_Pressure_kPa) %>%
+                         filter(Year == year)
 
-  # Check for duplicate timestamps, which will cause an error in pivot_wider
+  # Check for duplicate timestamps, which will cause an error in spread
   dups<-raw_wl3[(which(duplicated(raw_wl3[,c("Measure_Date_Time", "Site_Code")]))),]
 
   if(dim(dups)[1]>0){
@@ -115,21 +115,19 @@ prep_well_data<-function(path = NULL, year = 2019, rejected = FALSE, growing_sea
                  "The data frame of duplicate records is named dup_records in the global environment"))
   }
 
-  # Filter data based on function arguments
-  raw_wl4 <- raw_wl3 %>% filter(Year == year)
 
-  raw_wl5 <- if(rejected == FALSE){
-    raw_wl4 %>% filter(Flag != "R") %>% select(-Flag, -Flag_Note)
-  } else if(rejected == TRUE) {raw_wl4 %>% select(-Flag, -Flag_Note)}
+  raw_wl4 <- if(rejected == FALSE){
+    raw_wl3 %>% filter(Flag != "R") %>% select(-Flag, -Flag_Note)
+  } else if(rejected == TRUE) {raw_wl3 %>% select(-Flag, -Flag_Note)}
 
-  raw_wl6 <- if(growing_season == TRUE){
-    raw_wl5 %>% filter(doy > 134 & doy < 275)
-  } else {raw_wl5}
+  raw_wl5 <- if(growing_season == TRUE){
+    raw_wl4 %>% filter(doy > 134 & doy < 275)
+  } else {raw_wl4}
 
   if(quietly == FALSE) {cat("..")}
 
   #wl_wide <- raw_wl6 %>% pivot_wider(names_from = c(Site_Code), values_from = c(AbsPres)) # names are AbsPres_SITE
-  wl_wide <- raw_wl6 %>% spread(Site_Code, AbsPres) # spread is retired but system.time showed it's much faster than pivot_wider
+  wl_wide <- raw_wl5 %>% spread(Site_Code, AbsPres) # spread is retired but system.time showed it's much faster than pivot_wider
 
   if(quietly == FALSE) {cat("..")}
 
@@ -144,11 +142,14 @@ prep_well_data<-function(path = NULL, year = 2019, rejected = FALSE, growing_sea
 
   wl_wide3 <- wl_wide2[, col_order] # setting column order so easier to assume in later functions
 
+  wl_wide3 <- wl_wide3 %>% mutate(timestamp = force_tz(timestamp, "America/New_York"))
+
+
   if(quietly == FALSE) {cat("Done.", sep = "\n")}
 
   if(export == TRUE){
     filename <- if(growing_season == TRUE){
-      paste0("raw_well_data", year, "_GS.csv")
+      paste0("raw_well_data_", year, "_GS.csv")
       } else {paste0("raw_well_data_", year, ".csv")}
 
     write.csv(wl_wide3, paste0(path, filename), row.names = FALSE)

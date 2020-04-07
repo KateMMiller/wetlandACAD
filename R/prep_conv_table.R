@@ -19,8 +19,8 @@
 #' hour that the field water level measurement was taken. This function accounts
 #' for that by taking the last logged BARO measurement and using that for the correction
 #' factor. If the field measurement and the logged measurement are more than 2 hours apart,
-#' you will receive a warning. \strong {This function was designed to work with the most recent
-#' growing season of data to generate. Must have a the NETN RAM backend database
+#' you will receive a warning. \strong{This function only works correctly for the most recent
+#' growing season of data. Must have a the NETN RAM backend database
 #' named "RAM_BE" as a DSN.} Function is primarily for internal use.
 #'
 #' @param path Quoted path of the folder where the output will be saved
@@ -37,6 +37,8 @@
 #'
 #' @param export \code{TRUE} or \code{FALSE}. Export csv file to specified path.
 #' Defaults to \code{TRUE}.
+#' @param quietly \code{TRUE} or \code{FALSE}. If \code{FALSE}, code will not print progress into console.
+#' Defaults to \code{FALSE}
 #'
 #' @examples
 #' # Create conversion table for fall-only data
@@ -68,8 +70,6 @@ prep_conv_table <- function(path = NA, year = 2019, visits = c('both', 'spring',
   }
 
   # Check that specified path exists on computer
-  if(missing(path)) {path = "C:/Temp"}
-
   if(export == TRUE & dir.exists(path) == FALSE){
     stop(paste0("The specified path: ", path, " does not exist"))
   }
@@ -88,7 +88,7 @@ prep_conv_table <- function(path = NA, year = 2019, visits = c('both', 'spring',
   }
 
 db <- DBI::dbConnect(drv = odbc::odbc(), dsn="RAM_BE")
-if(quietly == FALSE) {cat("Importing data tables from NETN RAM database.")}
+if(quietly == FALSE) {cat("Importing data tables from NETN RAM database")}
 assign("well_visit", DBI::dbReadTable(db, "tbl_Well_Visit"), envir = .GlobalEnv)
 assign("well_loc", DBI::dbReadTable(db, "tbl_Well"), envir = .GlobalEnv)
 DBI::dbDisconnect(db)
@@ -99,8 +99,10 @@ east <- c("GILM", "LIHU", "NEMI")
 
 # Take imported raw water level data for the year specified and make it wide
 #well_prep <- prep_well_data(year = year, growing_season = FALSE, export = FALSE)
-well_prep <- force(prep_well_data(year = year, growing_season = FALSE,
+well_prep <- force(prep_well_data(path = path, year = year, growing_season = FALSE,
                                   export = FALSE, quietly = TRUE))
+
+if(quietly == FALSE) {cat("..")}
 
 if(quietly == FALSE) {cat("Done.", sep = "\n")}
 
@@ -151,8 +153,8 @@ well_visit3$water_depth_time <- as.POSIXct(well_visit3$water_depth_time,
 
 # Check for offseason visits
 if(dim(well_visit3 %>% filter(season %in% "offseason") %>% droplevels())[1]>0){
-        cat(paste("Warning: There are well visits outside of spring or fall periods. ",
-                  "Offseason measurements are omitted from this function unless visits == 'all'",
+        message(paste("Warning: There are well visits outside of spring or fall periods. ",
+                  "Offseason measurements are omitted from this function",
                   sep = "\n"))
   }
 
@@ -191,8 +193,8 @@ spring_meas2 <- spring_meas %>% mutate(spring_log_WL = WL_cm - (ground),
 
 conv_tbl_spring <- spring_meas2 %>% select(visit_time, season, Site_Code, wellabs, ground, corfac) %>%
                                     mutate(spring_visit_time = visit_time,
-                                           BARO_cor = case_when(Site_Code %in% east ~ "SHED_BARO",
-                                                                Site_Code %in% west ~ "WMTN_BARO"))
+                                           BARO_cor = case_when(Site_Code %in% east ~ "SHED_BARO_AbsPres",
+                                                                Site_Code %in% west ~ "WMTN_BARO_AbsPres"))
 
 spring_dates <- conv_tbl_spring %>% select(Site_Code, spring_visit_time)
 
@@ -236,13 +238,6 @@ fall_meas <- left_join(fall_visit, last_log_fall, by = c("Site_Code"))
 fall_check <-fall_meas %>% mutate(time_diff = (water_depth_time - last_log_time)) %>%
                            filter(time_diff > 2)
 
-if(quietly == FALSE & nrow(fall_check)>0) {cat("\n")}
-
-if (nrow(fall_check)>0) {cat("Warning: There are", nrow(fall_check),
-                             "sites with fall field water level measurements
-                             more than 2 hours after the last logged value.")}
-
-if(quietly == FALSE & nrow(fall_check)>0) {cat("\n")}
 
 fall_meas2 <- fall_meas %>% mutate(last_log_WL = last_log_cm - (ground),
                                           field_WL = Stick_Up_at_MP - Water_Depth,
@@ -254,8 +249,8 @@ fall_meas2 <- fall_meas %>% mutate(last_log_WL = last_log_cm - (ground),
 conv_tbl_fall1 <- fall_meas2 %>% select(visit_time, season, Site_Code, wellabs, ground, corfac)
 
 conv_tbl_fall <- left_join(conv_tbl_fall1, spring_dates, by=c("Site_Code"))%>%
-                 mutate(BARO_cor = case_when(Site_Code %in% east ~ "SHED_BARO",
-                                             Site_Code %in% west ~ "WMTN_BARO"))
+                 mutate(BARO_cor = case_when(Site_Code %in% east ~ "SHED_BARO_AbsPres",
+                                             Site_Code %in% west ~ "WMTN_BARO_AbsPres"))
 
 conv_table <- if(visits == "both"){
                   rbind(conv_tbl_spring, conv_tbl_fall) %>% group_by(Site_Code, wellabs) %>%
@@ -270,6 +265,8 @@ conv_table <- if(visits == "both"){
               } else if (visits == "spring"){
                   conv_tbl_spring
               }
+conv_table <- conv_table %>% mutate(visit_time = force_tz(visit_time, "America/New_York"),
+                                    spring_visit_time = force_tz(spring_visit_time, "America/New_York"))
 
 if(quietly == FALSE) {cat("Done.", sep = "\n")}
 
@@ -279,6 +276,12 @@ if(export == TRUE){
   if(quietly == FALSE) {cat(paste0("File: ", filename, " saved to: ", "\n", "\t",
                                   path))}
 }
+
+if(quietly == FALSE) {cat("", sep = "\n")}
+
+if (nrow(fall_check)>0) {message("Warning: There are ", nrow(fall_check),
+                             " sites with fall field water level measurements
+                             more than 2 hours after the last logged value.")}
 
 return(conv_table)
 }

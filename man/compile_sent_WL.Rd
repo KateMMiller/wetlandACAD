@@ -2,35 +2,39 @@
 % Please edit documentation in R/compile_sent_WL.R
 \name{compile_sent_WL}
 \alias{compile_sent_WL}
-\title{compile_sent_WL: Calculates water level from raw sentinal well data}
+\title{compile_sent_WL: Calculates water level from raw sentinal well data.}
 \usage{
-compile_sent_WL(df, conv_table)
+compile_sent_WL(df, conv_table, between_visits = TRUE)
 }
 \arguments{
 \item{df}{data frame output from join_well_data}
 
 \item{conv_table}{data frame listing site and well info for WL conversion}
+
+\item{between_visits}{\code{TRUE} or \code{FALSE}. If \code{TRUE} will include only measurements
+between the spring and fall well visits. If \code{FALSE}, will return all measurements included
+in the data frame generated from prep_well_data(). Defaults to \code{TRUE}.}
 }
 \value{
 Returns a data frame with the water level relative to the ground surface for each
 sentinal water level logger.
 }
 \description{
-This function uses (and requires) the output from join_well_data() to
-calculate the water level relative to the wetland surface for each sentinal site.
-This function also requires a data frame called conv_table with the following fields:
+This function uses (and requires) the output from prep_well_data() to
+calculate the water level relative to the wetland surface for each sentinel site.
+This should only be used for one year at a time, to ensure that the function is
+using the correct well measurements to calculate water level. This function
+also requires a data frame called conv_table with the following fields:
   site, wellabs, ground, corfac, baro
 }
 \examples{
-path='D:/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2018'
-well_data<-join_well_data(path)
-conv_table<-data.frame(site=c('BIGH','DUCK','GILM','HEBR','HODG','LIHU','NEMI','WMTN'),
-                       wellabs=c("BIGH_AbsPres", "DUCK_AbsPres", "GILM_AbsPres", "HEBR_AbsPres",
-                                 "HODG_AbsPres", "LIHU_AbsPres", "NEMI_AbsPres", "WMTN_AbsPres"),
-                       ground=c(88.9, 79.4, 63.1, 71.8, 95.1, 73.2, 85.7, 68.5),
-                       corfac=c(5.004, 4.73, 18.73, 0.845, 7.199, 26.566, 16.556, 7.284),
-                       baro=c('WMTN_BARO_AbsPres', 'WMTN_BARO_AbsPres', 'SHED_BARO_AbsPres', 'WMTN_BARO_AbsPres',
-                              'WMTN_BARO_AbsPres', 'SHED_BARO_AbsPres', 'SHED_BARO_AbsPres', 'WMTN_BARO_AbsPres'))
-df<-comb_sent_WL(well_data,conv_table)
+
+# Compile tables
+dir = c('C:/Water_level_data/growing_season_2019')
+well19 <- prep_well_data(path = dir, year = 2019, growing_season = TRUE, export = FALSE)
+conv_tbl_19 <- prep_conv_table(path = dir, year = 2019, visits = "fall", export = FALSE)
+
+# Create data frame with water level relative to surface, cut at spring well visit
+well19WL<-compile_sent_WL(well19, conv_tbl_19, between_visits = TRUE)
 
 }

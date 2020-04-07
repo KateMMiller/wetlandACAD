@@ -18,7 +18,7 @@
 #' @param export \code{TRUE} or \code{FALSE}. Export csv file to specified path. Defaults to \code{TRUE}.
 #'
 #' @examples
-#' path='D:/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2018'
+#' dir = c('C:/Water_level_data/growing_season_2019')
 #' well_data <- bind_HOBO_data(path)
 #'
 #' @return Returns a long data frame with ID (blank for Access to assign autonumber), Well_ID,

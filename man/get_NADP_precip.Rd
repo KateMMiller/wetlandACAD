@@ -7,7 +7,8 @@
 get_NADP_precip(
   start_date = "04/01/2018",
   end_date = "10/31/2018",
-  stationID = "ME98"
+  stationID = "ME98",
+  quietly = FALSE
 )
 }
 \arguments{
@@ -16,6 +17,9 @@ get_NADP_precip(
 \item{end_date}{Quoted date for last day of period (eg "10/31/2018")}
 
 \item{stationID}{Quoted name of station to pull data from (eg "ME98" is ACAD's weather station)}
+
+\item{quietly}{\code{TRUE} or \code{FALSE}. If \code{FALSE}, code will not print progress into console.
+Defaults to \code{FALSE}}
 }
 \value{
 Returns a data frame with Date, hour (0-23), timestamp (Y-M-D H:M:S), and precip_cm

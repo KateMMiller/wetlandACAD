@@ -30,6 +30,9 @@ Use this option if wells were reset during the spring visit and had not acclimat
 
 \item{export}{\code{TRUE} or \code{FALSE}. Export csv file to specified path.
 Defaults to \code{TRUE}.}
+
+\item{quietly}{\code{TRUE} or \code{FALSE}. If \code{FALSE}, code will not print progress into console.
+Defaults to \code{FALSE}}
 }
 \value{
 Returns a data frame with visit times, site, ground height, and correction factor
@@ -43,8 +46,8 @@ Because well visits are staggered, the fall BARO reading may not exist for the
 hour that the field water level measurement was taken. This function accounts
 for that by taking the last logged BARO measurement and using that for the correction
 factor. If the field measurement and the logged measurement are more than 2 hours apart,
-you will receive a warning. \strong {This function was designed to work with the most recent
-growing season of data to generate. Must have a the NETN RAM backend database
+you will receive a warning. \strong{This function only works correctly for the most recent
+growing season of data. Must have a the NETN RAM backend database
 named "RAM_BE" as a DSN.} Function is primarily for internal use.
 }
 \examples{

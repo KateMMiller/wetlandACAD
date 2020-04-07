@@ -18,12 +18,12 @@
 #' @export
 
 conv_kpa_cm<-function(df, pres, baro){
-  df<-data.frame(df)
+  df <- data.frame(df)
 
-  col1 <- df[,pres]
-  col2 <- df[,baro]
+  col1 <- df[ , pres]
+  col2 <- df[ , baro]
 
-  df[, paste0(substr(pres,1,4), "_cm")]<-as.numeric((col1-col2)*10.197)
+  df[, paste0(substr(pres,1,4), "_cm")] <- as.numeric((col1 - col2)*10.197)
 
   return(df)
 }
