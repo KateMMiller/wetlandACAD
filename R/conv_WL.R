@@ -14,8 +14,8 @@
 #' atmospheric pressure loggers are.
 #'
 #' @examples
-#' df <- data.frame(BIGH_AbsPres = c(110.1, 111.3, 110.4), BARO_AbsPres = c(102.1, 103.1, 102.8))
-#' df <- conv_kpa_cm(df, pres = 'BIGH_AbsPres', baro = 'BARO_AbsPres')
+#' df <- data.frame(BIGH_AbsPres = c(110.1, 111.3, 110.4), WMTN_BARO_AbsPres = c(102.1, 103.1, 102.8))
+#' df <- conv_kpa_cm(df, pres = 'BIGH_AbsPres', baro = 'WMTN_BARO_AbsPres')
 #' df <- conv_WL(df, cm_water = 'BIGH_cm', ground = 88.9, cor = 5.004)
 #'
 #' @return Returns a data frame with a new column labeled with SITECODE_WL, which is the water level
@@ -24,9 +24,8 @@
 #' @export
 
 conv_WL<-function(df, cm_water, ground, corfac){
-  site_code<-substr(cm_water,1,4)
-  df$WL<-NA
-  df$WL<-ifelse(!(is.na(df[,cm_water])), df[,cm_water]-(ground+corfac), NA)
-  names(df)[names(df)=='WL']<-paste0(site_code,'_WL')
+
+  df[, paste0(substr(cm_water,1,4),"_WL")]<- df[,cm_water]-(ground+corfac)
+
   return(df)
 }

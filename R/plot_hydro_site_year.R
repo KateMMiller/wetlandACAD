@@ -24,22 +24,34 @@
 #'
 #' @export
 
-plot_hydro_site_year<-function(df, yvar, site, years=2013:2019){
-  minWL<-min(df[,yvar],na.rm=T)
-  df<-df %>% filter(year %in% years) %>% filter(doy>134 & doy<275) %>% select(doy_h, yvar, year, lag.precip) %>% droplevels()
-  colnames(df)<-c('doy_h', 'WL', 'year', 'lag.precip')
-  p<-ggplot(df,aes(x=doy_h,y=WL,group=year))+
-          geom_line(col='black')+ geom_line(aes(x=doy_h,y=lag.precip*5+minWL, group=year),col='blue')+
-          facet_wrap(~year,nrow=length(unique(df$year)))+
-          geom_hline(yintercept=0,col='brown')+theme_bw()+
-          theme(plot.title = element_text(hjust = 0.5), panel.grid.minor = element_blank(),
+plot_hydro_site_year <- function(df, yvar, site, years = 2013:2019){
+  minWL <- min(df[,yvar], na.rm = TRUE)
+  df <- df %>% filter(Year %in% years) %>%
+               filter(doy > 134 & doy < 275) %>%
+               select(doy_h, yvar, Year, lag.precip) %>% droplevels()
+
+  colnames(df)<-c('doy_h', 'WL', 'Year', 'lag.precip')
+
+  p <- ggplot(df,aes(x = doy_h, y = WL, group = Year))+
+          geom_line(col = 'black')+
+          geom_line(aes(x = doy_h, y = lag.precip*5 + minWL, group = Year), col ='blue')+
+          facet_wrap(~Year, nrow = length(unique(df$Year)))+
+          geom_hline(yintercept = 0, col = 'brown')+
+          theme_bw()+
+          theme(plot.title = element_text(hjust = 0.5),
+                panel.grid.minor = element_blank(),
                 panel.grid.major = element_blank(),
                 axis.text.y.right = element_text(color = 'blue'),
-                axis.title.y.right = element_text(color = 'blue'))+
-          labs(title=site,y='Water Level (cm)\n',x='Date')+
-          scale_x_continuous(breaks=c(121,152,182,213,244,274),
-                             labels=c('May-01','Jun-01','Jul-01','Aug-01','Sep-01','Oct-01'))+
-          scale_y_continuous(sec.axis = sec_axis(~., breaks=c(minWL,minWL+10), name='Hourly Precip. (cm)\n',
-                                                 labels=c('0', '2')))
+                axis.title.y.right = element_text(color = 'blue'),
+                strip.text = element_text(size = 11))+
+          labs(title = site, y = 'Water Level (cm)\n', x = 'Date')+
+          scale_x_continuous(breaks = c(121, 152, 182, 213, 244, 274),
+                             labels = c('May-01', 'Jun-01',
+                                        'Jul-01', 'Aug-01',
+                                        'Sep-01', 'Oct-01'))+
+          scale_y_continuous(sec.axis = sec_axis(~.,
+                                                 breaks = c(minWL, minWL+10),
+                                                 name = 'Hourly Precip. (cm)\n',
+                                                 labels = c('0', '2')))
   return(p)
 }
