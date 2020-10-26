@@ -176,8 +176,8 @@ bind_HOBO_data <- function(path, export = TRUE){
                                 Flag = paste0("A"),
                                 Flag_Note = NA)
 
-  combdata <- combdata %>% select(ID, Well_ID, timestamp, Absolute_Pressure_kPa,
-                                  Degrees_C, site, Flag, Flag_Note)
+  combdata <- combdata %>% select(ID, Well_ID, Measure_Date_Time, Absolute_Pressure_kPa,
+                                  Degrees_C, Flag, Flag_Note)
 
   if(export == TRUE){
 
