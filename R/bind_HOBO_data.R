@@ -33,45 +33,126 @@ bind_HOBO_data <- function(path, export = TRUE){
 
   filenames <- list.files(path = path, pattern =".csv")
 
-  duck <- read.table(paste0(path, filenames[grep('Duck', filenames)]),
-                     skip = 1, sep = ',', stringsAsFactors = FALSE,
-                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
+  duck <- tryCatch(df <- read.table(paste0(path, filenames[grep('Duck', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     df <- read.table(paste0(path, filenames[grep('Duck', filenames, ignore.case = TRUE)]),
+                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                     return(df)
+                   }
 
-  lihu <- read.table(paste0(path, filenames[grep('LittleHunter', filenames)]),
-                     skip = 1, sep = ',', stringsAsFactors = FALSE,
-                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
+  )
 
-  gilm <- read.table(paste0(path, filenames[grep('Gilmore', filenames)]),
-                     skip = 1, sep = ',', stringsAsFactors = FALSE,
-                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
+  lihu <- tryCatch(df <- read.table(paste0(path, filenames[grep('LittleHunter', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     df <- read.table(paste0(path, filenames[grep('LittleHunter', filenames, ignore.case = TRUE)]),
+                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                     return(df)
+                   }
 
-  wmtn <- read.table(paste0(path, filenames[grep('WMTN_well', filenames)]),
-                     skip = 1, sep = ',', stringsAsFactors = FALSE,
-                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
+  )
 
-  hodg <- read.table(paste0(path, filenames[grep('Hodgdon', filenames)]),
-                     skip = 1, sep = ',', stringsAsFactors = FALSE,
-                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
+  gilm <- tryCatch(df <- read.table(paste0(path, filenames[grep('Gilmore', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     df <- read.table(paste0(path, filenames[grep('Gilmore', filenames, ignore.case = TRUE)]),
+                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                     return(df)
+                   }
 
-  nemi <- read.table(paste0(path, filenames[grep('NewMills', filenames)]),
-                     skip = 1, sep = ',', stringsAsFactors = FALSE,
-                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
+  )
 
-  hebr <- read.table(paste0(path, filenames[grep('Heath_Brook', filenames)]),
-                     skip = 1, sep = ',', stringsAsFactors = FALSE,
-                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
 
-  bigh <- read.table(paste0(path, filenames[grep('Big_Heath', filenames)]),
-                     skip = 1, sep = ',', stringsAsFactors = FALSE,
-                     col.names=c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
+  wmtn <- tryCatch(df <- read.table(paste0(path, filenames[grep('WMTN_well', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     df <- read.table(paste0(path, filenames[grep('WMTN_well', filenames, ignore.case = TRUE)]),
+                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                     return(df)
+                   }
 
-  wmtn_baro <- read.table(paste0(path, filenames[grep('westmtnswmp', filenames)]),
-                          skip = 1, sep = ',', stringsAsFactors = FALSE,
-                          col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
+  )
 
-  shed_baro <- read.table(paste0(path, filenames[grep('shed',filenames)]),
-                          skip = 1, sep = ',', stringsAsFactors = FALSE,
-                          col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4]
+  hodg <- tryCatch(df <- read.table(paste0(path, filenames[grep('Hodgdon', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     df <- read.table(paste0(path, filenames[grep('Hodgdon', filenames, ignore.case = TRUE)]),
+                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                     return(df)
+                   }
+
+  )
+
+  nemi <- tryCatch(df <- read.table(paste0(path, filenames[grep('NewMills', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     df <- read.table(paste0(path, filenames[grep('NewMills', filenames, ignore.case = TRUE)]),
+                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                     return(df)
+                   }
+
+  )
+
+  hebr <- tryCatch(df <- read.table(paste0(path, filenames[grep('Heath_Brook', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     df <- read.table(paste0(path, filenames[grep('Heath_Brook', filenames, ignore.case = TRUE)]),
+                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                     return(df)
+                   }
+
+  )
+
+  bigh <- tryCatch(df <- read.table(paste0(path, filenames[grep('Big_Heath', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     df <- read.table(paste0(path, filenames[grep('Big_Heath', filenames, ignore.case = TRUE)]),
+                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                     return(df)
+                   }
+
+  )
+
+  wmtn_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('westmtnswmp', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     df <- read.table(paste0(path, filenames[grep('westmtnswmp', filenames, ignore.case = TRUE)]),
+                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                     return(df)
+                   }
+
+  )
+
+  shed_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('SHED', filenames, ignore.case = TRUE)]),
+                                         skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                         col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                        error = function(e){
+                          df <- read.table(paste0(path, filenames[grep('SHED', filenames, ignore.case = TRUE)]),
+                                           skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                          colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                          return(df)
+                        }
+
+  )
 
   duck <- duck %>% mutate(site = 'duck', Well_ID = 9, ID = NA)
   lihu <- lihu %>% mutate(site = 'lihu', Well_ID = 13, ID = NA)
@@ -87,8 +168,8 @@ bind_HOBO_data <- function(path, export = TRUE){
   combdata <- rbind(duck, lihu, gilm, wmtn, hodg, nemi, hebr, bigh, wmtn_baro, shed_baro)
 
   combdata <- combdata %>% mutate(Measure_Date_Time = as.POSIXct(Measure_Date_Time,
-                                                                 format = "%m/%d/%y %I:%M:%S %p",
-                                                                 tz = "America/New_York"),
+                                                                   format = "%m/%d/%y %I:%M:%S %p",
+                                                                   tz = "America/New_York"),
                                 timestamp = as.POSIXct(Measure_Date_Time,
                                                        format= "%Y-%m-%d %H:%M:%S",
                                                        tz = "America/New_York"),
