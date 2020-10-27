@@ -24,8 +24,10 @@
 #' @export
 
 conv_WL<-function(df, cm_water, ground, corfac){
+  df$ground = as.numeric(paste(ground))
+  df$corfac = as.numeric(paste(corfac))
 
-  df[, paste0(substr(cm_water,1,4),"_WL")]<- df[,cm_water]-(ground+corfac)
+  df[, paste0(substr(cm_water,1,4),"_WL")] <- df[ , cm_water]-(df$ground+df$corfac)
 
   return(df)
 }
