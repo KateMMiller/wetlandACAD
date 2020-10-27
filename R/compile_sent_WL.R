@@ -56,48 +56,48 @@ compile_sent_WL<-function(df, conv_table, between_visits = TRUE){
                       baro = as.character(conv_table[8, "BARO_cor"]))
 
   df <- conv_WL(df, cm_water = as.character(paste0(conv_table[1, "Site_Code"],"_cm")),
-                    ground = conv_tbl_19[1, "ground"],
+                    ground = conv_table[1, "ground"],
                     corfac = conv_table[1, "corfac"])
 
   df <- conv_WL(df, cm_water = as.character(paste0(conv_table[2, "Site_Code"],"_cm")),
-                ground = conv_tbl_19[2, "ground"],
+                ground = conv_table[2, "ground"],
                 corfac = conv_table[2, "corfac"])
 
   df <- conv_WL(df, cm_water = as.character(paste0(conv_table[3, "Site_Code"],"_cm")),
-                ground = conv_tbl_19[3, "ground"],
+                ground = conv_table[3, "ground"],
                 corfac = conv_table[3, "corfac"])
 
   df <- conv_WL(df, cm_water = as.character(paste0(conv_table[4, "Site_Code"],"_cm")),
-                ground = conv_tbl_19[4, "ground"],
+                ground = conv_table[4, "ground"],
                 corfac = conv_table[4, "corfac"])
 
   df <- conv_WL(df, cm_water = as.character(paste0(conv_table[5, "Site_Code"],"_cm")),
-                ground = conv_tbl_19[5, "ground"],
+                ground = conv_table[5, "ground"],
                 corfac = conv_table[5, "corfac"])
 
   df <- conv_WL(df, cm_water = as.character(paste0(conv_table[6, "Site_Code"],"_cm")),
-                ground = conv_tbl_19[6, "ground"],
+                ground = conv_table[6, "ground"],
                 corfac = conv_table[6, "corfac"])
 
   df <- conv_WL(df, cm_water = as.character(paste0(conv_table[7, "Site_Code"],"_cm")),
-                ground = conv_tbl_19[7, "ground"],
+                ground = conv_table[7, "ground"],
                 corfac = conv_table[7, "corfac"])
 
   df <- conv_WL(df, cm_water = as.character(paste0(conv_table[8, "Site_Code"],"_cm")),
-                ground = conv_tbl_19[8, "ground"],
+                ground = conv_table[8, "ground"],
                 corfac = conv_table[8, "corfac"])
 
   df<-df[,c('timestamp','doy','BIGH_WL','DUCK_WL','GILM_WL','HEBR_WL','HODG_WL','LIHU_WL','NEMI_WL','WMTN_WL')]
 
   df2 <- if(between_visits == TRUE){
-          df %>% mutate(BIGH_WL = ifelse(timestamp < conv_tbl_19$spring_visit_time[conv_tbl_19$Site_Code == "BIGH"], NA, BIGH_WL),
-                        DUCK_WL = ifelse(timestamp < conv_tbl_19$spring_visit_time[conv_tbl_19$Site_Code == "DUCK"], NA, DUCK_WL),
-                        GILM_WL = ifelse(timestamp < conv_tbl_19$spring_visit_time[conv_tbl_19$Site_Code == "GILM"], NA, GILM_WL),
-                        HEBR_WL = ifelse(timestamp < conv_tbl_19$spring_visit_time[conv_tbl_19$Site_Code == "HEBR"], NA, HEBR_WL),
-                        HODG_WL = ifelse(timestamp < conv_tbl_19$spring_visit_time[conv_tbl_19$Site_Code == "HODG"], NA, HODG_WL),
-                        LIHU_WL = ifelse(timestamp < conv_tbl_19$spring_visit_time[conv_tbl_19$Site_Code == "LIHU"], NA, LIHU_WL),
-                        NEMI_WL = ifelse(timestamp < conv_tbl_19$spring_visit_time[conv_tbl_19$Site_Code == "NEMI"], NA, NEMI_WL),
-                        WMTN_WL = ifelse(timestamp < conv_tbl_19$spring_visit_time[conv_tbl_19$Site_Code == "WMTN"], NA, WMTN_WL))
+          df %>% mutate(BIGH_WL = ifelse(timestamp < conv_table$spring_visit_time[conv_table$Site_Code == "BIGH"], NA, BIGH_WL),
+                        DUCK_WL = ifelse(timestamp < conv_table$spring_visit_time[conv_table$Site_Code == "DUCK"], NA, DUCK_WL),
+                        GILM_WL = ifelse(timestamp < conv_table$spring_visit_time[conv_table$Site_Code == "GILM"], NA, GILM_WL),
+                        HEBR_WL = ifelse(timestamp < conv_table$spring_visit_time[conv_table$Site_Code == "HEBR"], NA, HEBR_WL),
+                        HODG_WL = ifelse(timestamp < conv_table$spring_visit_time[conv_table$Site_Code == "HODG"], NA, HODG_WL),
+                        LIHU_WL = ifelse(timestamp < conv_table$spring_visit_time[conv_table$Site_Code == "LIHU"], NA, LIHU_WL),
+                        NEMI_WL = ifelse(timestamp < conv_table$spring_visit_time[conv_table$Site_Code == "NEMI"], NA, NEMI_WL),
+                        WMTN_WL = ifelse(timestamp < conv_table$spring_visit_time[conv_table$Site_Code == "WMTN"], NA, WMTN_WL))
   } else {df}
 
   return(df2)
