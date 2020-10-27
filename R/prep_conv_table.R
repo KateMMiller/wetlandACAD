@@ -135,7 +135,7 @@ well_visit2 <- merge(well_loc[ , c("ID", "Site_Code", "Logger_Length", "MP_to_Bo
 # Preparing visit data for spring and fall
 well_visit3 <- well_visit2 %>% mutate(Year = lubridate::year(Visit_Date),
                                      month = lubridate::month(Visit_Date),
-                                     season = case_when(between(month, 4, 6) ~ "spring",
+                                     season = case_when(between(month, 4, 6) ~ "spring", # changed to 7 for 2020
                                                         between(month, 9, 11) ~ "fall",
                                                         TRUE ~ "offseason"),
                                      hour = lubridate::hour(Time),
@@ -143,9 +143,9 @@ well_visit3 <- well_visit2 %>% mutate(Year = lubridate::year(Visit_Date),
                                                        str_pad(hour, 2, side='left', pad = "0"),
                                                        ":00", sep = ""),
                                      ground = (Logger_Length + MP_to_Bolt) - Stick_Up_at_MP) %>%
-                               filter(Year %in% year) %>%
-                               select(Site_Code, Visit_Date, Year, month,
-                                      water_depth_time, season, Water_Depth, ground, Stick_Up_at_MP)
+                             filter(Year %in% year) %>%
+                              select(Site_Code, Visit_Date, Year, month,
+                                    water_depth_time, season, Water_Depth, ground, Stick_Up_at_MP)
 
 # Fixing the time format
 well_visit3$water_depth_time <- as.POSIXct(well_visit3$water_depth_time,
