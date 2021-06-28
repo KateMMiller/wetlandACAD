@@ -33,123 +33,155 @@ bind_HOBO_data <- function(path, export = TRUE){
 
   filenames <- list.files(path = path, pattern =".csv")
 
-  duck <- tryCatch(df <- read.table(paste0(path, filenames[grep('Duck', filenames, ignore.case = TRUE)]),
+  duck <- tryCatch(df <- read.table(paste0(path, filenames[grep('DUCK', filenames, ignore.case = TRUE)]),
                                     skip = 1, sep = ',', stringsAsFactors = FALSE,
                                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                    error = function(e){
-                     df <- read.table(paste0(path, filenames[grep('Duck', filenames, ignore.case = TRUE)]),
-                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                     return(df)
-                   }
-
-  )
-
-  lihu <- tryCatch(df <- read.table(paste0(path, filenames[grep('LittleHunter', filenames, ignore.case = TRUE)]),
-                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
-                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
-                   error = function(e){
-                     df <- read.table(paste0(path, filenames[grep('LittleHunter', filenames, ignore.case = TRUE)]),
-                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                     return(df)
-                   }
-
-  )
-
-  gilm <- tryCatch(df <- read.table(paste0(path, filenames[grep('Gilmore', filenames, ignore.case = TRUE)]),
-                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
-                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
-                   error = function(e){
-                     df <- read.table(paste0(path, filenames[grep('Gilmore', filenames, ignore.case = TRUE)]),
-                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                     return(df)
+                     err <- conditionMessage(e)
+                     if(startsWith("more columns than column names", err)){
+                       df <- read.table(paste0(path, filenames[grep('DUCK', filenames, ignore.case = TRUE)]),
+                                        skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                       colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                       return(df)
+                     } else {stop("Could not find water level CSV for Duck Pond.")}
                    }
 
   )
 
 
-  wmtn <- tryCatch(df <- read.table(paste0(path, filenames[grep('WMTN_well', filenames, ignore.case = TRUE)]),
+  lihu <- tryCatch(df <- read.table(paste0(path, filenames[grep('LittleHunter|LIHU', filenames, ignore.case = TRUE)]),
                                     skip = 1, sep = ',', stringsAsFactors = FALSE,
                                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                    error = function(e){
-                     df <- read.table(paste0(path, filenames[grep('WMTN_well', filenames, ignore.case = TRUE)]),
-                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                     return(df)
+                     err <- conditionMessage(e)
+                     if(startsWith("more columns than column names", err)){
+                       df <- read.table(paste0(path, filenames[grep('LittleHunter|LIHU', filenames, ignore.case = TRUE)]),
+                                        skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                       colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                       return(df)
+                     } else {stop("Could not find water level CSV for Little Hunter's Brook.")}
                    }
 
   )
 
-  hodg <- tryCatch(df <- read.table(paste0(path, filenames[grep('Hodgdon', filenames, ignore.case = TRUE)]),
+  gilm <- tryCatch(df <- read.table(paste0(path, filenames[grep('Gilmore|GILM', filenames, ignore.case = TRUE)]),
                                     skip = 1, sep = ',', stringsAsFactors = FALSE,
                                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                    error = function(e){
-                     df <- read.table(paste0(path, filenames[grep('Hodgdon', filenames, ignore.case = TRUE)]),
-                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                     return(df)
+                     err <- conditionMessage(e)
+                     if(startsWith("more columns than column names", err)){
+                       df <- read.table(paste0(path, filenames[grep('Gilmore|GILM', filenames, ignore.case = TRUE)]),
+                                        skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                       colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                       return(df)
+                     } else {stop("Could not find water level CSV for Gilmore Meadow.")}
                    }
 
   )
 
-  nemi <- tryCatch(df <- read.table(paste0(path, filenames[grep('NewMills', filenames, ignore.case = TRUE)]),
+
+  wmtn <- tryCatch(df <- read.table(paste0(path, filenames[grep('WMTN_well|westmtnswmp_WELL', filenames, ignore.case = TRUE)]),
                                     skip = 1, sep = ',', stringsAsFactors = FALSE,
                                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                    error = function(e){
-                     df <- read.table(paste0(path, filenames[grep('NewMills', filenames, ignore.case = TRUE)]),
-                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                     return(df)
+                     err <- conditionMessage(e)
+                     if(startsWith("more columns than column names", err)){
+                       df <- read.table(paste0(path, filenames[grep('WMTN_well|westmtnswmp_WELL', filenames, ignore.case = TRUE)]),
+                                        skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                       colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                       return(df)
+                     } else {stop("Could not find water level CSV for Western Mountain Swamp WELL.")}
                    }
 
   )
 
-  hebr <- tryCatch(df <- read.table(paste0(path, filenames[grep('Heath_Brook', filenames, ignore.case = TRUE)]),
+  hodg <- tryCatch(df <- read.table(paste0(path, filenames[grep('HODG|Hodgdon', filenames, ignore.case = TRUE)]),
                                     skip = 1, sep = ',', stringsAsFactors = FALSE,
                                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                    error = function(e){
-                     df <- read.table(paste0(path, filenames[grep('Heath_Brook', filenames, ignore.case = TRUE)]),
-                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                     return(df)
+                     err <- conditionMessage(e)
+                     if(startsWith("more columns than column names", err)){
+                       df <- read.table(paste0(path, filenames[grep('HODG|Hodgdon', filenames, ignore.case = TRUE)]),
+                                        skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                       colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                       return(df)
+                     } else {stop("Could not find water level CSV for Hodgdon Swamp.")}
                    }
 
   )
 
-  bigh <- tryCatch(df <- read.table(paste0(path, filenames[grep('Big_Heath', filenames, ignore.case = TRUE)]),
+  nemi <- tryCatch(df <- read.table(paste0(path, filenames[grep('NEMI|NewMills', filenames, ignore.case = TRUE)]),
                                     skip = 1, sep = ',', stringsAsFactors = FALSE,
                                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                    error = function(e){
-                     df <- read.table(paste0(path, filenames[grep('Big_Heath', filenames, ignore.case = TRUE)]),
-                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                     return(df)
+                     err <- conditionMessage(e)
+                     if(startsWith("more columns than column names", err)){
+                       df <- read.table(paste0(path, filenames[grep('NEMI|NewMills', filenames, ignore.case = TRUE)]),
+                                        skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                       colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                       return(df)
+                     } else {stop("Could not find water level CSV for New Mills Meadow - NW.")}
                    }
 
   )
 
-  wmtn_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('westmtnswmp', filenames, ignore.case = TRUE)]),
+  hebr <- tryCatch(df <- read.table(paste0(path, filenames[grep('HEBR|HeathBrook|Heath_Brook', filenames, ignore.case = TRUE)]),
                                     skip = 1, sep = ',', stringsAsFactors = FALSE,
                                     col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                    error = function(e){
-                     df <- read.table(paste0(path, filenames[grep('westmtnswmp', filenames, ignore.case = TRUE)]),
-                                      skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                     colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                     return(df)
+                     err <- conditionMessage(e)
+                     if(startsWith("more columns than column names", err)){
+                       df <- read.table(paste0(path, filenames[grep('HEBR|HeathBrook|Heath_Brook', filenames, ignore.case = TRUE)]),
+                                        skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                       colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                       return(df)
+                     } else {stop("Could not find water level CSV for Heath Brook.")}
                    }
 
   )
 
-  shed_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('SHED', filenames, ignore.case = TRUE)]),
+
+  bigh <- tryCatch(df <- read.table(paste0(path, filenames[grep('BIGH|BigHeath|Big_Heath', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     err <- conditionMessage(e)
+                     if(startsWith("more columns than column names", err)){
+                       df <- read.table(paste0(path, filenames[grep('BIGH|BigHeath|Big_Heath', filenames, ignore.case = TRUE)]),
+                                        skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                       colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                       return(df)
+                     } else {stop("Could not find water level CSV for Big Heath.")}
+                   }
+
+  )
+
+  wmtn_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('WMTN_BARO|westmtnswmp_BARO', filenames, ignore.case = TRUE)]),
+                                    skip = 1, sep = ',', stringsAsFactors = FALSE,
+                                    col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
+                   error = function(e){
+                     err <- conditionMessage(e)
+                     if(startsWith("more columns than column names", err)){
+                       df <- read.table(paste0(path, filenames[grep('WMTN_BARO|westmtnswmp_BARO', filenames, ignore.case = TRUE)]),
+                                        skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                       colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                       return(df)
+                     } else {stop("Could not find water level CSV for Western Mountain Swamp BARO.")}
+                   }
+
+  )
+
+  shed_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('SHED_BARO', filenames, ignore.case = TRUE)]),
                                          skip = 1, sep = ',', stringsAsFactors = FALSE,
                                          col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                         error = function(e){
-                          df <- read.table(paste0(path, filenames[grep('SHED', filenames, ignore.case = TRUE)]),
-                                           skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
-                          colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
-                          return(df)
+                          err <- conditionMessage(e)
+                          if(startsWith("more columns than column names", err)){
+                            df <- read.table(paste0(path, filenames[grep('SHED_BARO', filenames, ignore.case = TRUE)]),
+                                             skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
+                            colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
+                            return(df)
+                          } else {stop("Could not find water level CSV for Shed BARO.")}
                         }
 
   )
