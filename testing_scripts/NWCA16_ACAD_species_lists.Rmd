@@ -1,0 +1,56 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(knitr.kable.NA = '')
+```
+
+```{r import, echo = F, include = F}
+library(tidyverse)
+library(kableExtra)
+
+filepath <- "D:/NETN/Monitoring_Projects/Freshwater_Wetland/EPA_NWCA/2016_Data/2021_release/ACAD_only/"
+
+# Import ACAD Veg data from 2016 NWCA
+acad_veg <- read.csv(paste0(filepath, "DRAFT_NWCA2016_PlantSpeciesCoverHeight_20200416_ACAD.csv")) %>%
+            select(UID, SITE_ID, Local_Name, PLOT, SPECIES, COVER, HEIGHT, NE, SW)
+head(acad_veg)
+
+acad_p1 <- acad_veg %>% filter(PLOT == 1) %>% rename(P1_COV = COVER, P1_HT = HEIGHT, P1_NE = NE, P1_SW = SW) %>% select(-PLOT)
+acad_p2 <- acad_veg %>% filter(PLOT == 2) %>% rename(P2_COV = COVER, P2_HT = HEIGHT, P2_NE = NE, P2_SW = SW) %>% select(-PLOT)
+acad_p3 <- acad_veg %>% filter(PLOT == 3) %>% rename(P3_COV = COVER, P3_HT = HEIGHT, P3_NE = NE, P3_SW = SW) %>% select(-PLOT)
+acad_p4 <- acad_veg %>% filter(PLOT == 4) %>% rename(P4_COV = COVER, P4_HT = HEIGHT, P4_NE = NE, P4_SW = SW) %>% select(-PLOT)
+acad_p5 <- acad_veg %>% filter(PLOT == 5) %>% rename(P5_COV = COVER, P5_HT = HEIGHT, P5_NE = NE, P5_SW = SW) %>% select(-PLOT)
+
+acad_veg_wide <- Reduce(function(x,y) merge(x, y, all = TRUE, by = c("UID", "SITE_ID", "Local_Name", "SPECIES")),
+                        list(acad_p1, acad_p2, acad_p3, acad_p4, acad_p5)) %>% select(-UID)
+head(acad_veg_wide)
+```
+
+```{r DUCK, echo = F, include = F}
+site_name <- "Duck Pond Peatland"
+site_code = "DUCK"
+NWCA_code <- "NWCA16-R301"
+
+# Add top header that has P1, P2, P3, etc.
+# Change col names to drop P#_
+# Make species column wider
+# Set up a tab for each site.
+
+duck_tbl <- kable(acad_veg_wide %>% filter(Local_Name == "DUCK") %>% select(-SITE_ID, -Local_Name), 
+                  format = 'html', align = 'c') %>% 
+            kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
+                          full_width = TRUE, position = 'left', font_size = 12) %>% 
+            row_spec(0, extra_css = "border-top: 1px solid #000000; border-bottom: 1px solid #000000;") %>% 
+            column_spec(c(1, 2, 6, 10, 14, 18), extra_css = "border-left: 1px solid #000000;") %>% 
+            column_spec(21, extra_css = "border-right: 1px solid #000000;")
+
+```
+
+
+```{r DUCKtbl, echo = F}
+duck_tbl
+```
+
