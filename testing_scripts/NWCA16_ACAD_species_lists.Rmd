@@ -1,5 +1,7 @@
 ---
-output: html_document
+output: 
+  html_document:
+    css: styles.css
 ---
 
 ```{r setup, include=FALSE}
@@ -13,10 +15,18 @@ library(kableExtra)
 
 filepath <- "D:/NETN/Monitoring_Projects/Freshwater_Wetland/EPA_NWCA/2016_Data/2021_release/ACAD_only/"
 
+ACAD_codes <- c("DUCK", "WMTN", "BIGH", "GILM", "LIHU", "NEMI", "GRME", "HEBR", "HODG", "FRAZ")
+ACAD_sites <- c("Duck Pond Peatland", "Western Mountain Swamp", "Big Heath", "Gilmore Meadow",
+                "Little Hunter Brook", "New Mills Meadow - NW", "Great Meadow (IAH)", "Heath Brook",
+                "Hodgdon Swamp", "Frazer Fen")
+NWCA_codes <- c("NWCA16-R301", "NWCA16-R302", "NWCA16-R303", "NWCA16-R304", "NWCA16-R305",
+                "NWCA16-R306", "NWCA16-R307", "NWCA16-R308", "NWCA16-R309", "NWCA16-R310")
+
 # Import ACAD Veg data from 2016 NWCA
 acad_veg <- read.csv(paste0(filepath, "DRAFT_NWCA2016_PlantSpeciesCoverHeight_20200416_ACAD.csv")) %>%
             select(UID, SITE_ID, Local_Name, PLOT, SPECIES, COVER, HEIGHT, NE, SW)
-head(acad_veg)
+
+acad_veg$COVER <- ifelse(acad_veg$COVER < 0.1, NA_real_, acad_veg$COVER)
 
 acad_p1 <- acad_veg %>% filter(PLOT == 1) %>% rename(P1_COV = COVER, P1_HT = HEIGHT, P1_NE = NE, P1_SW = SW) %>% select(-PLOT)
 acad_p2 <- acad_veg %>% filter(PLOT == 2) %>% rename(P2_COV = COVER, P2_HT = HEIGHT, P2_NE = NE, P2_SW = SW) %>% select(-PLOT)
@@ -26,31 +36,41 @@ acad_p5 <- acad_veg %>% filter(PLOT == 5) %>% rename(P5_COV = COVER, P5_HT = HEI
 
 acad_veg_wide <- Reduce(function(x,y) merge(x, y, all = TRUE, by = c("UID", "SITE_ID", "Local_Name", "SPECIES")),
                         list(acad_p1, acad_p2, acad_p3, acad_p4, acad_p5)) %>% select(-UID)
-head(acad_veg_wide)
-```
+acad_veg_wide$SPECIES <- paste0(substr(acad_veg_wide$SPECIES, 1, 1), 
+                           tolower(substr(acad_veg_wide$SPECIES, 2, nchar(acad_veg_wide$SPECIES))))
 
-```{r DUCK, echo = F, include = F}
-site_name <- "Duck Pond Peatland"
-site_code = "DUCK"
-NWCA_code <- "NWCA16-R301"
 
-# Add top header that has P1, P2, P3, etc.
-# Change col names to drop P#_
-# Make species column wider
-# Set up a tab for each site.
-
-duck_tbl <- kable(acad_veg_wide %>% filter(Local_Name == "DUCK") %>% select(-SITE_ID, -Local_Name), 
-                  format = 'html', align = 'c') %>% 
+make_spp_kable <- function(site){
+  kable(acad_veg_wide %>% filter(Local_Name == site) %>% select(-SITE_ID, -Local_Name), 
+                  col.names = c("Species", rep(c("% Cov.", "HT", "NE", "SW"), 5)),
+                  format = 'html', align = 'c') %>%
+            add_header_above(c("", "Plot 1" = 4, "Plot 2" = 4, "Plot 3" = 4, "Plot 4" = 4, "Plot 5" = 4),
+                             extra_css = "border-bottom: 1px solid #000000; border-right: 3px solid #ffffff") %>% 
             kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
                           full_width = TRUE, position = 'left', font_size = 12) %>% 
-            row_spec(0, extra_css = "border-top: 1px solid #000000; border-bottom: 1px solid #000000;") %>% 
+            row_spec(0, extra_css = "border-bottom: 1px solid #000000;") %>% 
             column_spec(c(1, 2, 6, 10, 14, 18), extra_css = "border-left: 1px solid #000000;") %>% 
-            column_spec(21, extra_css = "border-right: 1px solid #000000;")
+            column_spec(21, extra_css = "border-right: 1px solid #000000;") %>% 
+            row_spec(nrow(acad_veg_wide %>% filter(Local_Name == site)), 
+                        extra_css = "border-bottom: 1px solid #000000;")
+  
+}
 
 ```
 
+### EPA NWCA 2016 Species Lists {.tabset .tabset-pills}
 
-```{r DUCKtbl, echo = F}
-duck_tbl
+```{r sitetabs, results='asis'}
+for(i in seq_along(ACAD_codes)){
+  site = ACAD_codes[i]
+  site_name = ACAD_sites[i]
+  NWCA_code = NWCA_codes[i]
+  
+  cat("#### ", site, "\n")
+  cat('<h4>', site_name, ": ", NWCA_code, '</h4>', "\n")
+     
+  print(make_spp_kable(ACAD_codes[i]))
+  cat("\n")
+  }
 ```
 
