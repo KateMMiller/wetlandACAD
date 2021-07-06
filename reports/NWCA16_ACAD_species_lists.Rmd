@@ -74,3 +74,39 @@ for(i in seq_along(ACAD_codes)){
   }
 ```
 
+```{r fullspp, results = 'hide', echo = FALSE}
+cov_cols <- c("P1_COV", "P2_COV", "P3_COV", "P4_COV", "P5_COV")
+acad_veg_wide[, cov_cols][is.na(acad_veg_wide[, cov_cols])] <- 0
+acad_veg_wide[, cov_cols][acad_veg_wide[, cov_cols]>0] <- 1
+
+full_spp <- acad_veg_wide %>% select(SITE_ID, Local_Name, SPECIES, all_of(cov_cols))
+
+full_spp$Num_Plots <- rowSums(full_spp[,cov_cols])
+full_spp$SITE <- substr(full_spp$SITE_ID, 8, 11)
+
+full_spp_wide <- full_spp %>% select(SITE, SPECIES, Num_Plots) %>%
+                              arrange(SITE, SPECIES) %>% 
+                              pivot_wider(names_from = SITE, values_from = Num_Plots) %>% 
+                              arrange(SPECIES)
+
+#write.csv(full_spp_wide, "Species_list_by_site.csv", row.names = F)
+
+spp_table <- kable(full_spp_wide, format = "html", align = c('l',rep('c', 10))) %>% 
+             add_header_above(c("", "DUCK", "WMTN", "BIGH", "GILM", "LIHU", "NEMI", "GRME", "HEBR", "HODG", "FRAZ")) %>% 
+             kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
+                           full_width = FALSE, position = 'left', font_size = 12) %>% 
+             column_spec(c(1,11), extra_css = "border-right: 2px solid #000000;") %>% 
+             column_spec(1, extra_css = "border-left: 2px solid #000000;") %>% 
+             column_spec(2:10, extra_css = 'border-right: 1px solid #000000;') %>% 
+             row_spec(0, extra_css = "border-bottom: 1px solid #000000;") %>% 
+             row_spec(nrow(full_spp_wide), extra_css = "border-bottom: 1px solid #000000;")
+
+
+```
+
+#### All Sites
+
+```{r spp_table}
+spp_table
+```
+
