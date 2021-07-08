@@ -89,33 +89,20 @@ h5 {
  /*position: fixed;*/
  }
 
-#col-left-header{
-  float:left;
-  width: 68%;
-  padding: 5px 0;
+.column-left{
+  float: left;
+  width: 33%;
+  text-align: left;
 }
-
-#col-right-header{
-  float:right;
-  width: 7%;
-  padding: 5px 0;
+.column-center{
+  display: inline-block;
+  width: 33%;
+  text-align: center;
 }
-
-#col-middle-header{
-  float:right;
-  text-align:left;
-  width: 25%;
-  padding: 5px 0;
-}
-
-.column_1 {
-  float:left;
-  width:48%;
-}
-
-.column_2 {
-  float:right;
-  width:48%;
+.column-right{
+  float: right;
+  width: 33%;
+  text-align: right;
 }
 
 .header img{
