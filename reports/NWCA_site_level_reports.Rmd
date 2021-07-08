@@ -1,0 +1,115 @@
+---
+output: 
+  html_document:
+    css: styles.css
+params:
+  site: "DUCK"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(knitr.kable.NA = '')
+```
+
+```{r imports, echo = FALSE, results = 'hide', include = F}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+
+filepath <- "D:/NETN/Monitoring_Projects/Freshwater_Wetland/EPA_NWCA/2016_Data/2021_release/ACAD_only"
+filenames <- list.files(filepath)
+list.files(filepath)
+site_df <- data.frame(Local_Name = c("DUCK", "WMTN", "BIGH", "GILM", "LIHU", "NEMI", "GRME", "HEBR", "HODG", "FRAZ"),
+                      Full_Name = c("Duck Pond Peatland", "Western Mountain Swamp", "Big Heath", "Gilmore Meadow",
+                                    "Little Hunter Brook", "New Mills Meadow - NW", "Great Meadow (IAH)", "Heath Brook",
+                                    "Hodgdon Swamp", "Frazer Fen"),
+                      NWCA_codes = c("NWCA16-R301", "NWCA16-R302", "NWCA16-R303", "NWCA16-R304", "NWCA16-R305",
+                                     "NWCA16-R306", "NWCA16-R307", "NWCA16-R308", "NWCA16-R309", "NWCA16-R310"))
+
+# Import NWCA data and drop columns with all NA
+import_csv <- function(filename){
+  df <- read.csv(paste0(filepath, "/", filename))
+  df <- df[,colSums(is.na(df)) < nrow(df)]
+  return(df)
+}
+
+prep_data <- function(df, site){
+  df <- df %>% filter(Local_Name == site)
+  df <- df[,colSums(is.na(df)) < nrow(df)]
+  df_long <- t(df)[-c(1:2),]
+  return(df_long)
+}
+
+# Site characterization data
+AAchar <- import_csv(filenames[1])[, c("SITE_ID", "Local_Name" ,"VALXSITE", "AA_AREA", "AA_CENTER",
+                                       "AA_LAT", "AA_LON", "AA_LAYOUT", "AA_POINT",
+                                       "HGM_CLASS", "DEPRESSION", "FLATS", "RIVERINE", "SLOPE")]
+
+
+AAhydro_source <- import_csv(filenames[2])[, c("SITE_ID", "Local_Name", "OUTFLOWS", "INFLOW_PRESENT", "PRECIP_PRESENT",
+                                               "GRDWATER_PRESENT", "INFLOW_RANK", "PRECIP_RANK", "GRDWATER_RANK")]
+
+AAhydro_ind <- import_csv(filenames[4]) %>% select(-UID, -(PUBLICATION_DATE:DATE_COL))
+
+waterchar <- import_csv(filenames[19])
+
+```
+
+```{r kable_tables, echo = F, include = F, results = 'hide'}
+AAchar_kbl <- kable(prep_data(AAchar, params$site), 
+                    col.names = c("AA Characterization"), format = "html", align = 'c') %>% 
+              kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
+                            full_width = FALSE, position = 'left', font_size = 12) %>% 
+              column_spec(1, extra_css = "border-left: 1px solid #000000;") %>% 
+              column_spec(2, extra_css = 'border-right: 1px solid #000000;') %>% 
+              column_spec(1, extra_css = 'border-right: 1px solid #CACACA;') %>% 
+              row_spec(1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+              row_spec(length(prep_data(AAchar, params$site)), extra_css = 'border-bottom: 1px solid #000000;') %>% 
+              row_spec(1:(length(prep_data(AAchar, params$site))-1), extra_css = "border-bottom: 0.5px solid #CACACA;")
+
+AAhydrosrc_kbl <- kable(prep_data(AAhydro_source, params$site),
+                        col.names = c("AA Hydro Sources"), format = "html", align = 'c') %>% 
+                  kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
+                                full_width = FALSE, position = 'left', font_size = 12) %>% 
+                column_spec(1, extra_css = "border-left: 1px solid #000000;") %>% 
+                column_spec(2, extra_css = 'border-right: 1px solid #000000;') %>% 
+                column_spec(1, extra_css = 'border-right: 1px solid #CACACA;') %>% 
+                row_spec(1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                row_spec(length(prep_data(AAhydro_source, params$site)), 
+                         extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                row_spec(1:(length(prep_data(AAhydro_source, params$site))-1), 
+                         extra_css = "border-bottom: 0.5px solid #CACACA;")
+
+AAhydroind_kbl <- kable(prep_data(AAhydro_ind, params$site),
+                        col.names = c("AA Hydro Indicators"), format = "html", align = 'c') %>% 
+                  kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
+                                full_width = FALSE, position = 'left', font_size = 12) %>% 
+                column_spec(1, extra_css = "border-left: 1px solid #000000;") %>% 
+                column_spec(2, extra_css = 'border-right: 1px solid #000000;') %>% 
+                column_spec(1, extra_css = 'border-right: 1px solid #CACACA;') %>% 
+                row_spec(1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                row_spec(length(prep_data(AAhydro_ind, params$site)), 
+                         extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                row_spec(1:(length(prep_data(AAhydro_ind, params$site))-1), 
+                         extra_css = "border-bottom: 0.5px solid #CACACA;")
+
+```
+
+### EPA NWCA 2016 Data Summary for: 
+#### `r paste(site_df$NWCA_codes[site_df$Local_Name == params$site], site_df$Full_Name[site_df$Local_Name == params$site], sep = ": ")`
+
+<div class = "column-left">
+```{r AAchar, echo = F}
+AAchar_kbl
+```
+</div>
+<div class = "column-center">
+```{r AAhydsrc, echo = F}
+AAhydrosrc_kbl
+```
+</div>
+<div class = "column-right">
+```{r AAhydind, echo = F} 
+AAhydroind_kbl
+```
+</div>
