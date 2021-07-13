@@ -52,8 +52,21 @@ make_long <- function(df, data_type){
   
 }
 
-drop_na <- function(x){ifelse(is.na(x), "", paste0(x, ", "))}
 
+make_long_buff <- function(df, data_type){
+  col_names <- names(df %>% select(-SITE_ID, -Local_Name, -Plot))
+  df_long <- df %>% mutate_at(all_of(col_names), as.character) %>% 
+                    pivot_longer(cols = all_of(col_names),
+                                 names_to = "Metric", 
+                                 values_to = "Value",
+                                 values_drop_na = TRUE) %>% 
+                    select(SITE_ID, Local_Name, Plot, Metric, Value)
+  return(df_long)
+  
+}
+
+drop_na <- function(x){ifelse(is.na(x), "", paste0(x, ", "))}
+drop_na2 <- function(x){ifelse(is.na(x), "", paste0(x))}
 # Site characterization data
 AAchar <- import_csv(filenames[1])[, c("SITE_ID", "Local_Name" ,"AA_AREA", "AA_CENTER",
                                        "AA_LAT", "AA_LON", "AA_LAYOUT", "AA_POINT",
@@ -87,7 +100,18 @@ waterchar <- waterchar %>% mutate(surf_water = ifelse(WATER_PRESENCE == "Y", "Sa
                           rename(Sample_Info = surf_water,
                                  Max_Depth_cm = SW_DEPTH_MAX,
                                  Pct_Cov_AA = SW_COVERAGE)
-                     
+
+
+buffer_stress <- import_csv(filenames[6]) %>% select(SITE_ID, Local_Name, LOCATION, PLOT, RES_ROAD, RES_ROAD_COMMENT,
+                                                     HAB_SELECTIVE_CUT, HAB_SELECTIVE_CUT_COMMENT, DATA_NOTES) %>% 
+                                              mutate(Plot = substr(paste0(drop_na2(LOCATION), drop_na2(PLOT)),1,2)) %>% 
+                                              select(-LOCATION, -PLOT, SITE_ID, Local_Name, 
+                                                     Plot, RES_ROAD:HAB_SELECTIVE_CUT_COMMENT) 
+
+buffer_long <- make_long_buff(buffer_stress) %>% 
+               mutate(Metric = ifelse(Metric == "DATA_NOTES", paste0("NONE"), Metric),
+                      Plot = ifelse(Plot == "", "NA", Plot)) %>% 
+               filter(Local_Name == params$site) %>% select(-SITE_ID, -Local_Name, -Value)
 
 ```
 
@@ -122,6 +146,14 @@ waterchar_kbl <- if(water_site$Sample_Info == "Sampled"){
                     column_spec(1:2, extra_css = "border-left: 1px solid #000000; border-right: 1px solid #000000;") 
 } else {noquote("Surface water not sampled.")}
 
+buffer_kbl <- kable(buffer_long, format = "html", align = "c", caption = "<h4>Buffer Stressors</h4>",
+                    col.names = c("Plot", "Metric")) %>% 
+              kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
+                            full_width = FALSE, position = 'right', font_size = 12) %>% 
+              row_spec(0:nrow(water_long), extra_css = 'border-bottom: 1px solid #000000;') %>% 
+              column_spec(1:2, extra_css = "border-left: 1px solid #000000; border-right: 1px solid #000000;") 
+        
+
 ```
 
 ### EPA NWCA 2016 Data Summary for: `r paste(site_df$NWCA_codes[site_df$Local_Name == params$site], site_df$Full_Name[site_df$Local_Name == params$site], sep = ": ")`
@@ -136,6 +168,8 @@ AAchar_kbl
 <div class="column-right">
 ```{r watersamp, echo = F}
 waterchar_kbl
+
+buffer_kbl
 ```
 </div>
 </div>
