@@ -34,82 +34,108 @@ import_csv <- function(filename){
 }
 
 prep_data <- function(df, site){
-  df <- df %>% filter(Local_Name == site)
+  df <- df %>% filter(Local_Name == site) %>% select(-SITE_ID, -Local_Name)
   df <- df[,colSums(is.na(df)) < nrow(df)]
-  df_long <- t(df)[-c(1:2),]
-  return(df_long)
+  return(df)
 }
 
+make_long <- function(df, data_type){
+  col_names <- names(df %>% select(-SITE_ID, -Local_Name))
+  df_long <- df %>% mutate_at(all_of(col_names), as.character) %>% 
+                    pivot_longer(cols = all_of(col_names),
+                                 names_to = "Metric", 
+                                 values_to = "Value",
+                                 values_drop_na = TRUE) %>% 
+                    mutate(Type = data_type) %>% 
+                    select(SITE_ID, Local_Name, Type, Metric, Value)
+  return(df_long)
+  
+}
+
+drop_na <- function(x){ifelse(is.na(x), "", paste0(x, ", "))}
+
 # Site characterization data
-AAchar <- import_csv(filenames[1])[, c("SITE_ID", "Local_Name" ,"VALXSITE", "AA_AREA", "AA_CENTER",
+AAchar <- import_csv(filenames[1])[, c("SITE_ID", "Local_Name" ,"AA_AREA", "AA_CENTER",
                                        "AA_LAT", "AA_LON", "AA_LAYOUT", "AA_POINT",
                                        "HGM_CLASS", "DEPRESSION", "FLATS", "RIVERINE", "SLOPE")]
-
 
 AAhydro_source <- import_csv(filenames[2])[, c("SITE_ID", "Local_Name", "OUTFLOWS", "INFLOW_PRESENT", "PRECIP_PRESENT",
                                                "GRDWATER_PRESENT", "INFLOW_RANK", "PRECIP_RANK", "GRDWATER_RANK")]
 
-AAhydro_ind <- import_csv(filenames[4]) %>% select(-UID, -(PUBLICATION_DATE:DATE_COL))
+AAhydro_ind <- import_csv(filenames[4]) %>% select(-UID, -(PUBLICATION_DATE:DATE_COL), -VALXSITE)
 
-waterchar <- import_csv(filenames[19])
+
+waterchar <- import_csv(filenames[19]) %>% select("SITE_ID", "Local_Name", "WATER_PRESENCE", "WATER_TYPE", 
+                                                  "SW_DEPTH_MAX", "SW_GREATER_1M", "SW_COVERAGE", "COLOR_BROWN",
+                                                  "CLARITY_CLEAR", "CLARITY_STAINED", "VEG_PRESENT", "SUB_MUCK",
+                                                  "SUB_ORGANIC", "SMELL_NONE", "SURFACE_FLOC", "SURFACE_SHEEN", 
+                                                  "SURFACE_VEGETATION")
+
+AAchar_long <- rbind(make_long(AAchar, "AA Characterization"),
+                     make_long(AAhydro_source, "AA Water Sources"),
+                     make_long(AAhydro_ind, "AA Hydrology Indicators"))
+
+waterchar <- waterchar %>% mutate(surf_water = ifelse(WATER_PRESENCE == "Y", "Sampled", "Not Sampled"),
+                                  veg_present = ifelse(VEG_PRESENT == "Y", "VEG PRESENT", NA),
+                                  surf_veg = ifelse(SURFACE_VEGETATION == "VEGETATION", "ROOTED VEGETATION", NA),
+                                  Water_Type = tolower(WATER_TYPE),
+                                  water_char = paste0(drop_na(COLOR_BROWN), drop_na(CLARITY_CLEAR), drop_na(CLARITY_STAINED), 
+                                                     drop_na(SUB_MUCK), drop_na(SUB_ORGANIC), drop_na(SURFACE_FLOC), 
+                                                     drop_na(SURFACE_SHEEN), drop_na(veg_present), drop_na(surf_veg)),
+                                  Characteristics = substr(water_char, 1, nchar(water_char) - 2)) %>% 
+                          select(SITE_ID, Local_Name, surf_water, Water_Type, SW_DEPTH_MAX, SW_COVERAGE, Characteristics) %>% 
+                          rename(Sample_Info = surf_water,
+                                 Max_Depth_cm = SW_DEPTH_MAX,
+                                 Pct_Cov_AA = SW_COVERAGE)
+                     
 
 ```
 
 ```{r kable_tables, echo = F, include = F, results = 'hide'}
-AAchar_kbl <- kable(prep_data(AAchar, params$site), 
-                    col.names = c("AA Characterization"), format = "html", align = 'c') %>% 
+AAsite <- prep_data(AAchar_long, params$site)
+
+row_changes_AA <- sapply(1:nrow(AAsite), function(x){
+  check = ifelse(AAsite$Type[x] != AAsite$Type[x + 1], x, NA)
+  }) %>% data.frame() %>% na.omit(.) 
+
+AAchar_kbl <- kable(AAsite, caption = "<h4>AA Characterization</h4>",
+                    col.names = c("Data Type", "Metric", "Value"),
+                    format = "html", align = 'c') %>% 
               kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
-                            full_width = FALSE, position = 'left', font_size = 12) %>% 
-              column_spec(1, extra_css = "border-left: 1px solid #000000;") %>% 
-              column_spec(2, extra_css = 'border-right: 1px solid #000000;') %>% 
-              column_spec(1, extra_css = 'border-right: 1px solid #CACACA;') %>% 
-              row_spec(1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
-              row_spec(length(prep_data(AAchar, params$site)), extra_css = 'border-bottom: 1px solid #000000;') %>% 
-              row_spec(1:(length(prep_data(AAchar, params$site))-1), extra_css = "border-bottom: 0.5px solid #CACACA;")
+                            full_width = FALSE, position = 'left', font_size = 12) %>%
+              column_spec(1:3, extra_css = "border-left: 1px solid #000000; border-right: 1px solid #000000;") %>% 
+              collapse_rows(1, valign = 'top') %>% 
+              row_spec(2:(nrow(AAsite)-1), extra_css = "border-bottom: 0.5px solid #CACACA;") %>% 
+              row_spec(row_changes_AA[,1], extra_css = "border-bottom: 1px solid #000000;") %>% 
+              row_spec(0, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+              row_spec(nrow(AAsite), extra_css = 'border-bottom: 1px solid #000000;', hline_after = T) 
 
-AAhydrosrc_kbl <- kable(prep_data(AAhydro_source, params$site),
-                        col.names = c("AA Hydro Sources"), format = "html", align = 'c') %>% 
-                  kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
-                                full_width = FALSE, position = 'left', font_size = 12) %>% 
-                column_spec(1, extra_css = "border-left: 1px solid #000000;") %>% 
-                column_spec(2, extra_css = 'border-right: 1px solid #000000;') %>% 
-                column_spec(1, extra_css = 'border-right: 1px solid #CACACA;') %>% 
-                row_spec(1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
-                row_spec(length(prep_data(AAhydro_source, params$site)), 
-                         extra_css = 'border-bottom: 1px solid #000000;') %>% 
-                row_spec(1:(length(prep_data(AAhydro_source, params$site))-1), 
-                         extra_css = "border-bottom: 0.5px solid #CACACA;")
+water_site <- waterchar %>% filter(Local_Name == params$site)
 
-AAhydroind_kbl <- kable(prep_data(AAhydro_ind, params$site),
-                        col.names = c("AA Hydro Indicators"), format = "html", align = 'c') %>% 
-                  kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
-                                full_width = FALSE, position = 'left', font_size = 12) %>% 
-                column_spec(1, extra_css = "border-left: 1px solid #000000;") %>% 
-                column_spec(2, extra_css = 'border-right: 1px solid #000000;') %>% 
-                column_spec(1, extra_css = 'border-right: 1px solid #CACACA;') %>% 
-                row_spec(1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
-                row_spec(length(prep_data(AAhydro_ind, params$site)), 
-                         extra_css = 'border-bottom: 1px solid #000000;') %>% 
-                row_spec(1:(length(prep_data(AAhydro_ind, params$site))-1), 
-                         extra_css = "border-bottom: 0.5px solid #CACACA;")
+waterchar_kbl <- if(water_site$Sample_Info == "Sampled"){
+                    water_long <- make_long(water_site, "Water Sample Info") %>% select(-SITE_ID, -Local_Name, -Type)
+                    kable(water_long, format = 'html', align = 'c', caption = "<h4>Water Sample Info</h4>",
+                          col.names = c("Metric", "Value")) %>% 
+                    kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
+                                  full_width = FALSE, position = 'right', font_size = 12) %>% 
+                    row_spec(0:nrow(water_long), extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                    column_spec(1:2, extra_css = "border-left: 1px solid #000000; border-right: 1px solid #000000;") 
+} else {noquote("Surface water not sampled.")}
 
 ```
 
-### EPA NWCA 2016 Data Summary for: 
-#### `r paste(site_df$NWCA_codes[site_df$Local_Name == params$site], site_df$Full_Name[site_df$Local_Name == params$site], sep = ": ")`
+### EPA NWCA 2016 Data Summary for: `r paste(site_df$NWCA_codes[site_df$Local_Name == params$site], site_df$Full_Name[site_df$Local_Name == params$site], sep = ": ")`
 
-<div class = "column-left">
+<div style="display:grid; grid-template-columns: 50% 50%; grid-row-gap: 20px; align-self:start">
+<div class="column-left">
 ```{r AAchar, echo = F}
 AAchar_kbl
 ```
 </div>
-<div class = "column-center">
-```{r AAhydsrc, echo = F}
-AAhydrosrc_kbl
+
+<div class="column-right">
+```{r watersamp, echo = F}
+waterchar_kbl
 ```
 </div>
-<div class = "column-right">
-```{r AAhydind, echo = F} 
-AAhydroind_kbl
-```
 </div>

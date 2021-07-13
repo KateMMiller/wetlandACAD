@@ -89,21 +89,6 @@ h5 {
  /*position: fixed;*/
  }
 
-.column-left{
-  float: left;
-  width: 33%;
-  text-align: left;
-}
-.column-center{
-  display: inline-block;
-  width: 33%;
-  text-align: center;
-}
-.column-right{
-  float: right;
-  width: 33%;
-  text-align: right;
-}
 
 .header img{
   display: inline-block;
@@ -120,6 +105,23 @@ h5 {
   margin:4px 5px;
   font-family: "Arial",Arial,sans-serif;
 }
+
+.cols2 {
+  column-count:2;
+}
+
+.column-left{
+  float: left;
+  width: 50%;
+  text-align: left;
+}
+
+.column-right{
+  display: inline-block;
+  width: 50%;
+  text-align: right;
+}
+
 
 table thead{
   border-bottom: 1px solid #00000;
