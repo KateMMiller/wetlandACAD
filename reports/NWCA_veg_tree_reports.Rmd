@@ -3,7 +3,7 @@ output:
   html_document:
     css: styles.css
 params:
-  site: "GILM"
+  site: "WMTN"
 ---
 
 ```{r setup, include = FALSE}
