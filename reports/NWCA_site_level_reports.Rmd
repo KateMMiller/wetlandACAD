@@ -67,6 +67,8 @@ make_long_buff <- function(df, data_type){
 
 drop_na <- function(x){ifelse(is.na(x), "", paste0(x, ", "))}
 drop_na2 <- function(x){ifelse(is.na(x), "", paste0(x))}
+drop_na_col <- function(x){ifelse(is.na(x), "", paste0(x, ": "))}
+
 # Site characterization data
 AAchar <- import_csv(filenames[1])[, c("SITE_ID", "Local_Name" ,"AA_AREA", "AA_CENTER",
                                        "AA_LAT", "AA_LON", "AA_LAYOUT", "AA_POINT",
@@ -88,15 +90,14 @@ AAchar_long <- rbind(make_long(AAchar, "AA Characterization"),
                      make_long(AAhydro_source, "AA Water Sources"),
                      make_long(AAhydro_ind, "AA Hydrology Indicators"))
 
-waterchar <- waterchar %>% mutate(surf_water = ifelse(WATER_PRESENCE == "Y", "Sampled", "Not Sampled"),
+waterchar <- waterchar %>% mutate(surf_water = ifelse(WATER_PRESENCE == "Y", "SAMPLED", "NOT SAMPLED"),
                                   veg_present = ifelse(VEG_PRESENT == "Y", "VEG PRESENT", NA),
                                   surf_veg = ifelse(SURFACE_VEGETATION == "VEGETATION", "ROOTED VEGETATION", NA),
-                                  Water_Type = tolower(WATER_TYPE),
                                   water_char = paste0(drop_na(COLOR_BROWN), drop_na(CLARITY_CLEAR), drop_na(CLARITY_STAINED), 
                                                      drop_na(SUB_MUCK), drop_na(SUB_ORGANIC), drop_na(SURFACE_FLOC), 
                                                      drop_na(SURFACE_SHEEN), drop_na(veg_present), drop_na(surf_veg)),
                                   Characteristics = substr(water_char, 1, nchar(water_char) - 2)) %>% 
-                          select(SITE_ID, Local_Name, surf_water, Water_Type, SW_DEPTH_MAX, SW_COVERAGE, Characteristics) %>% 
+                          select(SITE_ID, Local_Name, surf_water, WATER_TYPE, SW_DEPTH_MAX, SW_COVERAGE, Characteristics) %>% 
                           rename(Sample_Info = surf_water,
                                  Max_Depth_cm = SW_DEPTH_MAX,
                                  Pct_Cov_AA = SW_COVERAGE)
@@ -112,6 +113,16 @@ buffer_long <- make_long_buff(buffer_stress) %>%
                mutate(Metric = ifelse(Metric == "DATA_NOTES", paste0("NONE"), Metric),
                       Plot = ifelse(Plot == "", "NA", Plot)) %>% 
                filter(Local_Name == params$site) %>% select(-SITE_ID, -Local_Name, -Value)
+
+vegplot_layout <- import_csv(filenames[7]) %>% select(SITE_ID, Local_Name, OBSTACLE, OBSTACLE_DEEP) %>% 
+                                               mutate(veg_layout = ifelse(is.na(OBSTACLE), "STANDARD", 
+                                                                          paste0(drop_na_col(OBSTACLE), 
+                                                                                 drop_na2(OBSTACLE_DEEP)))) %>% 
+                                               select(SITE_ID, Local_Name, veg_layout)
+
+ground_char <- import_csv(filenames[8]) # 1 row per veg plot/site
+head(ground_char)
+
 
 ```
 
@@ -136,12 +147,12 @@ AAchar_kbl <- kable(AAsite, caption = "<h4>AA Characterization</h4>",
 
 water_site <- waterchar %>% filter(Local_Name == params$site)
 
-waterchar_kbl <- if(water_site$Sample_Info == "Sampled"){
+waterchar_kbl <- if(water_site$Sample_Info == "SAMPLED"){
                     water_long <- make_long(water_site, "Water Sample Info") %>% select(-SITE_ID, -Local_Name, -Type)
                     kable(water_long, format = 'html', align = 'c', caption = "<h4>Water Sample Info</h4>",
                           col.names = c("Metric", "Value")) %>% 
                     kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
-                                  full_width = FALSE, position = 'right', font_size = 12) %>% 
+                                  full_width = TRUE, position = 'right', font_size = 12) %>% 
                     row_spec(0:nrow(water_long), extra_css = 'border-bottom: 1px solid #000000;') %>% 
                     column_spec(1:2, extra_css = "border-left: 1px solid #000000; border-right: 1px solid #000000;") 
 } else {noquote("Surface water not sampled.")}
@@ -149,20 +160,28 @@ waterchar_kbl <- if(water_site$Sample_Info == "Sampled"){
 buffer_kbl <- kable(buffer_long, format = "html", align = "c", caption = "<h4>Buffer Stressors</h4>",
                     col.names = c("Plot", "Metric")) %>% 
               kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
-                            full_width = FALSE, position = 'right', font_size = 12) %>% 
+                            full_width = TRUE, position = 'right', font_size = 12) %>% 
               row_spec(0:nrow(water_long), extra_css = 'border-bottom: 1px solid #000000;') %>% 
               column_spec(1:2, extra_css = "border-left: 1px solid #000000; border-right: 1px solid #000000;") 
         
-
+veglayout_kbl <- kable(prep_data(vegplot_layout, params$site), format = 'html', align = 'c',
+                       caption = "<h4>Vegetation Plot Layout</h4>", col.names = "") %>% 
+                 kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
+                               full_width = TRUE, position = 'right', font_size = 12) %>% 
+                 row_spec(0:1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                 column_spec(1, extra_css = "border-left: 1px solid #000000; border-right: 1px solid #000000;") 
 ```
 
-### EPA NWCA 2016 Data Summary for: `r paste(site_df$NWCA_codes[site_df$Local_Name == params$site], site_df$Full_Name[site_df$Local_Name == params$site], sep = ": ")`
+### EPA NWCA 2016 Site Data for: `r paste(site_df$NWCA_codes[site_df$Local_Name == params$site], site_df$Full_Name[site_df$Local_Name == params$site], sep = ": ")`
 
-<div style="display:grid; grid-template-columns: 50% 50%; grid-row-gap: 20px; align-self:start">
+<div style="display:grid; grid-template-columns: 45% 15% 45%; grid-row-gap: 0px; align-self:start">
 <div class="column-left">
 ```{r AAchar, echo = F}
 AAchar_kbl
 ```
+</div>
+
+<div class="column-center">
 </div>
 
 <div class="column-right">
@@ -170,6 +189,8 @@ AAchar_kbl
 waterchar_kbl
 
 buffer_kbl
+
+veglayout_kbl
 ```
 </div>
 </div>

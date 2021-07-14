@@ -112,13 +112,19 @@ h5 {
 
 .column-left{
   float: left;
-  width: 50%;
+  width: 45%;
+  text-align: left;
+}
+
+.column-center{
+  display:inline-block;
+  width:10%;
   text-align: left;
 }
 
 .column-right{
   display: inline-block;
-  width: 50%;
+  width: 45%;
   text-align: right;
 }
 

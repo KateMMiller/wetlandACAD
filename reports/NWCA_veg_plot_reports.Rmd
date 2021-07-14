@@ -1,0 +1,130 @@
+---
+output: 
+  html_document:
+    css: styles.css
+params:
+  site: "DUCK"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(knitr.kable.NA = '')
+```
+
+```{r imports, echo = FALSE, results = 'hide', include = F}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+
+filepath <- "D:/NETN/Monitoring_Projects/Freshwater_Wetland/EPA_NWCA/2016_Data/2021_release/ACAD_only"
+filenames <- list.files(filepath)
+list.files(filepath)
+site_df <- data.frame(Local_Name = c("DUCK", "WMTN", "BIGH", "GILM", "LIHU", "NEMI", "GRME", "HEBR", "HODG", "FRAZ"),
+                      Full_Name = c("Duck Pond Peatland", "Western Mountain Swamp", "Big Heath", "Gilmore Meadow",
+                                    "Little Hunter Brook", "New Mills Meadow - NW", "Great Meadow (IAH)", "Heath Brook",
+                                    "Hodgdon Swamp", "Frazer Fen"),
+                      NWCA_codes = c("NWCA16-R301", "NWCA16-R302", "NWCA16-R303", "NWCA16-R304", "NWCA16-R305",
+                                     "NWCA16-R306", "NWCA16-R307", "NWCA16-R308", "NWCA16-R309", "NWCA16-R310"))
+
+# Import NWCA data and drop columns with all NA
+import_csv <- function(filename){
+  df <- read.csv(paste0(filepath, "/", filename))
+  df <- df[,colSums(is.na(df)) < nrow(df)]
+  return(df)
+}
+
+prep_data <- function(df, site){
+  df <- df %>% filter(Local_Name == site) %>% select(-SITE_ID, -Local_Name)
+  df <- df[,colSums(is.na(df)) < nrow(df)]
+  return(df)
+}
+
+make_long_veg <- function(df, data_type){
+  col_names <- names(df %>% select(-SITE_ID, -Local_Name, -PLOT))
+  df_long <- df %>% mutate_at(all_of(col_names), as.character) %>% 
+                    pivot_longer(cols = all_of(col_names),
+                                 names_to = "Metric", 
+                                 values_to = "Value",
+                                 values_drop_na = TRUE) %>% 
+                    mutate(Type = data_type) %>% 
+                    select(SITE_ID, Local_Name, PLOT, Type, Metric, Value)
+  return(df_long)
+  
+}
+
+drop_na <- function(x){ifelse(is.na(x), "", paste0(x, ", "))}
+drop_na2 <- function(x){ifelse(is.na(x), "", paste0(x))}
+drop_na_col <- function(x){ifelse(is.na(x), "", paste0(x, ": "))}
+
+# Vegplot data
+ground_char <- import_csv(filenames[8]) %>% select(SITE_ID, Local_Name, PLOT, TOTAL_WATER, 
+                                                   PREDOMINANT_DEPTH, EXPOSED_SOIL, EXPOSED_GRAVEL,
+                                                   EXPOSED_ROCK, TOTAL_LITTER, PREDOMINANT_LITTER,
+                                                   DEPTH_SW, DEPTH_NE, WD_COARSE, WD_FINE)
+
+strata_cov <- import_csv(filenames[18]) %>% select(SITE_ID, Local_Name, PLOT, WETLAND_TYPE,
+                                                   SUBMERGED_AQ, FLOATING_AQ, LIANAS, VTALL_VEG,
+                                                   TALL_VEG, HMED_VEG, MED_VEG, SMALL_VEG, VSMALL_VEG, 
+                                                   BRYOPHYTES, PEAT_MOSS, LICHENS, ARBOREAL_ABUNDANCE, ALGAE,
+                                                   MACROALGAE)
+
+vegchar_long <- rbind(make_long_veg(ground_char, "Ground Surface Attributes"),
+                      make_long_veg(strata_cov, "Vegetation Types"))
+ 
+vegchar_order <- data.frame(Metric = c("WETLAND_TYPE", "SUBMERGED_AQ", "FLOATING_AQ", "LIANAS", "VTALL_VEG",
+                                       "TALL_VEG", "HMED_VEG", "MED_VEG", "SMALL_VEG", "VSMALL_VEG",
+                                       "BRYOPHYTES", "PEAT_MOSS", "LICHENS", "ARBOREAL_ABUNDANCE",
+                                       "ALGAE", "MACROALGAE", 
+                                       "TOTAL_WATER", "PREDOMINANT_DEPTH", "EXPOSED_SOIL", "EXPOSED_GRAVEL",
+                                       "EXPOSED_ROCK", "TOTAL_LITTER", "PREDOMINANT_LITTER", 
+                                       "DEPTH_SW", "DEPTH_NE", "WD_COARSE", "WD_FINE"),
+                            Metric_Name = c("Wetland_Type", "Pct_Submerged_Aquatic", "Pct_Floating_Aquatic",
+                                            "Pct_Lianas", "Pct_Veg_over30m", "Pct_Veg_15_30m", "Pct_Veg_5_15m",
+                                            "Pct_Veg_2_5m", "Pct_Veg_0.5_2m", "Pct_Veg_0_0.5m", "Pct_Bryophytes",
+                                            "Peat_Dominant_Bryophyte", "Pct_Lichens", "Arboreal_Lichen_Abundance",
+                                            "Pct_Filamentous_Algae", "Pct_Macroalgae", 
+                                            "Pct_Water", "Pred_Water_Depth", "Pct_Exposed_Soil", "Pct_Exposed_Gravel",
+                                            "Pct_Exposed_Rock_over25cm", "Pct_Litter", "Pred_Litter_Type",
+                                            "Litter_Depth_SW", "Litter_Depth_NE", "Pct_CWD", "Pct_FWD"), 
+                            order = 1:27)
+
+vegchar_long2 <- left_join(vegchar_order, vegchar_long, by = "Metric") %>% 
+                 arrange(SITE_ID, PLOT, order) %>% 
+                 select(SITE_ID, Local_Name, PLOT, Type, Metric_Name, Value, order)
+vegchar_wide <- vegchar_long2 %>% pivot_wider(names_from = PLOT, 
+                                              values_from = Value, 
+                                              names_prefix = "PLOT_")
+
+```
+
+```{r kable_tables, echo = F, include = F, results = 'hide'}
+vegchar_site <- prep_data(vegchar_wide, params$site)
+
+row_changes_vegchar <- sapply(1:nrow(vegchar_site), function(x){
+  check = ifelse(vegchar_site$Type[x] != vegchar_site$Type[x + 1], x, NA)
+  }) %>% data.frame() %>% na.omit(.) 
+
+vegchar_kbl <- kable(vegchar_site %>% arrange(order) %>% select(-order), 
+                     caption = "<h4>Vegetation Characterization</h4>",
+                     col.names = c("Data Type", "Metric", "Plot 1", "Plot 2", "Plot 3", "Plot 4", "Plot 5"),
+                     format = "html", align = 'c') %>% 
+               kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
+                             full_width = FALSE, position = 'left', font_size = 12) %>%
+               column_spec(1:3, extra_css = "border-left: 1px solid #000000;") %>% 
+               column_spec(3:6, extra_css = "border-right: 1px solid #CACACA;") %>%
+               column_spec(7, extra_css = "border-right: 1px solid #000000;") %>% 
+               collapse_rows(1, valign = 'top') %>% 
+               row_spec(2:(nrow(vegchar_site)-1), extra_css = "border-bottom: 0.5px solid #CACACA;") %>% 
+               row_spec(row_changes_vegchar[,1], extra_css = "border-bottom: 1px solid #000000;") %>% 
+               row_spec(0, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+               row_spec(nrow(vegchar_site), extra_css = 'border-bottom: 1px solid #000000;', hline_after = T) 
+
+
+```
+
+### EPA NWCA 2016 Veg Plot Data for: `r paste(site_df$NWCA_codes[site_df$Local_Name == params$site], site_df$Full_Name[site_df$Local_Name == params$site], sep = ": ")`
+
+```{r vegchar}
+vegchar_kbl
+```
+

@@ -55,6 +55,7 @@ buff_stress <- import_csv(filenames[6]) # Row for each plot with a stressor, inc
 # Need to reshape
 
 # Vegetation Plot Data
+vegplot_layout <- import_csv(filenames[7]) # Floras and veg plot layout. 1 row/site;
 ground_char <- import_csv(filenames[8]) # 1 row per veg plot/site
 vegcov <- import_csv(filenames[10]) # Already analyzed with NWCA16_ACAD_species_lists.RMD
 trees <- import_csv(filenames[16]) # funky design with dead and live trees included. Need to reshape/summarize
