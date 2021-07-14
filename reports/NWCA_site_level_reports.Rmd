@@ -3,7 +3,7 @@ output:
   html_document:
     css: styles.css
 params:
-  site: "DUCK"
+  site: "FRAZ"
 ---
 
 ```{r setup, include = FALSE}
@@ -120,9 +120,6 @@ vegplot_layout <- import_csv(filenames[7]) %>% select(SITE_ID, Local_Name, OBSTA
                                                                                  drop_na2(OBSTACLE_DEEP)))) %>% 
                                                select(SITE_ID, Local_Name, veg_layout)
 
-ground_char <- import_csv(filenames[8]) # 1 row per veg plot/site
-head(ground_char)
-
 
 ```
 
@@ -155,13 +152,19 @@ waterchar_kbl <- if(water_site$Sample_Info == "SAMPLED"){
                                   full_width = TRUE, position = 'right', font_size = 12) %>% 
                     row_spec(0:nrow(water_long), extra_css = 'border-bottom: 1px solid #000000;') %>% 
                     column_spec(1:2, extra_css = "border-left: 1px solid #000000; border-right: 1px solid #000000;") 
-} else {noquote("Surface water not sampled.")}
+} else {            water_long <- make_long(water_site, "Water Sample Info") %>% select(Value) %>% slice(1)
+                    kable(water_long, format = 'html', align = 'c', caption = "<h4>Water Sample Info</h4>",
+                          col.names = c("")) %>% 
+                    kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
+                                  full_width = TRUE, position = 'right', font_size = 12) %>% 
+                    row_spec(0:1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                    column_spec(1, border_left = T, border_right = T)}
 
 buffer_kbl <- kable(buffer_long, format = "html", align = "c", caption = "<h4>Buffer Stressors</h4>",
                     col.names = c("Plot", "Metric")) %>% 
               kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
                             full_width = TRUE, position = 'right', font_size = 12) %>% 
-              row_spec(0:nrow(water_long), extra_css = 'border-bottom: 1px solid #000000;') %>% 
+              row_spec(0:nrow(buffer_long), extra_css = 'border-bottom: 1px solid #000000;') %>% 
               column_spec(1:2, extra_css = "border-left: 1px solid #000000; border-right: 1px solid #000000;") 
         
 veglayout_kbl <- kable(prep_data(vegplot_layout, params$site), format = 'html', align = 'c',
