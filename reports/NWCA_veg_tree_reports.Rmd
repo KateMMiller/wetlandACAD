@@ -1,0 +1,198 @@
+---
+output: 
+  html_document:
+    css: styles.css
+params:
+  site: "GILM"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(knitr.kable.NA = '')
+```
+
+```{r imports, echo = FALSE, results = 'hide', include = F}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+
+filepath <- "D:/NETN/Monitoring_Projects/Freshwater_Wetland/EPA_NWCA/2016_Data/2021_release/ACAD_only"
+filenames <- list.files(filepath)
+list.files(filepath)
+site_df <- data.frame(Local_Name = c("DUCK", "WMTN", "BIGH", "GILM", "LIHU", "NEMI", "GRME", "HEBR", "HODG", "FRAZ"),
+                      Full_Name = c("Duck Pond Peatland", "Western Mountain Swamp", "Big Heath", "Gilmore Meadow",
+                                    "Little Hunter Brook", "New Mills Meadow - NW", "Great Meadow (IAH)", "Heath Brook",
+                                    "Hodgdon Swamp", "Frazer Fen"),
+                      NWCA_codes = c("NWCA16-R301", "NWCA16-R302", "NWCA16-R303", "NWCA16-R304", "NWCA16-R305",
+                                     "NWCA16-R306", "NWCA16-R307", "NWCA16-R308", "NWCA16-R309", "NWCA16-R310"))
+
+# Import NWCA data and drop columns with all NA
+import_csv <- function(filename){
+  df <- read.csv(paste0(filepath, "/", filename))
+  df <- df[,colSums(is.na(df)) < nrow(df)]
+  return(df)
+}
+
+prep_data <- function(df, site){
+  df <- df %>% filter(Local_Name == site) %>% select(-SITE_ID, -Local_Name)
+  df <- df[,colSums(is.na(df)) < nrow(df)]
+  return(df)
+}
+
+make_long_tree <- function(df, col_remove, data_type){
+  col_names <- names(df %>% select(-all_of(col_remove)))
+  df_long <- df %>% mutate_at(all_of(col_names), as.character) %>% 
+                    pivot_longer(cols = all_of(col_names),
+                                 names_to = "Metric", 
+                                 values_to = "Value",
+                                 values_drop_na = TRUE) %>% 
+                    mutate(Type = data_type) %>% 
+                    select(SITE_ID, Local_Name, PLOT, Type, TREE_SPECIES, Metric, Value)
+  return(df_long)
+  
+}
+
+drop_na <- function(x){ifelse(is.na(x), "", paste0(x, ", "))}
+drop_na2 <- function(x){ifelse(is.na(x), "", paste0(x))}
+drop_na_col <- function(x){ifelse(is.na(x), "", paste0(x, ": "))}
+
+# Tree data
+tree_live <- import_csv(filenames[16]) %>% select(SITE_ID, Local_Name, PLOT, TREE_SPECIES, VSMALL_TREE:XXTHICK_TREE) %>% 
+                                           filter(!is.na(TREE_SPECIES))
+tree_live_long <- make_long_tree(tree_live, col_remove = c("SITE_ID", "Local_Name", "PLOT", "TREE_SPECIES"), "Live_Trees")
+
+tree_live_order <- data.frame(Metric = names(tree_live[5:17]),
+                              Metric_Name = c("Pct_Live_0_0.5m", "Pct_Live_0.5_2m", "Pct_Live_2_5m", 
+                                              "Pct_Live_5_15m", "Pct_Live_15_30m", "Pct_Live_over30m",
+                                              "Cnt_Live_5_10cm", "Cnt_Live_11_25cm",
+                                              "Cnt_Live_26_50cm", "Cnt_Live_51_75cm",
+                                              "Cnt_Live_76_100cm","Cnt_Live_101_200cm",
+                                              "Cnt_Live_over200cm"),
+                              order = 1:13)
+
+tree_live_wide <- left_join(tree_live_order, tree_live_long, by = "Metric") %>% 
+                  select(SITE_ID, Local_Name, PLOT, TREE_SPECIES, Metric_Name, Value, order) %>% 
+                  arrange(SITE_ID, PLOT, TREE_SPECIES, order) %>% select(-order) %>% 
+                  pivot_wider(names_from = Metric_Name, values_from = Value)
+
+tree_live_pct <- tree_live_wide %>% select(SITE_ID:TREE_SPECIES, Pct_Live_0_0.5m: Pct_Live_15_30m)
+tree_live_cnt <- tree_live_wide %>% select(SITE_ID:TREE_SPECIES, Cnt_Live_5_10cm:Cnt_Live_26_50cm)
+
+tree_dead <- import_csv(filenames[16]) %>% select(SITE_ID, Local_Name, PLOT, STANDING, XXTHIN_SNAG:THIN_SNAG) %>% 
+                                           filter(!is.na(STANDING)) %>% 
+                                           mutate(TREE_SPECIES = "DEAD")
+
+tree_dead_long <- make_long_tree(tree_dead, col_remove = c("SITE_ID", "Local_Name", "PLOT", "TREE_SPECIES"), "Dead_Trees")
+
+tree_dead_order <- data.frame(Metric = names(tree_dead[4:7]),
+                              Metric_Name = c("Standing_All_under5cm", "Cnt_Dead_5_10cm", "Cnt_Dead_11_25cm",
+                                              "Cnt_Dead_26_50cm"),
+                              order = 1:4)
+
+tree_dead_wide <- left_join(tree_dead_order, tree_dead_long, by = "Metric") %>% 
+                  select(SITE_ID, Local_Name, PLOT, Metric_Name, Value, order) %>% 
+                  arrange(SITE_ID, PLOT, order) %>% select(-order) %>% 
+                  pivot_wider(names_from = Metric_Name, values_from = Value)
+
+
+```
+
+```{r kable_tables, echo = F, include = F, results = 'hide'}
+dead_site <- prep_data(tree_dead_wide, params$site)
+
+row_changes_dead <- sapply(1:nrow(dead_site), function(x){
+  check = ifelse(dead_site$PLOT[x] != dead_site$PLOT[x + 1], x, NA)
+  }) %>% data.frame() %>% na.omit(.) 
+
+dead_kbl <- kable(dead_site,  
+                  caption = "<h4>Dead Stem Count By DBH</h4>",
+                  col.names = c("PLOT", "Est. Stems <5cm", "Count 5-10cm", "Count 11-25cm", "Count 26-50cm"),
+                  format = "html", align = 'c') %>% 
+            kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
+                          full_width = FALSE, position = 'left', font_size = 12) %>%
+            column_spec(1:2, extra_css = "border-left: 1px solid #000000;") %>% 
+            column_spec(2:4, extra_css = "border-right: 1px solid #CACACA;") %>%
+            column_spec(5, extra_css = "border-right: 1px solid #000000;") %>% 
+            collapse_rows(1, valign = 'top') %>% 
+            row_spec(2:(nrow(dead_site)-1), extra_css = "border-bottom: 0.5px solid #CACACA;") %>% 
+            row_spec(row_changes_dead[,1], extra_css = "border-bottom: 1px solid #000000;") %>% 
+            row_spec(0, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+            row_spec(nrow(dead_site), extra_css = 'border-bottom: 1px solid #000000;', hline_after = T) 
+
+
+live_cnt_site <- prep_data(tree_live_cnt, params$site)
+
+row_changes_live_cnt <- if(nrow(live_cnt_site) > 0){
+  sapply(1:nrow(live_cnt_site), function(x){
+  check = ifelse(live_cnt_site$PLOT[x] != live_cnt_site$PLOT[x + 1], x, NA)
+  }) %>% data.frame() %>% na.omit(.)
+} else {data.frame(PLOT = 0)} 
+
+
+live_cnt_kbl <- if(nrow(live_cnt_site) > 0){
+                kable(live_cnt_site,  
+                      caption = "<h4>Live Tree Stem Count By DBH</h4>",
+                      col.names = c("PLOT", "Species", "Count 5-10cm", "Count 11-25cm", "Count 26-50cm"),
+                      format = "html", align = 'c') %>% 
+                kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
+                              full_width = FALSE, position = 'left', font_size = 12) %>%
+                column_spec(1:3, extra_css = "border-left: 1px solid #000000;") %>% 
+                column_spec(3:4, extra_css = "border-right: 1px solid #CACACA;") %>%
+                column_spec(5, extra_css = "border-right: 1px solid #000000;") %>% 
+                collapse_rows(1, valign = 'top') %>% 
+                row_spec(2:(nrow(live_cnt_site)-1), extra_css = "border-bottom: 0.5px solid #CACACA;") %>% 
+                row_spec(row_changes_live_cnt[,1], extra_css = "border-bottom: 1px solid #000000;") %>% 
+                row_spec(0, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                row_spec(nrow(live_cnt_site), extra_css = 'border-bottom: 1px solid #000000;', hline_after = T) 
+} else {        kable(data.frame(x = "No Live Trees Present"), 
+                      format = 'html', align = 'c', caption = "<h4>Live Tree Stem Count By DBH</h4>",
+                      col.names = c("")) %>% 
+                kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
+                              full_width = TRUE, position = 'right', font_size = 12) %>% 
+                row_spec(0:1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                column_spec(1, border_left = T, border_right = T)}
+
+live_pct_site <- prep_data(tree_live_pct, params$site)
+
+row_changes_live_pct <- if(nrow(live_pct_site) > 0){
+  sapply(1:nrow(live_pct_site), function(x){
+  check = ifelse(live_pct_site$PLOT[x] != live_pct_site$PLOT[x + 1], x, NA)
+  }) %>% data.frame() %>% na.omit(.)
+} else {data.frame(PLOT = 0)}
+
+live_pct_kbl <- if(nrow(live_pct_site) > 0){
+                kable(live_pct_site,  
+                      caption = "<h4>Live Tree Percent By Height</h4>",
+                      col.names = c("PLOT", "Species", "% 0-0.5m", "% 0.5-2m", "% 2-5m", "% 5-15m", "% 15-30m"),
+                      format = "html", align = 'c') %>% 
+                kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
+                              full_width = FALSE, position = 'left', font_size = 12) %>%
+                column_spec(1:3, extra_css = "border-left: 1px solid #000000;") %>% 
+                column_spec(3:6, extra_css = "border-right: 1px solid #CACACA;") %>%
+                column_spec(7, extra_css = "border-right: 1px solid #000000;") %>% 
+                collapse_rows(1, valign = 'top') %>% 
+                row_spec(2:(nrow(live_pct_site)-1), extra_css = "border-bottom: 0.5px solid #CACACA;") %>% 
+                row_spec(row_changes_live_pct[,1], extra_css = "border-bottom: 1px solid #000000;") %>% 
+                row_spec(0, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                row_spec(nrow(live_pct_site), extra_css = 'border-bottom: 1px solid #000000;', hline_after = T)
+} else {kable(data.frame(x = "No Live Tree Cover Present"), 
+                      format = 'html', align = 'c', caption = "<h4>Live Tree Percent By Height</h4>",
+                      col.names = c("")) %>% 
+                kable_styling(fixed_thead = TRUE, bootstrap_options = 'condensed',
+                              full_width = TRUE, position = 'right', font_size = 12) %>% 
+                row_spec(0:1, extra_css = 'border-bottom: 1px solid #000000;') %>% 
+                column_spec(1, border_left = T, border_right = T)}
+
+
+```
+
+### EPA NWCA 2016 Veg Plot Tree Data for: `r paste(site_df$NWCA_codes[site_df$Local_Name == params$site], site_df$Full_Name[site_df$Local_Name == params$site], sep = ": ")`
+
+```{r treekables}
+dead_kbl
+
+live_pct_kbl
+
+live_cnt_kbl
+```
+
