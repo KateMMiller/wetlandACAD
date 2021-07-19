@@ -45,6 +45,16 @@ AA_comb <- data.frame(site = rep(unique(AAcenters$Site), times = 13),
 AA_comb_sf <- st_as_sf(AA_comb, coords = c("X", "Y"), crs = 26919)
 AA_comb_dd <- st_transform(AA_comb_sf, crs = 4269)
 
+AA_cent_dd <- AA_comb_dd %>% filter(buff_plot == "AA")
+
+AA_cent_dd_df <- data.frame(site = AA_cent_dd$site,
+                            code = AA_cent_dd$code,
+                            lat = st_coordinates(AA_cent_dd)[,2],
+                            lon = st_coordinates(AA_cent_dd)[,1]
+                            )
+write.csv(AA_cent_dd_df, "D:/NETN/Monitoring_Projects/Freshwater_Wetland/2021/Logistics/AA_Centers_DD.csv",
+          row.names = F)
+
 #st_crs(4269)
 st_write(AA_comb_sf, "D:/NETN/GIS/ACAD/Wetlands/Sample_Locations/2021_NWCA_AA_and_Buffer_Centers_UTM.shp")#, append = T)
 st_write(AA_comb_dd, "D:/NETN/GIS/ACAD/Wetlands/Sample_Locations/2021_NWCA_AA_and_Buffer_Centers_dd.shp")#, append = T)
