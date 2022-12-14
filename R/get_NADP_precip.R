@@ -25,7 +25,9 @@
 #' @export
 #'
 
-get_NADP_precip <- function(start_date = "04/01/2018", end_date = "10/31/2018", stationID = "ME98", quietly = FALSE){
+get_NADP_precip <- function(start_date = paste0("04/01/", as.numeric(format(Sys.Date(), "%Y"))),
+                            end_date = paste0("10/31/", as.numeric(format(Sys.Date(), "%Y"))),
+                            stationID = "ME98", quietly = FALSE){
 
   if(quietly == FALSE) {cat("Downloading NADP precip data")}
 

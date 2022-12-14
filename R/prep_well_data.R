@@ -45,7 +45,8 @@
 #' @export
 #'
 
-prep_well_data<-function(path = NULL, year = 2019, rejected = FALSE, growing_season = TRUE,
+prep_well_data<-function(path = NULL, year = as.numeric(format(Sys.Date(), "%Y")),
+                         rejected = FALSE, growing_season = TRUE,
                          export = TRUE, quietly = FALSE){
 
   #----------------

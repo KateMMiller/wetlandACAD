@@ -55,7 +55,8 @@
 #'
 #' @export
 
-prep_conv_table <- function(path = NA, year = 2019, visits = c('both', 'spring', 'fall'),
+prep_conv_table <- function(path = NA, year = as.numeric(format(Sys.Date(), "%Y")),
+                            visits = c('both', 'spring', 'fall'),
                             export = TRUE, quietly = FALSE){
 
   #----------------

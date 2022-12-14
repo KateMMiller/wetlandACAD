@@ -38,7 +38,7 @@ importQueries<- function(type=c('DSN','file'), odbc='RAM_FE', path=NA){
   }
   assign("spplist", DBI::dbReadTable(db, "qry_Species_List_All"), envir = .GlobalEnv)
   setTxtProgressBar(pb, 1)
-  assign("vmmi",DBI::dbReadTable(db, "tbl_VMMI"), envir = .GlobalEnv)
+  assign("vmmi", DBI::dbReadTable(db, "tbl_VMMI"), envir = .GlobalEnv)
   setTxtProgressBar(pb, 2)
   assign('plants',DBI::dbReadTable(db,"tlu_Plant"), envir = .GlobalEnv)
   setTxtProgressBar(pb, 3)

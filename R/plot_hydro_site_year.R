@@ -24,7 +24,7 @@
 #'
 #' @export
 
-plot_hydro_site_year <- function(df, yvar, site, years = 2013:2020){
+plot_hydro_site_year <- function(df, yvar, site, years = 2013:as.numeric(format(Sys.Date(), "%Y"))){
   minWL <- min(df[,yvar], na.rm = TRUE)
   df <- df %>% filter(Year %in% years) %>%
                filter(doy > 134 & doy < 275) %>%
