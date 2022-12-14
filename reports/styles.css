@@ -1,0 +1,198 @@
+/* QAQC report stylesheet */
+
+/*.tabset{
+  color:black;
+  font-size: 16px;
+} */
+
+/* Body and headers */
+/*.main-container{
+  max-width:1200px;
+}*/
+
+body {
+  font-family: "NPSRawlinsonOTTwo","Times New Roman", serif;
+  font-size: 12px;
+  color: black;
+  margin:0 auto;
+  /*width:1200px;*/
+  position:relative;
+}
+
+
+p {
+  font-family: "NPSRawlinsonOTTwo","Times New Roman", serif;
+  font-size: 14px;
+}
+
+
+h1 {
+  font-family: "FrutigerLTStd-Black","Arial",Arial,sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: black;
+  padding: 10px 0;
+  /*margin: 20px 0;*/
+}
+
+h2 {
+  font-family: "FrutigerLTStd-Black","Arial",Arial,sans-serif;
+  font-size: 18px;
+  /*font-weight: bold;*/
+  color: black;
+  margin: 18px 0 18px 0;
+}
+
+
+h3 {
+  font-family: "FrutigerLTStd-Black","Arial",Arial,sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  color: black;
+}
+
+/* Figs and legend title */
+h4 {
+  font-family: "FrutigerLTStd-Black","Arial",Arial,sans-serif;
+  font-size:14px;
+  font-weight: bold;
+  color: black;
+  /*color: #555;*/
+}
+
+/* Header font */
+h5 {
+  font-family: "FrutigerLTStd-Black","Arial",Arial,sans-serif;
+  font-size:12px;
+  padding:0;
+  margin:0;
+}
+
+/* Banner */
+.banner{
+  background: black;
+  height: 105px;
+  position:relative;
+  /*width: auto;*/
+  max-width: 1200px;
+  padding: 0 0 10px 0;
+  /*margin-left: auto;
+  margin-right: auto;*/
+  margin: 0 auto;
+}
+
+.header{
+ height: 100px;
+ width: 1200px;
+ margin-left:auto;
+ margin-right:auto;
+ /*position: fixed;*/
+ }
+
+#col-left-header{
+  float:left;
+  width: 68%;
+  padding: 5px 0;
+}
+
+#col-right-header{
+  float:right;
+  width: 7%;
+  padding: 5px 0;
+}
+
+#col-middle-header{
+  float:right;
+  text-align:left;
+  width: 25%;
+  padding: 5px 0;
+}
+
+.column_1 {
+  float:left;
+  width:48%;
+}
+
+.column_2 {
+  float:right;
+  width:48%;
+}
+
+.header img{
+  display: inline-block;
+  height: 90px;
+  position: relative;
+}
+
+.header h5 {
+  position: relative;
+  text-align: left;
+  color: white;
+  font-size: 14px;
+  padding: 2px 10px 1px 5px;
+  margin:4px 5px;
+  font-family: "Arial",Arial,sans-serif;
+}
+
+table thead{
+  border-bottom: 1px solid #00000;
+  /*font-size:14px;*/
+  font-weight: bold;
+  font-family: "FrutigerLTStd-Black", "Arial", Arial, sans-serif;
+}
+
+table td{
+  border-bottom: 1px solid #00000;
+  /*font-size:14px;*/
+  font-family: "FrutigerLTStd-Black", "Arial", Arial, sans-serif;
+}
+
+summary > h3{
+  margin: 0;
+  display: inline-block; /* so it shows up inline with details arrow */
+}
+
+.section{
+  /*width:1200px;*/
+  width:inherit;
+  /*margin:0 -50px;*/
+  padding:0;
+  position:inherit;
+
+}
+
+/* Navbar */
+.navbar {
+ visibility: hidden;
+ width:1200px;
+ margin:0 auto;
+}
+
+.nav-tabs li {
+  float: none;
+  display: inline-block;
+  margin:0 auto;
+}
+
+/* Tabset pills */
+.nav>li>a {
+    /* position: relative;*/
+    display: inline-block;
+    margin:0 auto;
+    color: #85708C;
+    font-family: "FrutigerLTStd-Light",FrutigerLTStd-Light, sans-serif;
+    font-size: 16px;
+    text-indent:0;
+
+
+}
+.nav-pills>li.active>a, .nav-pills>li.active>a:hover, .nav-pills>li.active>a:focus {
+    color: #ffffff;
+    background-color: #85708C;
+    /*padding: 10px 15px;*/
+    width:100%;
+    margin:0 auto;
+
+}
+
+

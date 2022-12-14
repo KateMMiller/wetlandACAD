@@ -1,0 +1,112 @@
+---
+output: 
+  html_document:
+    css: styles.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(knitr.kable.NA = '')
+```
+
+```{r import, echo = F, include = F}
+library(tidyverse)
+library(kableExtra)
+
+filepath <- "D:/NETN/Monitoring_Projects/Freshwater_Wetland/EPA_NWCA/2016_Data/2021_release/ACAD_only/"
+
+ACAD_codes <- c("DUCK", "WMTN", "BIGH", "GILM", "LIHU", "NEMI", "GRME", "HEBR", "HODG", "FRAZ")
+ACAD_sites <- c("Duck Pond Peatland", "Western Mountain Swamp", "Big Heath", "Gilmore Meadow",
+                "Little Hunter Brook", "New Mills Meadow - NW", "Great Meadow (IAH)", "Heath Brook",
+                "Hodgdon Swamp", "Frazer Fen")
+NWCA_codes <- c("NWCA16-R301", "NWCA16-R302", "NWCA16-R303", "NWCA16-R304", "NWCA16-R305",
+                "NWCA16-R306", "NWCA16-R307", "NWCA16-R308", "NWCA16-R309", "NWCA16-R310")
+
+# Import ACAD Veg data from 2016 NWCA
+acad_veg <- read.csv(paste0(filepath, "DRAFT_NWCA2016_PlantSpeciesCoverHeight_20200416_ACAD.csv")) %>%
+            select(UID, SITE_ID, Local_Name, PLOT, SPECIES, COVER, HEIGHT, NE, SW)
+
+acad_veg$COVER <- ifelse(acad_veg$COVER < 0.1, NA_real_, acad_veg$COVER)
+
+acad_p1 <- acad_veg %>% filter(PLOT == 1) %>% rename(P1_COV = COVER, P1_HT = HEIGHT, P1_NE = NE, P1_SW = SW) %>% select(-PLOT)
+acad_p2 <- acad_veg %>% filter(PLOT == 2) %>% rename(P2_COV = COVER, P2_HT = HEIGHT, P2_NE = NE, P2_SW = SW) %>% select(-PLOT)
+acad_p3 <- acad_veg %>% filter(PLOT == 3) %>% rename(P3_COV = COVER, P3_HT = HEIGHT, P3_NE = NE, P3_SW = SW) %>% select(-PLOT)
+acad_p4 <- acad_veg %>% filter(PLOT == 4) %>% rename(P4_COV = COVER, P4_HT = HEIGHT, P4_NE = NE, P4_SW = SW) %>% select(-PLOT)
+acad_p5 <- acad_veg %>% filter(PLOT == 5) %>% rename(P5_COV = COVER, P5_HT = HEIGHT, P5_NE = NE, P5_SW = SW) %>% select(-PLOT)
+
+acad_veg_wide <- Reduce(function(x,y) merge(x, y, all = TRUE, by = c("UID", "SITE_ID", "Local_Name", "SPECIES")),
+                        list(acad_p1, acad_p2, acad_p3, acad_p4, acad_p5)) %>% select(-UID)
+acad_veg_wide$SPECIES <- paste0(substr(acad_veg_wide$SPECIES, 1, 1), 
+                           tolower(substr(acad_veg_wide$SPECIES, 2, nchar(acad_veg_wide$SPECIES))))
+
+
+make_spp_kable <- function(site){
+  kable(acad_veg_wide %>% filter(Local_Name == site) %>% select(-SITE_ID, -Local_Name), 
+                  col.names = c("Species", rep(c("% Cov.", "HT", "NE", "SW"), 5)),
+                  format = 'html', align = 'c') %>%
+            add_header_above(c("", "Plot 1" = 4, "Plot 2" = 4, "Plot 3" = 4, "Plot 4" = 4, "Plot 5" = 4),
+                             extra_css = "border-bottom: 1px solid #000000; border-right: 3px solid #ffffff") %>% 
+            kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
+                          full_width = TRUE, position = 'left', font_size = 12) %>% 
+            row_spec(0, extra_css = "border-bottom: 1px solid #000000;") %>% 
+            column_spec(c(1, 2, 6, 10, 14, 18), extra_css = "border-left: 1px solid #000000;") %>% 
+            column_spec(21, extra_css = "border-right: 1px solid #000000;") %>% 
+            row_spec(nrow(acad_veg_wide %>% filter(Local_Name == site)), 
+                        extra_css = "border-bottom: 1px solid #000000;")
+  
+}
+
+```
+
+### EPA NWCA 2016 Species Lists {.tabset .tabset-pills}
+
+```{r sitetabs, results='asis'}
+for(i in seq_along(ACAD_codes)){
+  site = ACAD_codes[i]
+  site_name = ACAD_sites[i]
+  NWCA_code = NWCA_codes[i]
+  
+  cat("#### ", site, "\n")
+  cat('<h4>', site_name, ": ", NWCA_code, '</h4>', "\n")
+     
+  print(make_spp_kable(ACAD_codes[i]))
+  cat("\n")
+  }
+```
+
+```{r fullspp, results = 'hide', echo = FALSE}
+cov_cols <- c("P1_COV", "P2_COV", "P3_COV", "P4_COV", "P5_COV")
+acad_veg_wide[, cov_cols][is.na(acad_veg_wide[, cov_cols])] <- 0
+acad_veg_wide[, cov_cols][acad_veg_wide[, cov_cols]>0] <- 1
+
+full_spp <- acad_veg_wide %>% select(SITE_ID, Local_Name, SPECIES, all_of(cov_cols))
+
+full_spp$Num_Plots <- rowSums(full_spp[,cov_cols])
+full_spp$SITE <- substr(full_spp$SITE_ID, 8, 11)
+
+full_spp_wide <- full_spp %>% select(SITE, SPECIES, Num_Plots) %>%
+                              arrange(SITE, SPECIES) %>% 
+                              pivot_wider(names_from = SITE, values_from = Num_Plots) %>% 
+                              arrange(SPECIES)
+
+#write.csv(full_spp_wide, "Species_list_by_site.csv", row.names = F)
+
+spp_table <- kable(full_spp_wide, format = "html", align = c('l',rep('c', 10))) %>% 
+             add_header_above(c("", "DUCK", "WMTN", "BIGH", "GILM", "LIHU", "NEMI", "GRME", "HEBR", "HODG", "FRAZ")) %>% 
+             kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'), 
+                           full_width = FALSE, position = 'left', font_size = 12) %>% 
+             column_spec(c(1,11), extra_css = "border-right: 2px solid #000000;") %>% 
+             column_spec(1, extra_css = "border-left: 2px solid #000000;") %>% 
+             column_spec(2:10, extra_css = 'border-right: 1px solid #000000;') %>% 
+             row_spec(0, extra_css = "border-bottom: 1px solid #000000;") %>% 
+             row_spec(nrow(full_spp_wide), extra_css = "border-bottom: 1px solid #000000;")
+
+
+```
+
+#### All Sites
+
+```{r spp_table}
+spp_table
+```
+

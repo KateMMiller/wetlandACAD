@@ -31,7 +31,7 @@ get_NADP_precip <- function(start_date = paste0("04/01/", as.numeric(format(Sys.
 
   if(quietly == FALSE) {cat("Downloading NADP precip data")}
 
-  PrecipURL<-paste0('http://nadp.slh.wisc.edu/siteOps/ppt/Data.aspx?id=',stationID,'&stdate=',
+  PrecipURL<-paste0('http://nadp2.slh.wisc.edu/siteOps/ppt/Data.aspx?id=',stationID,'&stdate=',
                     start_date,'T13:35&endate=', end_date,
                     'T13:30&plot_sel=1111110&data_sel1=H&data_sel2=110&sel2_count=2&offset_txt=-5')
 
