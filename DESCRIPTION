@@ -1,6 +1,6 @@
 Package: wetlandACAD
 Type: Package
-Title: Package for compiling, querying, summarizing and plotting freshwater wetland data in Acadia NP.
+Title: Package for compiling, querying, summarizing and plotting freshwater wetland data in Acadia NP
 Version: 0.1.4
 Author: Kate Miller
 Maintainer: Kate Miller <kathryn_miller@nps.gov>
@@ -8,8 +8,10 @@ Description: This package contains functions that compile, query, summarize and 
 License: Public Domain
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 Collate:
+    'NWCA16_download.R'
+    'NWCA16_import.R'
     'bind_HOBO_data.R'
     'calc_WL_stats.R'
     'conv_WL.R'
@@ -22,14 +24,14 @@ Collate:
     'prep_conv_table.R'
 Imports:
     dplyr,
+    ggplot2,
     magrittr,
     lubridate,
-    odbc,
     purrr,
     stringr,
     tidyr,
     XML
 Suggests:
     DBI,
-    ggplot2,
-    odbc
+    odbc,
+    zip

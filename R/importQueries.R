@@ -22,6 +22,7 @@
 
 importQueries<- function(type=c('DSN','file'), odbc='RAM_FE', path=NA){
   type<-match.arg(type)
+
   if(!requireNamespace("odbc", quietly = TRUE)){
     stop("Package 'odbc' needed for this function to work. Please install it.", call. = FALSE)
   }
