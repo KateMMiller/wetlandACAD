@@ -4,7 +4,12 @@
 \alias{plot_hydro_site_year}
 \title{plot_hydro_site_year: Plots a hydrograph by each year within a site}
 \usage{
-plot_hydro_site_year(df, yvar, site, years = 2013:2020)
+plot_hydro_site_year(
+  df,
+  yvar,
+  site,
+  years = 2013:as.numeric(format(Sys.Date(), "\%Y"))
+)
 }
 \arguments{
 \item{df}{the name of the data frame}

@@ -7,7 +7,7 @@
 \usage{
 prep_well_data(
   path = NULL,
-  year = 2019,
+  year = as.numeric(format(Sys.Date(), "\%Y")),
   rejected = FALSE,
   growing_season = TRUE,
   export = TRUE,

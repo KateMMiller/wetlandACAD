@@ -7,7 +7,7 @@ relative to the wetland surface}
 \usage{
 prep_conv_table(
   path = NA,
-  year = 2019,
+  year = as.numeric(format(Sys.Date(), "\%Y")),
   visits = c("both", "spring", "fall"),
   export = TRUE,
   quietly = FALSE

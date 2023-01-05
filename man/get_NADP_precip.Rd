@@ -5,8 +5,8 @@
 \title{get_NADP_precip: Downloads and cleans hourly precipitation data from NADP}
 \usage{
 get_NADP_precip(
-  start_date = "04/01/2018",
-  end_date = "10/31/2018",
+  start_date = paste0("04/01/", as.numeric(format(Sys.Date(), "\%Y"))),
+  end_date = paste0("10/31/", as.numeric(format(Sys.Date(), "\%Y"))),
   stationID = "ME98",
   quietly = FALSE
 )
