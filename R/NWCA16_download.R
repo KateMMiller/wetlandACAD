@@ -36,11 +36,12 @@ NWCA16_download <- function(path = NA, zip = TRUE){
   options(scipen = 100) # for Taxa ID numbers
 
   # Error handling for path
-  if(is.na(path)){path <- getwd()
-  print(paste0("No path specified. Saving output to working directory: ", getwd()), quote = FALSE)
+  if(is.na(path)){
+    path <- getwd()
+    print(paste0("No path specified. Saving output to working directory: ", getwd()), quote = FALSE)
   } else if(!dir.exists(path)){
     stop("Specified directory does not exist.")
-  } else {cat("Downloading data and metadata files")}
+  } else {}
 
   # Normalize path for zip::zipr
   pathn <- normalizePath(path)
@@ -59,7 +60,7 @@ NWCA16_download <- function(path = NA, zip = TRUE){
 
   metadata_list <- paste(data_list, "meta", sep = "_")
 
-  noquote("Downloading data")
+  cat("Downloading data and metadata", "\n")
 
   pb <- txtProgressBar(min = 0, max = length(data_list) * 2, style = 3)
   x <- 0
@@ -73,6 +74,7 @@ NWCA16_download <- function(path = NA, zip = TRUE){
 
   algal_toxin <- import_csv(
     "https://www.epa.gov/sites/default/files/2021-04/nwca_2016_microcystin_-_data_csv.csv")
+
   setTxtProgressBar(pb, x)
 
   buffer_natcov <- import_csv(
@@ -260,15 +262,19 @@ NWCA16_download <- function(path = NA, zip = TRUE){
 
   cat("Writing files to disk")
 
+  head(get(data_list[[1]]))
+
   # # Export files
   if(zip == FALSE){
     invisible(lapply(seq_along(data_list), function(x){
-      write.csv(data_list[[x]], paste0(pathn, data_list[x], ".csv"),
+      write.csv(get(data_list[[x]]),
+                paste0(pathn, data_list[x], ".csv"),
                 row.names = FALSE)
     }))
 
     invisible(lapply(seq_along(metadata_list), function(x){
-      write.csv(metadata_list[[x]], paste0(pathn, metadata_list[x], ".csv"),
+      write.csv(get(metadata_list[[x]]),
+                paste0(pathn, metadata_list[x], ".csv"),
                 row.names = FALSE)
     }))
 
@@ -278,7 +284,8 @@ NWCA16_download <- function(path = NA, zip = TRUE){
     dir.create(tmp <- tempfile())
 
     invisible(lapply(seq_along(data_list), function(x){
-      write.csv(data_list[[x]], paste0(tmp, "\\", data_list[x], ".csv"),
+      write.csv(get(data_list[[x]]),
+                paste0(tmp, "\\", data_list[x], ".csv"),
                 row.names = FALSE)}))
 
     file_list <- list.files(tmp)
@@ -292,7 +299,8 @@ NWCA16_download <- function(path = NA, zip = TRUE){
     # Write metadata to separate zip
     dir.create(tmp2 <- tempfile())
     invisible(lapply(seq_along(metadata_list), function(x){
-      write.csv(metadata_list[[x]], paste0(tmp2, "\\", metadata_list[x], ".csv"),
+      write.csv(get(metadata_list[[x]]),
+                paste0(tmp2, "\\", metadata_list[x], ".csv"),
                 row.names = FALSE)}))
 
     file_list2 <- list.files(tmp2)
