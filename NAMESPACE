@@ -2,6 +2,7 @@
 
 export(NWCA16_download)
 export(NWCA16_import)
+export(NWCA16_vegMMI)
 export(bind_HOBO_data)
 export(calc_WL_stats)
 export(compile_sent_WL)

@@ -1,11 +1,5 @@
 #' @title NWCA16_download: Downloads data from 2016 EPA National Wetland Condition Assessment
 #'
-#' @importFrom XML readHTMLTable
-#' @importFrom dplyr select filter mutate
-#' @importFrom magrittr %>%
-#' @importFrom stringr str_sub
-#' @importFrom lubridate date year
-#'
 #' @description This function downloads the 2016 EPA NWCA data directly from the National Aquatic Resource Surveys website and saves the dataset to disk.
 #'
 #' @param path Quoted path of folder to download files into. If not specified, will save to working directory.
@@ -27,6 +21,8 @@
 #'
 
 NWCA16_download <- function(path = NA, zip = TRUE){
+
+  stopifnot(class(zip) == 'logical')
 
   # Check that suggested package required for this function are installed
   if(!requireNamespace("zip", quietly = TRUE) & zip == TRUE){

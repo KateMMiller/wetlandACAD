@@ -26,11 +26,14 @@ This function imports all data files from the NWCA2016 from a zip or individual 
 }
 \examples{
 \dontrun{
-# Import individual csvs into global environment
-NWCA16_import(path = "./data/", new_env = FALSE)
 
-# Import zipped csvs into NWCA16 environment
-NWCA16_import(path = "./data/", zip_name = "NWCA2016_data.zip")
+# Import using default of adding new environment, not using zip file, and including only ACAD sites.
+NWCA16_import(path = "../data/NWCA16")
+
+# Import all sites from zip file into global environment
+NWCA16_import(path = "../data/NWCA16", new_env = FALSE,
+              zip_name = "NWCA2016_data.zip", ACAD_only = FALSE)
+
 }
 
 }

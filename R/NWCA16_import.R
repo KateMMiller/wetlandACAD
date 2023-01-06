@@ -2,6 +2,8 @@
 #'
 #' @description This function imports all data files from the NWCA2016 from a zip or individual files as data frames. Metadata files are not imported. Each data frame is either added to the global environment or to an environment named NWCA16, based on whether new_env = TRUE or FALSE.
 #'
+#' @importFrom dplyr filter mutate
+#'
 #' @param path Quoted path of folder containing data files.
 #'
 #' @param new_env Logical. Specifies which environment to store data frames in. If \code{TRUE}(Default), stores
@@ -17,16 +19,23 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Import individual csvs into global environment
-#' NWCA16_import(path = "./data/", new_env = FALSE)
 #'
-#' # Import zipped csvs into NWCA16 environment
-#' NWCA16_import(path = "./data/", zip_name = "NWCA2016_data.zip")
+#' # Import using default of adding new environment, not using zip file, and including only ACAD sites.
+#' NWCA16_import(path = "../data/NWCA16")
+#'
+#' # Import all sites from zip file into global environment
+#' NWCA16_import(path = "../data/NWCA16", new_env = FALSE,
+#'               zip_name = "NWCA2016_data.zip", ACAD_only = FALSE)
+#'
 #' }
 #'
 #' @export
 
 NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = TRUE){
+
+  #----- Error handling -----
+  stopifnot(class(new_env) == 'logical')
+  stopifnot(class(ACAD_only) == 'logical')
 
   # Error handling for path
   if(is.na(path)){stop("Must specify a path to import csvs.")
@@ -35,6 +44,10 @@ NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = T
   # Add / to end of path if it wasn't specified.
   path <- if(substr(path, nchar(path), nchar(path)) != "/"){paste0(path, "/")} else {(paste0(path))}
 
+  # Make sure zip file exists and all the dfs are included
+  if(!is.na(zip_name)){
+    if(!file.exists(paste0(path, zip_name))){stop("Specified zip file doesn't exist in path.")}}
+
   options(scipen = 100) # For TSNs
 
   data_list <- c("algal_toxin", "buffer_natcov", "buffer_stress", "hydro_sources", "hydro_stress",
@@ -42,9 +55,7 @@ NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = T
                  "soil_prof_pit", "soil_prof_hor", "veg_data", "veg_tree", "veg_type", "veg_surf",
                  "veg_layout", "veg_plot_loc", "water_char", "water_chem")
 
-  # Make sure zip file exists and all the dfs are included
-  if(!is.na(zip_name)){
-    if(!file.exists(paste0(path, zip_name))){stop("Specified zip file doesn't exist in path.")}}
+
 
   # Make sure all the dfs are in the path or zip file. If anything is missing, function stops.
   files <-
@@ -61,13 +72,13 @@ NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = T
   } else if (length(missing) == length(data_list)){
     stop(paste0("Data files were not detected in specified ", ifelse(is.na(zip_name), "path.", "zip file.")))}
 
-  # Since the missing test passed, clean up files so only includes names in data_list, but
-  # maintain order in files
+  #----- Import dfs now that all tests passed -----
+  # Clean up files so only includes names in data_list, but maintain order in files
   files <- intersect(files, data_list)
 
-  # Import dfs now that all tests passed
   pb <- txtProgressBar(min = 0, max = length(data_list), style = 3)
 
+  # Importing data
   data_import <-
     if(!is.na(zip_name)){
       dfs <- unzip(paste0(path, zip_name), junkpaths = TRUE, exdir = tempdir())
@@ -93,8 +104,6 @@ NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = T
                                 "NEMI", "GRME", "HEBR", "HODG", "FRAZ"))
 
 
-#  data_import$algal_toxin |> filter(SITE_ID %in% ACAD_sites)
-
   data_import <-
     lapply(seq_along(data_import), function(x){
     df <- data_import[[x]] |> filter(SITE_ID %in% ACAD_sites$SITE_ID)
@@ -104,7 +113,7 @@ NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = T
 
   data_import <- setNames(data_import, files)
 
-  }
+  } else {data_import}
 
   if(new_env == TRUE){
     NWCA16 <<- new.env()

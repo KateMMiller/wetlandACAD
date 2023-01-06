@@ -12,6 +12,7 @@ RoxygenNote: 7.2.3
 Collate:
     'NWCA16_download.R'
     'NWCA16_import.R'
+    'NWCA16_vegMMI.R'
     'bind_HOBO_data.R'
     'calc_WL_stats.R'
     'conv_WL.R'
