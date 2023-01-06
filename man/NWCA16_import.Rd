@@ -4,7 +4,7 @@
 \alias{NWCA16_import}
 \title{NWCA16_import: Import NWCA 2016 data from file}
 \usage{
-NWCA16_import(path = NA, new_env = TRUE, zip_name = NA)
+NWCA16_import(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = TRUE)
 }
 \arguments{
 \item{path}{Quoted path of folder containing data files.}
@@ -15,6 +15,8 @@ data frames in NWCA16 environment. If \code{FALSE}, stores data frames in global
 \item{zip_name}{Quoted string ending in .zip. If specified, function looks for the specified file name and
 imports .csvs from the zip file. If not specified, function looks for and imports individual csvs. Note that
 this takes slightly longer than loading individual .csvs, due to the unzipping process.}
+
+\item{ACAD_only}{Logical. If TRUE, only imports ACAD sentinel sites. If FALSE, imports full dataset.}
 }
 \value{
 NWCA16 data files as data frames in specified environment

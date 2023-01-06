@@ -11,6 +11,8 @@
 #' imports .csvs from the zip file. If not specified, function looks for and imports individual csvs. Note that
 #' this takes slightly longer than loading individual .csvs, due to the unzipping process.
 #'
+#' @param ACAD_only Logical. If TRUE, only imports ACAD sentinel sites. If FALSE, imports full dataset.
+#'
 #' @return NWCA16 data files as data frames in specified environment
 #'
 #' @examples
@@ -24,7 +26,7 @@
 #'
 #' @export
 
-NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA){
+NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = TRUE){
 
   # Error handling for path
   if(is.na(path)){stop("Must specify a path to import csvs.")
@@ -80,6 +82,29 @@ NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA){
     }
 
   data_import <- setNames(data_import, files)
+
+  if(ACAD_only == TRUE){
+
+  ACAD_sites <-  data.frame(SITE_ID =
+                              c("NWCA16-R301", "NWCA16-R302", "NWCA16-R303", "NWCA16-R304", "NWCA16-R305",
+                                "NWCA16-R306", "NWCA16-R307", "NWCA16-R308", "NWCA16-R309", "NWCA16-R310"),
+                            LOCAL_ID =
+                              c("DUCK", "WMTN", "BIGH", "GILM", "LIHU",
+                                "NEMI", "GRME", "HEBR", "HODG", "FRAZ"))
+
+
+#  data_import$algal_toxin |> filter(SITE_ID %in% ACAD_sites)
+
+  data_import <-
+    lapply(seq_along(data_import), function(x){
+    df <- data_import[[x]] |> filter(SITE_ID %in% ACAD_sites$SITE_ID)
+    df <- left_join(df, ACAD_sites, by = "SITE_ID")
+    return(df)
+    })
+
+  data_import <- setNames(data_import, files)
+
+  }
 
   if(new_env == TRUE){
     NWCA16 <<- new.env()
