@@ -2,7 +2,7 @@
 #'
 #' @description This function imports all data files from the NWCA2016 from a zip or individual files as data frames. Metadata files are not imported. Each data frame is either added to the global environment or to an environment named NWCA16, based on whether new_env = TRUE or FALSE.
 #'
-#' @importFrom dplyr filter mutate
+#' @importFrom dplyr arrange filter mutate
 #'
 #' @param path Quoted path of folder containing data files.
 #'
@@ -50,12 +50,10 @@ NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = T
 
   options(scipen = 100) # For TSNs
 
-  data_list <- c("algal_toxin", "buffer_natcov", "buffer_stress", "hydro_sources", "hydro_stress",
+  data_list <- sort(c("algal_toxin", "buffer_natcov", "buffer_stress", "hydro_sources", "hydro_stress",
                  "hydro_indicators", "site_info", "site_AAchar", "soil_chem_hor", "soil_chem_std",
                  "soil_prof_pit", "soil_prof_hor", "veg_data", "veg_tree", "veg_type", "veg_surf",
-                 "veg_layout", "veg_plot_loc", "water_char", "water_chem")
-
-
+                 "veg_layout", "veg_plot_loc", "water_char", "water_chem"))
 
   # Make sure all the dfs are in the path or zip file. If anything is missing, function stops.
   files <-
@@ -74,7 +72,7 @@ NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = T
 
   #----- Import dfs now that all tests passed -----
   # Clean up files so only includes names in data_list, but maintain order in files
-  files <- intersect(files, data_list)
+  files <- sort(intersect(files, data_list))
 
   pb <- txtProgressBar(min = 0, max = length(data_list), style = 3)
 
@@ -102,7 +100,6 @@ NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = T
                             LOCAL_ID =
                               c("DUCK", "WMTN", "BIGH", "GILM", "LIHU",
                                 "NEMI", "GRME", "HEBR", "HODG", "FRAZ"))
-
 
   data_import <-
     lapply(seq_along(data_import), function(x){
