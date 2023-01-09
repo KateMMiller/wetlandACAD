@@ -4,7 +4,10 @@
 \alias{NWCA16_vegMMI}
 \title{NWCA16_vegMMI: calculate Vegetation Multi-metric Index}
 \usage{
-NWCA16_vegMMI()
+NWCA16_vegMMI(export_spp = FALSE)
+}
+\arguments{
+\item{export_spp}{Logical. If TRUE, adds a dataframe called veg_spp_cov that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.}
 }
 \value{
 NWCA16 data files as data frames in specified environment
@@ -15,9 +18,9 @@ This function calculates the 4 metrics used to calculate the vegetation multi-me
 \examples{
 \dontrun{
 
-#+++++ ADD EXAMPLES +++++
-# Import ACAD only data
+# Import ACAD only data and export
 NWCA16_import(path = "../data/NWCA16", zip_name = "NWCA2016_data.zip")
+vmmi <- NWCA16_vegMMI(export_spp = TRUE)
 
 }
 
