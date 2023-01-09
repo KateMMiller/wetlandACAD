@@ -258,8 +258,6 @@ NWCA16_download <- function(path = NA, zip = TRUE){
 
   cat("Writing files to disk")
 
-  head(get(data_list[[1]]))
-
   # # Export files
   if(zip == FALSE){
     invisible(lapply(seq_along(data_list), function(x){
