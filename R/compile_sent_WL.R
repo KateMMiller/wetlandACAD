@@ -20,6 +20,7 @@
 #' in the data frame generated from prep_well_data(). Defaults to \code{TRUE}.
 #'
 #' @examples
+#' \dontrun{
 #'
 #' # Compile tables
 #' dir = c('C:/Water_level_data/growing_season_2019')
@@ -28,6 +29,7 @@
 #'
 #' # Create data frame with water level relative to surface, cut at spring well visit
 #' well19WL<-compile_sent_WL(well19, conv_tbl_19, between_visits = TRUE)
+#' }
 #'
 #' @return Returns a data frame with the water level relative to the ground surface for each
 #' sentinal water level logger.

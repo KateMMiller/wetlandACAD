@@ -14,9 +14,11 @@
 #' atmospheric pressure loggers are.
 #'
 #' @examples
+#' \dontrun{
 #' df <- data.frame(BIGH_AbsPres = c(110.1, 111.3, 110.4), WMTN_BARO_AbsPres = c(102.1, 103.1, 102.8))
 #' df <- conv_kpa_cm(df, pres = 'BIGH_AbsPres', baro = 'WMTN_BARO_AbsPres')
 #' df <- conv_WL(df, cm_water = 'BIGH_cm', ground = 88.9, cor = 5.004)
+#' }
 #'
 #' @return Returns a data frame with a new column labeled with SITECODE_WL, which is the water level
 #' in cm relative to the surface of the wetland. Negative values are below ground, positive are above ground.

@@ -31,8 +31,10 @@ The doy_h field is the day of year with a decimal point for hour (eg 173.09 is J
 Year is a 4 digit number which is a group variable and used for facet wrap.
 }
 \examples{
+\dontrun{
 welld<-read.csv('./Analysis/FINAL_DATA/well_prec_data_2013-2018.csv')
 plot_hydro_site_year(df=welld,yvar='BIGH_WL',site='Big Heath')
 plot_hydro_site_year(df=welld,yvar='DUCK_WL',site='Duck Pond')
+}
 
 }

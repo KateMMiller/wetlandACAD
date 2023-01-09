@@ -7,11 +7,13 @@
 importQueries(type = c("DSN", "file"), odbc = "RAM_FE", path = NA)
 }
 \arguments{
-\item{type}{Select whether to use the default DSN to import data or a different database
+\item{type}{Select whether to use the default Data Source Named database (DSN) to import data or a different database. If "DSN" is selected, must specify name in odbc argument.
 \describe{
-\item{"DSN"}{Default. DSN database. If not specified, will use "NETNFVM" .}
+\item{"DSN"}{Default. DSN database. If odbc argument is not specified, will default to "RAM_FE"}
 \item{"file"}{A different database than default DSN}
 }}
+
+\item{odbc}{DSN of the database when using type = DSN. If not specified will defaut to "RAM_FE", which is the front end of the MS Access RAM database that contains the queries to import.}
 
 \item{path}{Quoted path of database backend file, including the name of the backend.}
 }
@@ -23,10 +25,12 @@ This function imports the queries from a named ODBC datasource from
 NETN forest backend databases and prepares the data for plotting in wetlandViz.
 }
 \examples{
+\dontrun{
 # Import database in specific folder:
 importQueries(type='file', path='./Data/NETN_RAM_Frontend.mdb')
 
 # Import ODBC named database
 importQueries(type='DSN', odbc="RAM_FE")
+}
 
 }

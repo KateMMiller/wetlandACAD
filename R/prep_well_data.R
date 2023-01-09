@@ -4,8 +4,6 @@
 #' @importFrom dplyr filter rename rename_at select
 #' @importFrom magrittr %>%
 #' @importFrom lubridate year yday force_tz
-#' @importFrom odbc odbc odbcListDataSources
-#' @importFrom DBI dbConnect dbReadTable dbDisconnect
 #' @importFrom tidyr spread
 #'
 #' @description This function pulls in the water level data from the NETN RAM database,
@@ -28,6 +26,7 @@
 #' Defaults to \code{FALSE}
 #'
 #' @examples
+#' \dontrun{
 #' # Export growing season only data to a table
 #' dir = c('C:/Water_level_data/growing_season_2019')
 #' prep_well_data(path = dir, year = 2019, export = TRUE, growing_season = TRUE)
@@ -39,6 +38,7 @@
 #' # Run for 2019 growing season data without printing messages in the console, and save output to file
 #' welld_2018 <- prep_well_data(year = 2019, growing_season = TRUE, export = TRUE,
 #'                              quietly = TRUE)
+#' }
 #'
 #' @return Returns a wide data frame with timestamp, SITENAME_AbsPres.
 #'

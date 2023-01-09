@@ -18,8 +18,9 @@
 #' Defaults to \code{FALSE}
 #'
 #' @examples
-#' precip_2018<- get_NADP_precip(start_date='04/01/2018', end_date='10/31/2018', stationID='ME98')
-#'
+#' \dontrun{
+#' precip_2018 <- get_NADP_precip(start_date='04/01/2018', end_date='10/31/2018', stationID='ME98')
+#' }
 #' @return Returns a data frame with Date, hour (0-23), timestamp (Y-M-D H:M:S), and precip_cm
 #'
 #' @export

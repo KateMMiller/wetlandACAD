@@ -18,8 +18,10 @@
 #' @param export \code{TRUE} or \code{FALSE}. Export csv file to specified path. Defaults to \code{TRUE}.
 #'
 #' @examples
+#' \dontrun{
 #' dir = c('C:/Water_level_data/growing_season_2019')
 #' well_data <- bind_HOBO_data(path)
+#' }
 #'
 #' @return Returns a long data frame with ID (blank for Access to assign autonumber), Well_ID,
 #' timestamp, Absolute_Pressure_kPa, Degrees_C, and site.

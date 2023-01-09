@@ -28,6 +28,7 @@ also requires a data frame called conv_table with the following fields:
   site, wellabs, ground, corfac, baro
 }
 \examples{
+\dontrun{
 
 # Compile tables
 dir = c('C:/Water_level_data/growing_season_2019')
@@ -36,5 +37,6 @@ conv_tbl_19 <- prep_conv_table(path = dir, year = 2019, visits = "fall", export 
 
 # Create data frame with water level relative to surface, cut at spring well visit
 well19WL<-compile_sent_WL(well19, conv_tbl_19, between_visits = TRUE)
+}
 
 }

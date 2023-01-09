@@ -28,7 +28,9 @@ to append to the MS Access table. Function requires all 8 sites and 2 barometric
 loggers to run. Mostly for internal use.
 }
 \examples{
+\dontrun{
 dir = c('C:/Water_level_data/growing_season_2019')
 well_data <- bind_HOBO_data(path)
+}
 
 }

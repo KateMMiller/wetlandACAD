@@ -9,8 +9,11 @@
 #' @param baro Quoted field name of the atmostpheric barometric pressure correction field
 #'
 #' @examples
+#' \dontrun{
 #' df <- data.frame(BIGH_AbsPres = c(100, 99, 98), WMTN_BARO_AbsPres = c(99, 96, 94))
 #' df2 <- conv_kpa_cm(df, pres = 'BIGH_AbsPres', baro = 'WMTN_BARO_AbsPres')
+#'
+#' }
 #'
 #' @return Returns a data frame with a new column labeled with SITECODE_cm, which represents
 #' cm of water above the logger.
