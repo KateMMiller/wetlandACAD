@@ -2,7 +2,9 @@
 
 export(NWCA16_download)
 export(NWCA16_import)
+export(NWCA16_soilMMI)
 export(NWCA16_vegMMI)
+export(NWCA16_waterMMI)
 export(bind_HOBO_data)
 export(calc_WL_stats)
 export(compile_sent_WL)
