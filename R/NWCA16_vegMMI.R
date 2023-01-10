@@ -6,7 +6,7 @@
 #'
 #' @param export_spp Logical. If TRUE, adds a dataframe called veg_spp_cov that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.
 #'
-#' @return NWCA16 data files as data frames in specified environment
+#' @return Data frame with vegetation MMI metrics and ratings
 #'
 #' @examples
 #' \dontrun{
@@ -34,18 +34,25 @@ NWCA16_vegMMI<- function(export_spp = FALSE){
   stopifnot(class(export_spp) == 'logical')
 
   # Extract veg data
-  # Function only works for ACAD sites, so filtering out other sites
-  ACAD_sites <- c("NWCA16-R301", "NWCA16-R302", "NWCA16-R303", "NWCA16-R304", "NWCA16-R305",
-                  "NWCA16-R306", "NWCA16-R307", "NWCA16-R308", "NWCA16-R309", "NWCA16-R310")
-
   env = if(exists("NWCA16")){NWCA16} else {.GlobalEnv}
 
   tryCatch(
-    {vegcov <- get("veg_data", envir = env) |>
-                 dplyr::select(UID, SITE_ID, LOCAL_ID, YEAR, VISIT_NO, DATE_COL, PLOT,
-                        SPECIES, SPECIES_NAME_ID, COVER, HEIGHT, NE, SW) |>
-                 dplyr::filter(SITE_ID %in% ACAD_sites)},
+    {vegcov1 <- get("veg_data", envir = env) |>
+                 dplyr::select(UID, SITE_ID, YEAR, VISIT_NO, DATE_COL, PLOT,
+                        SPECIES, SPECIES_NAME_ID, COVER, HEIGHT, NE, SW)},
      error = function(e){stop("The veg_data data frame was not found. Please import the data.")})
+
+  # filter on ACAD sites and add local name
+    ACAD_sites <-  data.frame(SITE_ID =
+                                c("NWCA16-R301", "NWCA16-R302", "NWCA16-R303", "NWCA16-R304", "NWCA16-R305",
+                                  "NWCA16-R306", "NWCA16-R307", "NWCA16-R308", "NWCA16-R309", "NWCA16-R310"),
+                              LOCAL_ID =
+                                c("DUCK", "WMTN", "BIGH", "GILM", "LIHU",
+                                  "NEMI", "GRME", "HEBR", "HODG", "FRAZ"))
+
+
+     vegcov2 <- vegcov1 |> dplyr::filter(SITE_ID %in% ACAD_sites$SITE_ID)
+     vegcov <- dplyr::left_join(vegcov2, ACAD_sites, by = "SITE_ID")
 
   # Importing COC table from MNAP website
   tryCatch(
@@ -62,7 +69,7 @@ NWCA16_vegMMI<- function(export_spp = FALSE){
   tryCatch(
     {vegtype = get("veg_type", envir = env) |>
       dplyr::select(UID, SITE_ID, PLOT, BRYOPHYTES) |>
-      dplyr::filter(SITE_ID %in% ACAD_sites)},
+      dplyr::filter(SITE_ID %in% ACAD_sites$SITE_ID)},
      error = function(e){stop("The veg_type data frame was not found. Please import the data.")})
 
   # Join COC to vegcov then check if there are species missing a coefficient

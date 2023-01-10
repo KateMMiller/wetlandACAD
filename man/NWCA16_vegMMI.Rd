@@ -10,7 +10,7 @@ NWCA16_vegMMI(export_spp = FALSE)
 \item{export_spp}{Logical. If TRUE, adds a dataframe called veg_spp_cov that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.}
 }
 \value{
-NWCA16 data files as data frames in specified environment
+Data frame with vegetation MMI metrics and ratings
 }
 \description{
 This function calculates the 4 metrics used to calculate the vegetation multi-metric index (MMI) developed by Miller et al. (2016). Note that to calculate the MMI, the species data must be joined with the Coefficient of Conservatism ranking. This is only implemented for EcoRegion 82 and downloads the CoCs from the Maine Natural Areas Program's website: https://www.maine.gov/dacf/mnap/features/coc.htm. This function is only implemented for ACAD sites and will break if the url hosting the CoC rankings changes.
