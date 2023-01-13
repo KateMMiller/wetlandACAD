@@ -23,6 +23,7 @@ Suggests:
     httr,
     odbc,
     readxl,
+    rjson,
     zip
 Encoding: UTF-8
 LazyData: true
@@ -33,6 +34,7 @@ Collate:
     'NWCA16_soilMMI.R'
     'NWCA16_vegMMI.R'
     'NWCA16_waterMMI.R'
+    'NWCA21_vegMMI.R'
     'bind_HOBO_data.R'
     'calc_WL_stats.R'
     'conv_WL.R'
