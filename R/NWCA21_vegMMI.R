@@ -9,7 +9,7 @@
 #'
 #' @param path Quoted path of folder containing data files.
 #'
-#' @param export_spp Logical. If TRUE, adds a dataframe called veg_spp_cov that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.
+#' @param export_spp Logical. If TRUE, adds a data frame called veg_spp_cov21 that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.
 #'
 #' @param new_env Logical. Specifies which environment to store data frames in. If \code{TRUE}(Default), stores
 #' data frames in NWCA21 environment. If \code{FALSE}, stores data frames in global environment
@@ -266,7 +266,7 @@ NWCA21_vegMMI<- function(path = NA, new_env = TRUE, export_spp = TRUE){
   vegcov_coc <- left_join(v2_sum, coc2, by = "species") |>
                 mutate(stress_tol = ifelse(coc > 0 & coc <= 4, 1, 0))
 
-  if(export_spp == TRUE){assign( "veg_spp_cov", vegcov_coc, envir = .GlobalEnv)}
+  if(export_spp == TRUE){assign( "veg_spp_cov21", vegcov_coc, envir = .GlobalEnv)}
 
   vegsum <- vegcov_coc |> group_by(site_name) |>
     summarize(mean_c = mean(coc),

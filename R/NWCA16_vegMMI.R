@@ -4,7 +4,7 @@
 #'
 #' @importFrom dplyr arrange filter first group_by mutate rename select summarize
 #'
-#' @param export_spp Logical. If TRUE, adds a dataframe called veg_spp_cov that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.
+#' @param export_spp Logical. If TRUE, adds a dataframe called veg_spp_cov16 that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.
 #'
 #' @return Data frame with vegetation MMI metrics and ratings
 #'
@@ -126,7 +126,7 @@ NWCA16_vegMMI<- function(export_spp = FALSE){
               stress_tol = first(stress_tol),
               .groups = 'drop')
 
-  if(export_spp == TRUE){assign( "veg_spp_cov", vegsum, envir = .GlobalEnv)}
+  if(export_spp == TRUE){assign( "veg_spp_cov16", vegsum, envir = .GlobalEnv)}
 
   vmmi1 <- vegsum |> group_by(UID, SITE_ID, LOCAL_ID) |>
                      summarize(mean_c = mean(coc),

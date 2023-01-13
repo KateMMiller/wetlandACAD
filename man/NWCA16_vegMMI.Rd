@@ -7,7 +7,7 @@
 NWCA16_vegMMI(export_spp = FALSE)
 }
 \arguments{
-\item{export_spp}{Logical. If TRUE, adds a dataframe called veg_spp_cov that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.}
+\item{export_spp}{Logical. If TRUE, adds a dataframe called veg_spp_cov16 that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.}
 }
 \value{
 Data frame with vegetation MMI metrics and ratings

@@ -12,7 +12,7 @@ NWCA21_vegMMI(path = NA, new_env = TRUE, export_spp = TRUE)
 \item{new_env}{Logical. Specifies which environment to store data frames in. If \code{TRUE}(Default), stores
 data frames in NWCA21 environment. If \code{FALSE}, stores data frames in global environment}
 
-\item{export_spp}{Logical. If TRUE, adds a dataframe called veg_spp_cov that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.}
+\item{export_spp}{Logical. If TRUE, adds a data frame called veg_spp_cov21 that contains average percent cover of all species recorded at a site to the global environment. If FALSE (default), only returns the final VMMI dataframe.}
 }
 \value{
 Data frame with vegetation MMI metrics and ratings
