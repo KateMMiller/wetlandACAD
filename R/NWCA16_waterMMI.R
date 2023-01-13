@@ -17,7 +17,7 @@
 #'
 #' @export
 
-NWCA16_waterMMI<- function(){
+NWCA16_waterMMI <- function(){
 
   # Extract soil data
   env = if(exists("NWCA16")){NWCA16} else {.GlobalEnv}

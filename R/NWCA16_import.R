@@ -31,7 +31,7 @@
 #'
 #' @export
 
-NWCA16_import<- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = TRUE){
+NWCA16_import <- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = TRUE){
 
   #----- Error handling -----
   stopifnot(class(new_env) == 'logical')

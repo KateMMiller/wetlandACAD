@@ -26,7 +26,7 @@
 #'
 #' @export
 
-NWCA21_vegMMI<- function(path = NA, new_env = TRUE, export_spp = TRUE){
+NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
 
   #----- Error handling -----
   stopifnot(class(new_env) == 'logical')
