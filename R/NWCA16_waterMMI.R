@@ -57,7 +57,6 @@ NWCA16_waterMMI <- function(){
            wmmi_rank = ifelse(wmmi > 68.00122, "Good", ifelse(wmmi < 55.86188, "Poor", "Fair"))
     ) |> arrange(SITE_ID)
 
-  wmmi
   return(wmmi)
 
   }
