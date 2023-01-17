@@ -54,7 +54,7 @@ NWCA16_waterMMI <- function(){
            logTP_adj = ((((logTP - 0.679588)/(3.09319 - 0.679588)) * 10) - 10) * -1,
            wmmi1 = pH_adj + logCond_adj + logTP_adj,
            wmmi = ((wmmi1 - 0.956494)/(26.65048 - 0.956494)) * 100,
-           smmi_rank = ifelse(wmmi > 68.00122, "Good", ifelse(wmmi < 55.86188, "Poor", "Fair"))
+           wmmi_rank = ifelse(wmmi > 68.00122, "Good", ifelse(wmmi < 55.86188, "Poor", "Fair"))
     ) |> arrange(SITE_ID)
 
   wmmi
