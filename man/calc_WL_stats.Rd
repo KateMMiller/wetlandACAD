@@ -21,8 +21,10 @@ This function calculates growing season water level statistics by site
 and by year for sentinel wetlands in Acadia NP. Metrics follow Miller & Weed 2017
 }
 \examples{
+\dontrun{
 well_data <- read.csv("well_prec_data_2013-2019.csv")
 gs_wl_stats <- calc_WL_stats(df = well_data, from = 2017, to = 2019)
+}
 
 }
 \seealso{

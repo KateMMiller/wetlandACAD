@@ -7,7 +7,7 @@
 \usage{
 prep_well_data(
   path = NULL,
-  year = 2019,
+  year = as.numeric(format(Sys.Date(), "\%Y")),
   rejected = FALSE,
   growing_season = TRUE,
   export = TRUE,
@@ -44,6 +44,7 @@ spring and fall well visit per year. \strong{Must have a the NETN RAM backend
 database named as a DSN.} Function is primarily for internal use.
 }
 \examples{
+\dontrun{
 # Export growing season only data to a table
 dir = c('C:/Water_level_data/growing_season_2019')
 prep_well_data(path = dir, year = 2019, export = TRUE, growing_season = TRUE)
@@ -55,5 +56,6 @@ welld_2018 <- prep_well_data(year = 2018, rejected = TRUE, growing_season = FALS
 # Run for 2019 growing season data without printing messages in the console, and save output to file
 welld_2018 <- prep_well_data(year = 2019, growing_season = TRUE, export = TRUE,
                              quietly = TRUE)
+}
 
 }

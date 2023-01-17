@@ -1,15 +1,40 @@
-Package: wetlandACAD
 Type: Package
-Title: Package for compiling, querying, summarizing and plotting freshwater wetland data in Acadia NP.
-Version: 0.1.4
+Package: wetlandACAD
+Title: Package for compiling, querying, summarizing and plotting
+    freshwater wetland data in Acadia NP
+Version: 0.1.5
 Author: Kate Miller
 Maintainer: Kate Miller <kathryn_miller@nps.gov>
-Description: This package contains functions that compile, query, summarize and plot freshwater wetland data collected by the Northeast Temperate Network in Acadia National Park.
-License: Public Domain
+Description: This package contains functions that compile, query,
+    summarize and plot freshwater wetland data collected by the Northeast
+    Temperate Network in Acadia National Park.
+License: GPL (>= 3)
+Imports:
+    dplyr,
+    ggplot2,
+    lubridate,
+    magrittr,
+    purrr,
+    stringr,
+    tidyr,
+    XML
+Suggests:
+    DBI,
+    httr,
+    odbc,
+    readxl,
+    rjson,
+    zip
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 Collate:
+    'NWCA16_download.R'
+    'NWCA16_import.R'
+    'NWCA16_soilMMI.R'
+    'NWCA16_vegMMI.R'
+    'NWCA16_waterMMI.R'
+    'NWCA21_vegMMI.R'
     'bind_HOBO_data.R'
     'calc_WL_stats.R'
     'conv_WL.R'
@@ -20,16 +45,3 @@ Collate:
     'plot_hydro_site_year.R'
     'prep_well_data.R'
     'prep_conv_table.R'
-Imports:
-    dplyr,
-    magrittr,
-    lubridate,
-    odbc,
-    purrr,
-    stringr,
-    tidyr,
-    XML
-Suggests:
-    DBI,
-    ggplot2,
-    odbc

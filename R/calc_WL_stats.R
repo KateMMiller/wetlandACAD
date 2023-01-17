@@ -1,6 +1,6 @@
 #' @title calc_WL_stats: Calculates growing season water level statistics.
 #'
-#' @importFrom dplyr between filter group_by lag left_join mutate select  summarise
+#' @importFrom dplyr between filter group_by lag left_join mutate n select summarise ungroup
 #' @importFrom magrittr %>%
 #' @importFrom lubridate month
 #' @importFrom tidyr gather spread
@@ -16,8 +16,10 @@
 #' @param to Year to stop analysis, ranging from 2013-2019
 #'
 #' @examples
+#' \dontrun{
 #' well_data <- read.csv("well_prec_data_2013-2019.csv")
 #' gs_wl_stats <- calc_WL_stats(df = well_data, from = 2017, to = 2019)
+#' }
 #'
 #' @return Returns a data frame with water level growing season statistics.
 #'
@@ -29,7 +31,7 @@ calc_WL_stats <- function(df, from = 2013, to = 2019){
 EDT<-"America/New_York"
 well_prp <- df %>% mutate(timestamp = as.POSIXct(timestamp, format = "%m/%d/%Y %H:%M"),
                           month = lubridate::month(timestamp),
-                          mon = months(timestamp, abbr = T)) %>%
+                          mon = months(timestamp, abbreviate = T)) %>%
                    filter(doy > 134 & doy < 275) %>% droplevels()
 
 well_prp2 <- well_prp %>% group_by(Year) %>%

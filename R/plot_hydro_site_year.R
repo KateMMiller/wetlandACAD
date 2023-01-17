@@ -15,9 +15,11 @@
 #' @param years years to plot
 #'
 #' @examples
+#' \dontrun{
 #' welld<-read.csv('./Analysis/FINAL_DATA/well_prec_data_2013-2018.csv')
 #' plot_hydro_site_year(df=welld,yvar='BIGH_WL',site='Big Heath')
 #' plot_hydro_site_year(df=welld,yvar='DUCK_WL',site='Duck Pond')
+#'}
 #'
 #' @return Returns a panel of hydrographs during the growing season for each year
 #' in the data frame.

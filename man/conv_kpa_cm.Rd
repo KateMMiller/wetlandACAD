@@ -21,7 +21,10 @@ cm of water above the logger.
 This function converts absolute pressure in kPa to cm of water.
 }
 \examples{
+\dontrun{
 df <- data.frame(BIGH_AbsPres = c(100, 99, 98), WMTN_BARO_AbsPres = c(99, 96, 94))
 df2 <- conv_kpa_cm(df, pres = 'BIGH_AbsPres', baro = 'WMTN_BARO_AbsPres')
+
+}
 
 }

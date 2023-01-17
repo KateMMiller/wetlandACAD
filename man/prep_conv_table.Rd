@@ -7,7 +7,7 @@ relative to the wetland surface}
 \usage{
 prep_conv_table(
   path = NA,
-  year = 2019,
+  year = as.numeric(format(Sys.Date(), "\%Y")),
   visits = c("both", "spring", "fall"),
   export = TRUE,
   quietly = FALSE
@@ -51,6 +51,7 @@ growing season of data. Must have a the NETN RAM backend database
 named "RAM_BE" as a DSN.} Function is primarily for internal use.
 }
 \examples{
+\dontrun{
 # Create conversion table for fall-only data
 dir = c('C:/Water_level_data/growing_season_2019')
 conv_tbl_19 <- prep_conv_table(path = dir, year = 2019, visits = "fall", export = TRUE)
@@ -60,5 +61,6 @@ conv_tbl_19 <- prep_conv_table(path = dir, year = 2019, visits = "fall", export 
 dir = c('C:/Water_level_data/growing_season_2019')
 conv_tbl_19 <- prep_conv_table(path = dir, year = 2019, visits = "both",
                                export = FALSE, quietly = TRUE)
+}
 
 }

@@ -3,11 +3,9 @@
 #' @title prep_conv_table: Prepares conversion table to calculate water level
 #' relative to the wetland surface
 #'
-#' @importFrom dplyr arrange between case_when filter first full_join group_by left_join mutate rename select summarise
+#' @importFrom dplyr arrange between case_when desc filter first full_join group_by last left_join mutate rename select summarise
 #' @importFrom magrittr %>%
 #' @importFrom lubridate force_tz hour month year ymd
-#' @importFrom odbc odbc odbcListDataSources
-#' @importFrom DBI dbConnect dbReadTable dbDisconnect
 #' @importFrom stringr str_c str_pad
 #' @importFrom tidyr gather spread
 #'
@@ -41,6 +39,7 @@
 #' Defaults to \code{FALSE}
 #'
 #' @examples
+#' \dontrun{
 #' # Create conversion table for fall-only data
 #' dir = c('C:/Water_level_data/growing_season_2019')
 #' conv_tbl_19 <- prep_conv_table(path = dir, year = 2019, visits = "fall", export = TRUE)
@@ -50,6 +49,7 @@
 #' dir = c('C:/Water_level_data/growing_season_2019')
 #' conv_tbl_19 <- prep_conv_table(path = dir, year = 2019, visits = "both",
 #'                                export = FALSE, quietly = TRUE)
+#' }
 #'
 #' @return Returns a data frame with visit times, site, ground height, and correction factor
 #'
@@ -161,7 +161,7 @@ if(dim(well_visit3 %>% filter(season %in% "offseason") %>% droplevels())[1]>0){
 
 
 # prep raw water level for year of interest
-raw_wl_yr <- raw_wl %>% mutate(logger_time = force_tz(Measure_Date_Time, tz = "America/New_York")) %>%
+raw_wl_yr <- raw_wl %>% mutate(logger_time = force_tz(Measure_Date_Time, tzone = "America/New_York")) %>%
                         filter(year(logger_time) == year) %>% select(-ID) %>%
                         left_join(., well_loc[ , c("ID", "Site_Code")], by = c("Well_ID" = "ID"))
 

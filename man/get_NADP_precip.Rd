@@ -5,8 +5,8 @@
 \title{get_NADP_precip: Downloads and cleans hourly precipitation data from NADP}
 \usage{
 get_NADP_precip(
-  start_date = "04/01/2018",
-  end_date = "10/31/2018",
+  start_date = paste0("04/01/", as.numeric(format(Sys.Date(), "\%Y"))),
+  end_date = paste0("10/31/", as.numeric(format(Sys.Date(), "\%Y"))),
   stationID = "ME98",
   quietly = FALSE
 )
@@ -31,6 +31,7 @@ some stations may have different download links, and may not always work. The li
 used to download the NADP data was generated for station: ME98.
 }
 \examples{
-precip_2018<- get_NADP_precip(start_date='04/01/2018', end_date='10/31/2018', stationID='ME98')
-
+\dontrun{
+precip_2018 <- get_NADP_precip(start_date='04/01/2018', end_date='10/31/2018', stationID='ME98')
+}
 }
