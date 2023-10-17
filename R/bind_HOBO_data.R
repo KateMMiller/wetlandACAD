@@ -183,7 +183,7 @@ bind_HOBO_data <- function(path, export = TRUE){
                                              skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
                             colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
                             return(df)
-                          } else {stop("Could not find water level CSV for Shed BARO.")}
+                          } else {stop("Could not find water level CSV for HQ BARO.")}
                         }
 
   )
@@ -197,7 +197,7 @@ bind_HOBO_data <- function(path, export = TRUE){
   hebr <- hebr %>% mutate(site = 'hebr', Well_ID = 15, ID = NA)
   bigh <- bigh %>% mutate(site = 'bigh', Well_ID = 11, ID = NA)
   wmtn_baro <- wmtn_baro %>% mutate(site = 'wmtn_baro', Well_ID = 17, ID = NA)
-  hq_baro <- shed_baro %>% mutate(site = 'hq_baro', Well_ID = 19, ID = NA)
+  hq_baro <- hq_baro %>% mutate(site = 'hq_baro', Well_ID = 19, ID = NA)
 
   combdata <- rbind(duck, lihu, gilm, wmtn, hodg, nemi, hebr, bigh, wmtn_baro, hq_baro)
 
