@@ -173,13 +173,13 @@ bind_HOBO_data <- function(path, export = TRUE){
 
   )
 
-  hq_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('SHED_BARO', filenames, ignore.case = TRUE)]),
+  hq_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('HQ_BARO', filenames, ignore.case = TRUE)]),
                                          skip = 1, sep = ',', stringsAsFactors = FALSE,
                                          col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                         error = function(e){
                           err <- conditionMessage(e)
                           if(startsWith("more columns than column names", err)){
-                            df <- read.table(paste0(path, filenames[grep('SHED_BARO', filenames, ignore.case = TRUE)]),
+                            df <- read.table(paste0(path, filenames[grep('HQ_BARO', filenames, ignore.case = TRUE)]),
                                              skip = 1, sep = ',', stringsAsFactors = FALSE)[-1,2:4]
                             colnames(df) <- c('Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C')
                             return(df)
