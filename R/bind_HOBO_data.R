@@ -173,7 +173,7 @@ bind_HOBO_data <- function(path, export = TRUE){
 
   )
 
-  shed_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('SHED_BARO', filenames, ignore.case = TRUE)]),
+  hq_baro <- tryCatch(df <- read.table(paste0(path, filenames[grep('SHED_BARO', filenames, ignore.case = TRUE)]),
                                          skip = 1, sep = ',', stringsAsFactors = FALSE,
                                          col.names = c('V1', 'Measure_Date_Time', 'Absolute_Pressure_kPa', 'Degrees_C'))[-1,2:4],
                         error = function(e){
@@ -197,9 +197,9 @@ bind_HOBO_data <- function(path, export = TRUE){
   hebr <- hebr %>% mutate(site = 'hebr', Well_ID = 15, ID = NA)
   bigh <- bigh %>% mutate(site = 'bigh', Well_ID = 11, ID = NA)
   wmtn_baro <- wmtn_baro %>% mutate(site = 'wmtn_baro', Well_ID = 17, ID = NA)
-  shed_baro <- shed_baro %>% mutate(site = 'shed_baro', Well_ID = 19, ID = NA)
+  hq_baro <- shed_baro %>% mutate(site = 'shed_baro', Well_ID = 19, ID = NA)
 
-  combdata <- rbind(duck, lihu, gilm, wmtn, hodg, nemi, hebr, bigh, wmtn_baro, shed_baro)
+  combdata <- rbind(duck, lihu, gilm, wmtn, hodg, nemi, hebr, bigh, wmtn_baro, hq_baro)
 
   combdata <- combdata %>% mutate(Measure_Date_Time = as.POSIXct(Measure_Date_Time,
                                                                    format = "%m/%d/%y %I:%M:%S %p",
