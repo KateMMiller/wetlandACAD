@@ -36,7 +36,7 @@ importQueries<- function(type = c('DSN', 'file'), odbc = 'RAM_FE', path = NA){
     stop("Package 'DBI' needed for this function to work. Please install it.", call. = FALSE)
   }
 
-  pb = txtProgressBar(min = 0, max = 23, style = 3)
+  pb = txtProgressBar(min = 0, max = 4, style = 3)
   db <- if (type=='DSN'){
     db <- DBI::dbConnect(drv = odbc::odbc(), dsn = odbc)
   }
