@@ -35,7 +35,7 @@ well_prp <- df %>% mutate(timestamp = as.POSIXct(timestamp, format = "%m/%d/%Y %
                    filter(doy > 134 & doy < 275) %>% droplevels()
 
 well_prp2 <- well_prp %>% group_by(Year) %>%
-                          mutate(lag.precip = lag(precip_cm, k = 1)) %>%
+                          mutate(lag.precip = dplyr::lag(precip_cm, n = 1)) %>%
                           ungroup()
 
 well_prp_yr <- well_prp2 %>% filter(between(Year, from, to)) %>% droplevels()
@@ -46,7 +46,7 @@ well_prp_long <- well_prp_yr %>% gather("site","water_level_cm",
                                    -doy_h, -month, -mon, -precip_cm, -lag.precip)
 
 well_prp_long2 <- well_prp_long %>% group_by(Year, site) %>%
-                                    mutate(lag_WL = lag(water_level_cm),
+                                    mutate(lag_WL = dplyr::lag(water_level_cm, n = 1),
                                            change_WL = water_level_cm-lag_WL)
 
 # Calculate growing season stats
