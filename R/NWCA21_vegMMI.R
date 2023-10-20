@@ -144,9 +144,17 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
   v2_all_sites$Cover_4 <- as.numeric(v2_all_sites$Cover_4)
   v2_all_sites$Cover_5 <- as.numeric(v2_all_sites$Cover_5)
 
+  v2_all_sites$pres_1 <- ifelse(v2_all_sites$Cover_1 > 0, 1, 0)
+  v2_all_sites$pres_2 <- ifelse(v2_all_sites$Cover_2 > 0, 1, 0)
+  v2_all_sites$pres_3 <- ifelse(v2_all_sites$Cover_3 > 0, 1, 0)
+  v2_all_sites$pres_4 <- ifelse(v2_all_sites$Cover_4 > 0, 1, 0)
+  v2_all_sites$pres_5 <- ifelse(v2_all_sites$Cover_5 > 0, 1, 0)
+
   # Calculate average cover across all plots
-  v2_sum <- v2_all_sites |> mutate(avg_cov = (Cover_1 + Cover_2 + Cover_3 + Cover_4 + Cover_5)/5) |>
-    select(site_name, species, avg_cov)
+  v2_sum <- v2_all_sites |>
+    mutate(avg_cov = (Cover_1 + Cover_2 + Cover_3 + Cover_4 + Cover_5)/5,
+           pct_freq = (pres_1 + pres_2 + pres_3 + pres_4 + pres_5)/5) |>
+    select(site_name, species, avg_cov, pct_freq)
 
   # Join with CoC
   vegcov_check <- left_join(v2_sum,
@@ -155,7 +163,7 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
 
   # Check for species without CoCs, and manually add in. Where a genus is recorded, use the average C of species
   # in that genus that are native.
-  spp_miss <- vegcov_check |> filter(is.na(coc)) |> select(-site_name, -avg_cov) |>
+  spp_miss <- vegcov_check |> filter(is.na(coc)) |> select(-site_name, -avg_cov, -pct_freq) |>
     unique() |> arrange(species)
 
   # Genus level scores (following NJNHP approach to filling in)
@@ -163,10 +171,10 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
   VIOLA <- coc |> filter(grepl("VIOLA", SPECIES)) |> filter(nativity == "native") |>
     summarize(coc = mean(ecoreg_82_COC)) |> unique()
 
-  # This isn't pretty, but doing it here, so I can check the values.
+  # This isn't pretty, but doing it here, so I can check the values. Changing to the USDA Codes used by NETN.
   spp_miss$coc[spp_miss$species == "ALNUS INCANA SPP. RUGOSA"] <- 3 # SSP in COC
   spp_miss$nativity[spp_miss$species == "ALNUS INCANA SPP. RUGOSA"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "ALNUS INCANA SPP. RUGOSA"] <- "ALINR"
+  spp_miss$PLANTS[spp_miss$species == "ALNUS INCANA SPP. RUGOSA"] <- "ALIN2"
 
   spp_miss$coc[spp_miss$species == "AMELANCHIER"] <- as.numeric(AMELSPP)
   spp_miss$nativity[spp_miss$species == "AMELANCHIER"] <- "native"
@@ -182,31 +190,31 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
 
   spp_miss$coc[spp_miss$species == "CALOPOGON TUBEROSUS VAR. TUBEROSUS"] <- 7 #B. pap var. pap.
   spp_miss$nativity[spp_miss$species == "CALOPOGON TUBEROSUS VAR. TUBEROSUS"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "CALOPOGON TUBEROSUS VAR. TUBEROSUS"] <- "CATUT"
+  spp_miss$PLANTS[spp_miss$species == "CALOPOGON TUBEROSUS VAR. TUBEROSUS"] <- "CATU5"
 
   spp_miss$coc[spp_miss$species == "CAREX ECHINATA VAR. ECHINATA"] <- 3 # C. echinata
   spp_miss$nativity[spp_miss$species == "CAREX ECHINATA VAR. ECHINATA"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "CAREX ECHINATA VAR. ECHINATA"] <- "CAECE"
+  spp_miss$PLANTS[spp_miss$species == "CAREX ECHINATA VAR. ECHINATA"] <- "CAEC"
 
   spp_miss$coc[spp_miss$species == "CAREX LASIOCARPA SPP. AMERICANA"] <- 6 # C. lasiocarpa
   spp_miss$nativity[spp_miss$species == "CAREX LASIOCARPA SPP. AMERICANA"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "CAREX LASIOCARPA SPP. AMERICANA"] <- "CALAA"
+  spp_miss$PLANTS[spp_miss$species == "CAREX LASIOCARPA SPP. AMERICANA"] <- "CALA11"
 
   spp_miss$coc[spp_miss$species == "CAREX MAGELLANICA SPP. IRRIGUA"] <- 7 # C. magellanica
   spp_miss$nativity[spp_miss$species == "CAREX MAGELLANICA SPP. IRRIGUA"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "CAREX MAGELLANICA SPP. IRRIGUA"] <- "CAMAI2"
+  spp_miss$PLANTS[spp_miss$species == "CAREX MAGELLANICA SPP. IRRIGUA"] <- "CAMA12"
 
   spp_miss$coc[spp_miss$species == "CHAMAEPERICLYMENUM CANADENSE"] <- 5 #syn: Cornus canadensis
   spp_miss$nativity[spp_miss$species == "CHAMAEPERICLYMENUM CANADENSE"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "CHAMAEPERICLYMENUM CANADENSE"] <- "CHCA24"
+  spp_miss$PLANTS[spp_miss$species == "CHAMAEPERICLYMENUM CANADENSE"] <- "COCA13"
 
   spp_miss$coc[spp_miss$species == "ERIOPHORUM ANGUSTIFOLIUM SPP. ANGUSTIFOLIUM"] <- 6 #syn: E. angustifolium
   spp_miss$nativity[spp_miss$species == "ERIOPHORUM ANGUSTIFOLIUM SPP. ANGUSTIFOLIUM"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "ERIOPHORUM ANGUSTIFOLIUM SPP. ANGUSTIFOLIUM"] <- "ERANA3"
+  spp_miss$PLANTS[spp_miss$species == "ERIOPHORUM ANGUSTIFOLIUM SPP. ANGUSTIFOLIUM"] <- "ERAN6"
 
   spp_miss$coc[spp_miss$species == "GAYLUSSACIA BIGELOVIANA"] <- 8 #syn: G. dumosa
   spp_miss$nativity[spp_miss$species == "GAYLUSSACIA BIGELOVIANA"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "GAYLUSSACIA BIGELOVIANA"] <- "GABI7"
+  spp_miss$PLANTS[spp_miss$species == "GAYLUSSACIA BIGELOVIANA"] <- "GADU"
 
   spp_miss$coc[spp_miss$species == "KALMIA ANGUSTIFOLIA SPP. ANGUSTIFOLIA"] <- 4 #K. angustifolia
   spp_miss$nativity[spp_miss$species == "KALMIA ANGUSTIFOLIA SPP. ANGUSTIFOLIA"] <- "native"
@@ -214,7 +222,7 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
 
   spp_miss$coc[spp_miss$species == "LYSIMACHIA BOREALIS"] <- 4 #syn: Trientalis borealis
   spp_miss$nativity[spp_miss$species == "LYSIMACHIA BOREALIS"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "LYSIMACHIA BOREALIS"] <- "TRIBO2" # USDA plants doesn't have LYSBOR code
+  spp_miss$PLANTS[spp_miss$species == "LYSIMACHIA BOREALIS"] <- "TRBO2" # USDA plants doesn't have LYSBOR code
 
   spp_miss$coc[spp_miss$species == "NUPHAR VARIEGATA"] <- 4 #Syn: N. lutea spp. variegata
   spp_miss$nativity[spp_miss$species == "NUPHAR VARIEGATA"] <- "native"
@@ -230,7 +238,7 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
 
   spp_miss$coc[spp_miss$species == "RUBUS REPENS"] <- 5 #syn: Dalibarda repens
   spp_miss$nativity[spp_miss$species == "RUBUS REPENS"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "RUBUS REPENS"] <- "DARE"
+  spp_miss$PLANTS[spp_miss$species == "RUBUS REPENS"] <- "RURE4"
 
   spp_miss$coc[spp_miss$species == "SARRACENIA PURPUREA SPP. PURPUREA"] <- 7 #S. purpurea
   spp_miss$nativity[spp_miss$species == "SARRACENIA PURPUREA SPP. PURPUREA"] <- "native"
@@ -238,7 +246,7 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
 
   spp_miss$coc[spp_miss$species == "SOLIDAGO ULIGINOSA VAR. PERACUTA"] <- 8 #S. purpurea
   spp_miss$nativity[spp_miss$species == "SOLIDAGO ULIGINOSA VAR. PERACUTA"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "SOLIDAGO ULIGINOSA VAR. PERACUTA"] <- "SOULP"
+  spp_miss$PLANTS[spp_miss$species == "SOLIDAGO ULIGINOSA VAR. PERACUTA"] <- "SOUL"
 
   spp_miss$coc[spp_miss$species == "SPARGANIUM EMERSUM"] <- 3 #Not on current list, using previous version
   spp_miss$nativity[spp_miss$species == "SPARGANIUM EMERSUM"] <- "native"
@@ -246,7 +254,7 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
 
   spp_miss$coc[spp_miss$species == "THELYPTERIS PALUSTRIS VAR. PUBESCENS"] <- 3 #T.palustris
   spp_miss$nativity[spp_miss$species == "THELYPTERIS PALUSTRIS VAR. PUBESCENS"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "THELYPTERIS PALUSTRIS VAR. PUBESCENS"] <- "THPAP"
+  spp_miss$PLANTS[spp_miss$species == "THELYPTERIS PALUSTRIS VAR. PUBESCENS"] <- "THPA"
 
   spp_miss$coc[spp_miss$species == "TRICHOPHORUM CESPITOSUM SPP. CESPITOSUM"] <- 7 #T. cespitosum
   spp_miss$nativity[spp_miss$species == "TRICHOPHORUM CESPITOSUM SPP. CESPITOSUM"] <- "native"
@@ -254,14 +262,20 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
 
   spp_miss$coc[spp_miss$species == "UTRICULARIA VULGARIS SPP. MACRORHIZA"] <- 4 #U. machrorhiza
   spp_miss$nativity[spp_miss$species == "UTRICULARIA VULGARIS SPP. MACRORHIZA"] <- "native"
-  spp_miss$PLANTS[spp_miss$species == "UTRICULARIA VULGARIS SPP. MACRORHIZA"] <- "UTVUM"
+  spp_miss$PLANTS[spp_miss$species == "UTRICULARIA VULGARIS SPP. MACRORHIZA"] <- "UTMA"
 
   spp_miss$coc[spp_miss$species == "VIOLA"] <- as.numeric(VIOLA)
   spp_miss$nativity[spp_miss$species == "VIOLA"] <- "native"
   spp_miss$PLANTS[spp_miss$species == "VIOLA"] <- "VIOLA"
 
+  names(coc)
   coc2 <- rbind(coc |> select(species = SPECIES, coc = ecoreg_82_COC, nativity, PLANTS = `PLANTS_Accepted Symbol`),
                 spp_miss)
+
+  #change a few USDA codes to match NETN
+  coc2$PLANTS[coc2$species == "FRANGULA ALNUS"] <- "RHFR"
+  coc2$PLANTS[coc2$species == "PLATANTHERA CLAVELLATA"] <- "GYCL"
+  coc2$PLANTS[coc2$species == "SPIRAEA ALBA VAR. LATIFOLIA"] <- "SPAL2"
 
   vegcov_coc <- left_join(v2_sum, coc2, by = "species") |>
                 mutate(stress_tol = ifelse(coc > 0 & coc <= 4, 1, 0))
