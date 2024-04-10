@@ -2,7 +2,7 @@
 #'
 #' @description This function imports all tables in the wetland RAM backend and combines them into flattened views for the data package. Each view is added to a VIEWS_WETLAND environment in your workspace, or to your global environment based on whether new_env = TRUE or FALSE.
 #'
-#' @importFrom dplyr arrange collect everything group_by left_join rename summarize tbl
+#' @importFrom dplyr arrange collect group_by left_join mutate rename summarize tbl
 #' @importFrom purrr reduce
 #' @importFrom tidyr pivot_wider
 #'
@@ -12,6 +12,8 @@
 #' \item{"WELL"}{Only imports water level data collected in sentinel site wells.}
 #' \item{"all"}{Imports all data tables. Note importing all files can be slow.}
 #' }
+#'
+#'@param export_protected Logical. If TRUE, all records are exported. If FALSE (Default), only non-protected species are exported.
 #'
 #' @param type Select whether to use the default Data Source Named database (DSN) to import data or a different database. If "DSN" is selected, must specify name in odbc argument.
 #' \describe{
@@ -36,10 +38,11 @@
 #' @export
 
 
-makeDataPackage <- function(data_type = c("RAM", "WELL", "all"),
+makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protected = FALSE,
                        type = c('DSN', 'file'), odbc = 'RAM_BE', path = NA, new_env = TRUE){
 
   data_type <- match.arg(data_type)
+  stopifnot(class(protected) == 'logical')
   type <- match.arg(type)
   stopifnot(class(new_env) == 'logical')
 
@@ -141,8 +144,7 @@ tryCatch(
     tbl_locations <- reduce(loc_tbl_list, left_join, by = "Location_ID") |> arrange(Code)
 
     # tbl_visits
-    tbl_Visit <- tbl_Visit |> mutate(Year = substr(Date, 1, 4)) |>
-      select(Location_ID, Visit_ID, Date, Year, Visit_Type, everything())
+    tbl_Visit <- tbl_Visit |> mutate(Year = substr(Date, 1, 4))
 
     visit_tbl_list <- list(tbl_Visit,
                            tbl_Visit_Inundation |> rename(Flag_Inundation = Flag),
@@ -150,13 +152,26 @@ tryCatch(
                            tbl_Visit_Surface |> rename(Flag_Surface = Flag))
     visit_tbls <- reduce(visit_tbl_list, left_join, by = c("Visit_ID"))
 
-    tbl_visits1 <- left_join(tbl_Location |> select(Location_ID, Code),
+    tbl_visits1 <- left_join(tbl_Location |> select(Code, Location_ID, Panel),
                               visit_tbls, by = "Location_ID") |>
                   arrange(Code, Date)
+
     tbl_visits <- left_join(tbl_visits1,
                             tbl_Protocol |> select(ID, Protocol_Version = Version),
                             by = c("Protocol_ID" = "ID"))
 
+    first_cols <- c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type")
+    last_cols <- c("Protocol_Version", "Checked", "Data_Verified_By", "Certification_Level")
+    notes <- c("Notes_RAM01", "Notes_RAM02", "Notes_Topographic_Complexity", "Notes_Mosaic_Complexity",
+               "Notes_RAM05", "Notes_RAM06", "Notes_RAM07", "Notes_RAM08", "Notes_RAM09",
+               "Notes_RAM10", "Notes_RAM11", "Notes_Species", "Notes_H1")
+    new_order <- c(first_cols,
+                   names(tbl_visits[,!names(tbl_visits) %in% c(first_cols, notes, last_cols)]),
+                   notes, last_cols)
+
+    tbl_visits <- tbl_visits[, new_order]
+
+    names(tbl_visits)
     # tbl_plant_species
     tbl_species1 <- left_join(xref_Species_List,
                               tlu_Plant |> select(Accepted_Latin_Name, TSN_Accepted, TSN, Latin_Name, Common,
@@ -165,6 +180,16 @@ tryCatch(
                                                   Moss_Lichen, Shrub, Tree, Vine,  Author,
                                                   Canopy_Exclusion, Favorites, Protected_species),
                               by = c("Plant_ID" = "TSN"))
+
+    tbl_species2 <- left_join(tbl_visits |> select(all_of(first_cols)), tbl_species1, by = "Visit_ID")
+    # Change -1 to 1
+    binvars <- c("Quadrat_NE", "Quadrat_SE", "Quadrat_SW", "Quadrat_NW", "Coll")
+    tbl_species2[,binvars][tbl_species2[,binvars] == -1] <- 1
+
+    # Add qualifiers for plot visits that didn't run out tapes (RAM-17 all years; RAM-GM last year),
+    # so percent freq isn't calculated as /4.
+    tbl_species2$pct_freq <- 0
+
     head(tbl_species1)
     head(xref_Species_List)
 
@@ -173,6 +198,11 @@ tryCatch(
   if(data_type %in% c("WELL", "all")){
 
   }
+
+  if(export_protected == TRUE){ #Keep all records
+  } else {#Use tlu_Species$Protected_species column to filter protected species out of tbl_species and
+    #RAM data with species attached.
+    }
 
   close(pb)
 
