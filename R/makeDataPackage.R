@@ -254,25 +254,23 @@ tryCatch(
       select(Code, Year, Severity_Indiv, Severity_Overall, Stressor_ID, Stressor_ID_Overall, Visit_ID, Stressor_Category) |>
       arrange(Stressor_Category, Visit_ID)
 
-    if(nrow(miss_overall) > 0){warning(paste0("The following Stressor_Overall records are missing a ranking where an individual stressor was recorded.",
-                                              "\n",
-                                              paste0(miss_overall[, c("Code", "Year", "Visit_ID", "Stressor_Category", "Stressor_ID", "Stressor_ID_Overall",
-                                                                     "Severity_Indiv", "Severity_Overall")], collapse = "\n ")))}
+    if(nrow(miss_overall) > 0){
+      warning(paste0("The following Stressor_Overall records are missing a ranking where an individual stressor was recorded:",
+                      "\n",
+              paste0(miss_overall[, c("Code", "Year", "Visit_ID", "Stressor_Category", "Stressor_ID", "Stressor_ID_Overall",
+                                      "Severity_Indiv", "Severity_Overall")], collapse = "\n ")))}
 
-    miss_indiv <- tbl_RAM_stress1 |> group_by(Code, Year, Stressor_ID, Stressor_Category) |>
+    miss_indiv <- tbl_RAM_stress1 |> group_by(Code, Year, Visit_ID, Stressor_Category) |>
       summarize(num_indiv_stress = sum(Severity_Indiv > 0),
                 stress_overall = sum(Severity_Overall > 0), .groups = 'drop') |>
       filter(num_indiv_stress == 0 & stress_overall > 0)
 
+    if(nrow(miss_indiv) > 0){
+      warning(paste0("The following Stressor_Category records are have an Overall ranking without an individual stressor recorded:",
+                     "\n",
+              paste0(miss_indiv[, c("Code", "Year", "Visit_ID", "Stressor_Category")], collapse = "\n ")))}
+
     #++++++++++++++ ENDED HERE ++++++++++++++++++++
-    # Lots of returns- need to look into why (may need to add another grouping variable)
-
-    head(miss_indiv)
-    # filter(Severity_Overall > 0 & Severity_Indiv == 0) |>
-      # select(Code, Year, Severity_Indiv, Severity_Overall, Stressor_ID, Stressor_ID_Overall, Visit_ID, Stressor_Category) |>
-      # arrange(Stressor_Category, Visit_ID)
-
-    write.csv(fixes, "missing_Overalls.csv", row.names = F)
 
     head(tbl_RAM_stress1)
 
