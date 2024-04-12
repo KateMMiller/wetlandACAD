@@ -2,7 +2,11 @@
 #'
 #' @description This function imports all tables in the wetland RAM backend and combines them into flattened views for the data package. Each view is added to a VIEWS_WETLAND environment in your workspace, or to your global environment based on whether new_env = TRUE or FALSE.
 #'
+<<<<<<< HEAD
 #' @importFrom dplyr all_of arrange collect filter full_join group_by left_join mutate rename summarize tbl
+=======
+#' @importFrom dplyr arrange collect group_by left_join mutate rename summarize tbl
+>>>>>>> 68193c3b1307ee188c08a1f4fbe09f68e0cc1bd9
 #' @importFrom purrr reduce
 #' @importFrom tidyr pivot_wider
 #'
@@ -171,6 +175,7 @@ tryCatch(
 
     tbl_visits <- tbl_visits[, new_order]
 
+
     # tbl_plant_species
     tbl_species1 <- left_join(xref_Species_List |> rename(TSN = Plant_ID),
                               tlu_Plant |> select(Accepted_Latin_Name, TSN_Accepted, TSN, Latin_Name, Common,
@@ -179,6 +184,16 @@ tryCatch(
                                                   Moss_Lichen, Shrub, Tree, Vine,  Author,
                                                   Canopy_Exclusion, Favorites, Protected_species),
                               by = c("TSN"))
+
+
+    tbl_species2 <- left_join(tbl_visits |> select(all_of(first_cols)), tbl_species1, by = "Visit_ID")
+    # Change -1 to 1
+    binvars <- c("Quadrat_NE", "Quadrat_SE", "Quadrat_SW", "Quadrat_NW", "Coll")
+    tbl_species2[,binvars][tbl_species2[,binvars] == -1] <- 1
+
+    # Add qualifiers for plot visits that didn't run out tapes (RAM-17 all years; RAM-GM last year),
+    # so percent freq isn't calculated as /4.
+    tbl_species2$pct_freq <- 0
 
     tbl_species2 <- left_join(tbl_visits |> select(all_of(first_cols)), tbl_species1, by = "Visit_ID")
     # Change -1 to 1
@@ -279,6 +294,11 @@ tryCatch(
 
 
   }
+
+  if(export_protected == TRUE){ #Keep all records
+  } else {#Use tlu_Species$Protected_species column to filter protected species out of tbl_species and
+    #RAM data with species attached.
+    }
 
   if(export_protected == TRUE){ #Keep all records
   } else {#Use tlu_Species$Protected_species column to filter protected species out of tbl_species and
