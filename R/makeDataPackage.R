@@ -2,11 +2,7 @@
 #'
 #' @description This function imports all tables in the wetland RAM backend and combines them into flattened views for the data package. Each view is added to a VIEWS_WETLAND environment in your workspace, or to your global environment based on whether new_env = TRUE or FALSE.
 #'
-<<<<<<< HEAD
 #' @importFrom dplyr all_of arrange collect filter full_join group_by left_join mutate rename summarize tbl
-=======
-#' @importFrom dplyr arrange collect group_by left_join mutate rename summarize tbl
->>>>>>> 68193c3b1307ee188c08a1f4fbe09f68e0cc1bd9
 #' @importFrom purrr reduce
 #' @importFrom tidyr pivot_wider
 #'
@@ -58,9 +54,9 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
     stop("Package 'DBI' needed for this function to work. Please install it.", call. = FALSE)
   }
 
-  if(!requireNamespace("dbplyr", quietly = TRUE)){
-    stop("Package 'dbplyr' needed for this function to work. Please install it.", call. = FALSE)
-  }
+  # if(!requireNamespace("dbplyr", quietly = TRUE)){
+  #   stop("Package 'dbplyr' needed for this function to work. Please install it.", call. = FALSE)
+  # }
 
   # make sure db is on dsn list if type == DSN
   dsn_list <- odbc::odbcListDataSources()
@@ -122,10 +118,11 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
   #   VIEWS_WETLAND <<- new.env()
   #   list2env(tbl_import, envir = VIEWS_WETLAND)
   # } else {
-    list2env(tbl_import, envir = .GlobalEnv)#}
+  list2env(tbl_import, envir = .GlobalEnv)#}
 
   #---- Combine tables into views by data types ----
   if(data_type %in% c("RAM", "all")){
+    #--- tbl_locations
     # Create tbl_locations by reshaping xrefs to have 1 record per location
     xref_Loc_Diff1 <- left_join(xref_Location_Difficulty, tlu_Difficulty, by = "Difficulty_ID")
     xref_Loc_Diff <- xref_Loc_Diff1 |> group_by(Location_ID) |>
@@ -148,7 +145,32 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
                                            paste0(Wetland_Hydrology_Comments, collapse = ": "))
 
     loc_tbl_list <- list(tbl_Location, xref_Loc_Diff, xref_Loc_Req, xref_Loc_Hydro_wide)
-    tbl_locations <- reduce(loc_tbl_list, left_join, by = "Location_ID") |> arrange(Code)
+    tbl_locations1 <- reduce(loc_tbl_list, left_join, by = "Location_ID") |> arrange(Code)
+
+    tbl_locations2 <- left_join(tbl_locations,
+                                tlu_Predominant_Category |> rename(FWS_Class_Code = Code),
+                                by = "Predominant_Category_ID")
+
+    tbl_locations3 <- left_join(tbl_locations2,
+                                tlu_Class |> rename(HGM_Class = Class),
+                                by = "Class_ID")
+
+    tbl_locations4 <- left_join(tbl_locations3,
+                                tlu_Sub_Class |> rename(HGM_Sub_Class = Sub_Class),
+                                by = c("Class_ID", "Sub_Class_ID"))
+
+    tbl_locations5 <- left_join(tbl_locations4 |> rename(AA_Area = Area),
+                                tlu_AA_Layout |> rename(AA_Layout = Shape),
+                                by = "Layout_ID")
+
+    tbl_locations <- tbl_locations5[,c("Code", "Location_ID", "Panel", "Date_Established",
+                                       "Contact_ID", "Easting", "Northing",
+                                       "UTM_Zone", "Description", "FWS_Class_Code",
+                                       "HGM_Class", "HGM_Sub_Class", "AA_Layout", "AA_Area",
+                                       "Directions", "Location_Comments", "Access_Comments",
+                                       "Notes_AA2", "Access_Difficulty", "Access_Requirement",
+                                       "Wetland_Hydro_Comments")]
+    tbl_locations <- tbl_locations |> arrange(Code)
 
     #--- tbl_visits
     tbl_Visit <- tbl_Visit |> mutate(Year = substr(Date, 1, 4))
@@ -163,21 +185,88 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
                               visit_tbls, by = "Location_ID") |>
                   arrange(Code, Date)
 
-    tbl_visits <- left_join(tbl_visits1,
-                            tbl_Protocol |> select(ID, Protocol_Version = Version),
-                            by = c("Protocol_ID" = "ID"))
+    tbl_visits2 <- left_join(tbl_visits1,
+                             tbl_Protocol |> select(ID, Protocol_Version = Version),
+                             by = c("Protocol_ID" = "ID"))
+
+    tbl_visits3 <- left_join(tbl_visits2, tlu_Invasive_Coverage, by = "Invasive_Coverage_ID") |>
+      rename(Invasive_Cover_Class = Invasive_Coverage)
+
+    # Prepare and add buffer widths
+    tbl_buffs1 <- left_join(xref_Buffer_Width, tlu_Buffer_Direction, by = "Buffer_Direction_ID") |>
+      select(-Buffer_Direction_ID) |>
+      pivot_wider(names_from = Buffer_Direction, values_from = Width_m,
+                  names_prefix = "Buffer_Width_") |>
+      mutate(Buffer_Width_Avg = (Buffer_Width_N + Buffer_Width_NE + Buffer_Width_E +
+                                 Buffer_Width_SE + Buffer_Width_S + Buffer_Width_SW +
+                                 Buffer_Width_W + Buffer_Width_NW)/8)
+
+    tbl_visits4 <- left_join(tbl_visits3, tbl_buffs1, by = "Visit_ID")
+    tbl_visits5 <- left_join(tbl_visits4, tlu_Perimeter, by = "Perimeter_ID") |>
+      rename(Buffer_Perim_Percent = Percent)
+
+    # add top 3 water sources
+    tbl_water1 <- left_join(xref_Visit_Water, tlu_Water, by = "Water_ID") |>
+      select(-Water_ID, -Present) |> filter(Rank > 0)
+
+    tbl_water2 <-tbl_water1 |>
+      group_by(Visit_ID) |>
+      mutate(Flag_Water_Source =
+               paste(Flag[!is.na(Flag)], collapse = "; ")) |>
+      ungroup() |>
+      select(-Flag) |> arrange(Visit_ID, Rank) |>
+      pivot_wider(names_from = Rank, values_from = Source, names_prefix = "Water_Source_")
+
+    tbl_visits6 <- left_join(tbl_visits5, tbl_water2, by = "Visit_ID")
 
     first_cols <- c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type")
+    mid_cols <- c("Weather",  "Prior_Weather", "Ditch_Present", "Depth_1", "Depth_2", "Depth_3",
+                  "Flag_Water_Source", "Water_Source_1", "Water_Source_2", "Water_Source_3",
+                  "Mosaic_Complexity", "SphagnumMoss", "Sphagnum_Cover", "Invasive_Cover_Class",
+                  "Invasive_Cover", "Buffer_Width_N", "Buffer_Width_NE", "Buffer_Width_E",
+                  "Buffer_Width_SE", "Buffer_Width_S", "Buffer_Width_SW", "Buffer_Width_W",
+                  "Buffer_Width_NW", "Buffer_Width_Avg", "Buffer_Perim_Percent", "AlgalMatOrCrust",
+                  "AquaticInvertebrate", "BioticCrust", "DrainagePatterns", "DriftDeposits",
+                  "Flag_Inundation", "IronDeposits", "MarlDeposits", "MossTrimLines", "SaltCrust",
+                  "SedimentDeposits", "SparselyVegetatedConcaveSurfaces", "SurfaceSoilCracks", "WaterMarks",
+                  "WaterStainedLeaves", "TrueAquaticPlants", "CrayfishBurrows", "DrySeasonWaterTable",
+                  "FiddlerCrabBurrows", "Flag_Saturation", "HydrogenSulfideOdor", "SaltDeposits",
+                  "SurficialThinMuck", "OxidizedRhizospheres", "Flag_Surface", "GeomorphicPosition",
+                  "HighWaterTable", "MicrotopographicRelief", "ShallowAquitard", "SoilSaturation",
+                  "StuntedOrStressedPlants", "SurfaceWater")
     last_cols <- c("Protocol_Version", "Checked", "Data_Verified_By", "Certification_Level")
-    notes <- c("Notes_RAM01", "Notes_RAM02", "Notes_Topographic_Complexity", "Notes_Mosaic_Complexity",
+    notes <- c("Notes_AA_Point", "Notes_RAM01", "Notes_RAM02",
+               "Notes_Topographic_Complexity", "Notes_Mosaic_Complexity",
                "Notes_RAM05", "Notes_RAM06", "Notes_RAM07", "Notes_RAM08", "Notes_RAM09",
                "Notes_RAM10", "Notes_RAM11", "Notes_Species", "Notes_H1")
     new_order <- c(first_cols,
-                   names(tbl_visits[,!names(tbl_visits) %in% c(first_cols, notes, last_cols)]),
+                   mid_cols,
+                   #names(tbl_visits5[,!names(tbl_visits5) %in% c(first_cols, mid_cols, notes, last_cols)]),
                    notes, last_cols)
 
-    tbl_visits <- tbl_visits[, new_order]
-    #head(tbl_visits)
+    tbl_visits <- tbl_visits6[, new_order]
+
+    #setdiff(names(tbl_visits6), names(tbl_visits)) # dropped unwanted names
+
+    #--- tbl_AA_characterization
+    # Topo Complexity and Hydro sources
+    tbl_topo1 <- left_join(xref_Topo_Complexity, tlu_Topo_Complexity, by = "Topography_ID")
+    tbl_topo2 <- right_join(tbl_visits[,first_cols], tbl_topo1, by = "Visit_ID") |>
+      filter(Observed == -1) |>
+      mutate(Type = "Topographic_Complexity",
+             Present = ifelse(Observed == -1, 1, 0),
+             Flag = NA_character_) |>
+      rename(Feature = Topography) |>
+      select(-Topography_ID, -Observed)
+
+    # Only take sources that are present. Top 3 sources (rank) is in tbl_visits
+    tbl_water1 <- left_join(xref_Visit_Water, tlu_Water, by = "Water_ID") |>
+      mutate(Present = ifelse(Present == -1, 1, 0)) |> select(-Water_ID, -Rank)
+    tbl_water2 <- right_join(tbl_visits[,first_cols], tbl_water1, by = "Visit_ID") |>
+      mutate(Type = "Water_Sources") |>
+      rename(Feature = Source)
+
+    tbl_AA_char <- rbind(tbl_topo2, tbl_water2) |> arrange(Code, Year, Type, Feature)
 
     #--- tbl_plant_species
     tbl_species1 <- left_join(xref_Species_List |> rename(TSN = Plant_ID),
@@ -236,32 +325,28 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
     stress_tbls <- rbind(xref_Buffer_Stressor, xref_Hydro_Period_Stressor,
                          xref_Substrate_Stressor, xref_Vegetation_Stressor)
 
-
     tbl_stress1 <- left_join(stress_tbls, tlu_Stressor, by = "Stressor_ID")
     tbl_stress2 <- left_join(tbl_stress1, tlu_Stressor_Category, by = "Stressor_Category_ID")
     tbl_stress3 <- right_join(tbl_visits[,first_cols], tbl_stress2, by = "Visit_ID")
 
     tbl_stress_overall <- tbl_stress3 |> filter(Stressor %in% "Overall Ranking") |> select(-Stressor, Stressor_ID_Overall = Stressor_ID)
     tbl_stress_indiv <- tbl_stress3 |> filter(!Stressor %in% "Overall Ranking")
-    head(tbl_stress_overall)
-    head(tbl_stress_indiv)
 
     tbl_RAM_stress1 <- full_join(tbl_stress_overall, tbl_stress_indiv,
                                  by = c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
                                         "Location_Level", "Stressor_Category", "Stressor_Category_ID"),
                                  suffix = c("_Overall", "_Indiv")) |>
                        #filter(Severity_Indiv > 0) |>
-                       select(all_of(first_cols), Location_Level, Stressor_Category, Stressor, Severity_Indiv, Severity_Overall,
-                                     Stressor_Category_ID, Stressor_ID, Stressor_ID_Overall)
+                       select(all_of(first_cols), Location_Level, Stressor_Category, Stressor, Severity_Indiv, Severity_Overall)
 
     miss_overall <- tbl_RAM_stress1 |> filter(Severity_Overall == 0 & Severity_Indiv > 0) |>
-      select(Code, Year, Severity_Indiv, Severity_Overall, Stressor_ID, Stressor_ID_Overall, Visit_ID, Stressor_Category) |>
+      select(Code, Year, Severity_Indiv, Severity_Overall, Visit_ID, Stressor_Category) |>
       arrange(Stressor_Category, Visit_ID)
 
     if(nrow(miss_overall) > 0){
       warning(paste0("The following Stressor_Overall records are missing a ranking where an individual stressor was recorded:",
                       "\n",
-              paste0(miss_overall[, c("Code", "Year", "Visit_ID", "Stressor_Category", "Stressor_ID", "Stressor_ID_Overall",
+              paste0(miss_overall[, c("Code", "Year", "Visit_ID", "Stressor_Category",
                                       "Severity_Indiv", "Severity_Overall")], collapse = "\n ")))}
 
     miss_indiv <- tbl_RAM_stress1 |> group_by(Code, Year, Visit_ID, Stressor_Category) |>
@@ -274,9 +359,53 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
                      "\n",
               paste0(miss_indiv[, c("Code", "Year", "Visit_ID", "Stressor_Category")], collapse = "\n ")))}
 
-    #++++++++++++++ ENDED HERE ++++++++++++++++++++
+    # Alterations to Hydro Period and Stressors to Substrate don't have an overall score. Applying max Indiv per group to Overall
+    tbl_RAM_stress1 <- tbl_RAM_stress1 |> group_by(Code, Location_ID, Visit_ID, Panel, Date, Year,
+                                                   Visit_Type, Location_Level, Stressor_Category) |>
+      mutate(Severity_Overall = ifelse(
+        Stressor_Category %in% c("Alterations to Hydroperiod", "Stressors to Substrate"),
+        max(Severity_Indiv, na.rm = T), Severity_Overall)) |>
+      ungroup()
 
-    head(tbl_RAM_stress1)
+    stress_check <- tbl_RAM_stress1 |>
+      group_by(Code, Location_ID, Visit_ID, Panel, Date, Year,
+               Visit_Type, Location_Level, Stressor_Category) |>
+      mutate(check_indiv = ifelse(max(Severity_Indiv, na.rm = T) > max(Severity_Overall), 1, 0)) |>
+      ungroup() |>
+      filter(check_indiv > 0) |>
+      select(Code, Year, Visit_ID, Stressor, Stressor_Category, Severity_Indiv, Severity_Overall)
+
+    if(nrow(stress_check) > 0){warning(
+    paste0("The following records have an overall severity less than the highest recorded individual severity:",
+           paste0(stress_check, collapse = "\n "))
+                                       )}
+    #table(tbl_RAM_stress1$Stressor_Category, tbl_RAM_stress1$Severity_Overall, useNA = 'always')
+
+    #-- prepare and add in xref_Visit_Hydrologic_Stressor
+    tbl_hstress1 <- left_join(xref_Visit_Hydrologic_Stressor, tlu_Hydrologic_Stressor,
+                             by = c("Hydrologic_Stressor_ID", "Hydrologic_Stressor_Category_ID"))
+
+    tbl_hstress2 <- right_join(tbl_visits[,first_cols], tbl_hstress1, by = c("Visit_ID" = "Visit_Id"))
+    tbl_hstress2$Location_Level = "AA"
+    tbl_hstress2$Stressor_Category = "Hydrological"
+    tbl_hstress2$Stressor = tbl_hstress2$Hydrologic_Stressor
+    tbl_hstress2$Severity_Indiv = tbl_hstress2$Rank
+    # Only have indiv ranks for each hydro stressor. Like with Alterations to Hydroperiod,
+    # will take the max of each visit as Overall
+    tbl_hstress2 <- tbl_hstress2 |>
+      group_by(Code, Location_ID, Visit_ID, Panel, Date, Year,
+               Visit_Type, Location_Level, Stressor_Category) |>
+      mutate(Severity_Overall = max(Severity_Indiv, na.rm = T)) |>
+      ungroup()
+
+    tbl_hstress3 <- tbl_hstress2[, names(tbl_RAM_stress1)]
+
+    tbl_RAM_stress <- rbind(tbl_RAM_stress1, tbl_hstress3) |> arrange(Code, Year, Location_Level, Stressor_Category) |>
+      filter(Severity_Indiv > 0)
+
+    head(xref_Visit_Water)
+
+    #++++++++++++++ ENDED HERE ++++++++++++++++++++
 
     head(xref_Buffer_Stressor)
     head(xref_Hydro_Period_Stressor)
