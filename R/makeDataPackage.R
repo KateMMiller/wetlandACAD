@@ -45,6 +45,7 @@
 makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protected = FALSE,
                        type = c('DSN', 'file'), odbc = 'RAM_BE', path = NA, new_env = TRUE){
 
+  #---- error handling ----
   data_type <- match.arg(data_type)
   stopifnot(class(protected) == 'logical')
   type <- match.arg(type)
@@ -61,11 +62,13 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
     stop("Package 'dbplyr' needed for this function to work. Please install it.", call. = FALSE)
   }
 
+  # make sure db is on dsn list if type == DSN
   dsn_list <- odbc::odbcListDataSources()
 
   if(type == 'DSN' & !any(dsn_list$name %in% odbc)){
     stop(paste0("Specified DSN ", odbc, " is not a named database source." ))}
 
+  # check for db if type = file
   if(type == "file"){
     if(is.na(path)){stop("Must specify a path to the database for type = file option.")
     } else {
@@ -77,21 +80,22 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
   #   env = VIEWS_WETLAND
   # } else { env = .GlobalEnv }
 
-tryCatch(
-  db <- if (type == 'DSN'){
+  #---- import db tables ----
+  tryCatch(
+    db <- if (type == 'DSN'){
     db <- DBI::dbConnect(drv = odbc::odbc(), dsn = odbc)
-  }
-  else if (type == 'file'){
-    db <- DBI::dbConnect(drv=odbc::odbc(),
-                         .connection_string =
+    }
+    else if (type == 'file'){
+      db <- DBI::dbConnect(drv=odbc::odbc(),
+                           .connection_string =
                            paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=", path))
-  },
-  error = function(e){
-    stop(error_mess)},
-  warning = function(w){
-    stop(error_mess)
-  }
-)
+    },
+      error = function(e){
+      stop(error_mess)},
+      warning = function(w){
+      stop(error_mess)
+    }
+    )
 
   tbl_list1 <- DBI::dbListTables(db)[grepl("tbl|tlu|xref", DBI::dbListTables(db))]
   tbl_list <- switch(data_type,
@@ -102,7 +106,6 @@ tryCatch(
 
   pb = txtProgressBar(min = 0, max = length(tbl_list), style = 3)
 
-  # Import tables using their names and show progress bar
   tbl_import <- lapply(seq_along(tbl_list),
                        function(x){
                          setTxtProgressBar(pb, x)
@@ -121,7 +124,7 @@ tryCatch(
   # } else {
     list2env(tbl_import, envir = .GlobalEnv)#}
 
-  # Combine tables into views by data types
+  #---- Combine tables into views by data types ----
   if(data_type %in% c("RAM", "all")){
     # Create tbl_locations by reshaping xrefs to have 1 record per location
     xref_Loc_Diff1 <- left_join(xref_Location_Difficulty, tlu_Difficulty, by = "Difficulty_ID")
@@ -147,7 +150,7 @@ tryCatch(
     loc_tbl_list <- list(tbl_Location, xref_Loc_Diff, xref_Loc_Req, xref_Loc_Hydro_wide)
     tbl_locations <- reduce(loc_tbl_list, left_join, by = "Location_ID") |> arrange(Code)
 
-    # tbl_visits
+    #--- tbl_visits
     tbl_Visit <- tbl_Visit |> mutate(Year = substr(Date, 1, 4))
 
     visit_tbl_list <- list(tbl_Visit,
@@ -174,9 +177,9 @@ tryCatch(
                    notes, last_cols)
 
     tbl_visits <- tbl_visits[, new_order]
+    #head(tbl_visits)
 
-
-    # tbl_plant_species
+    #--- tbl_plant_species
     tbl_species1 <- left_join(xref_Species_List |> rename(TSN = Plant_ID),
                               tlu_Plant |> select(Accepted_Latin_Name, TSN_Accepted, TSN, Latin_Name, Common,
                                                   Order, Family, Genus, PLANTS_Code, CoC_ME_ACAD, ACAD_ED,
@@ -187,6 +190,7 @@ tryCatch(
 
 
     tbl_species2 <- left_join(tbl_visits |> select(all_of(first_cols)), tbl_species1, by = "Visit_ID")
+
     # Change -1 to 1
     binvars <- c("Quadrat_NE", "Quadrat_SE", "Quadrat_SW", "Quadrat_NW", "Coll")
     tbl_species2[,binvars][tbl_species2[,binvars] == -1] <- 1
@@ -213,7 +217,6 @@ tryCatch(
                                      ((tbl_species2$Quadrat_NE + tbl_species2$Quadrat_SE +
                                        tbl_species2$Quadrat_SW + tbl_species2$Quadrat_NW)/4)*100)
 
-
     first_cols <- c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type")
     last_cols <- c("Protocol_Version", "Checked", "Data_Verified_By", "Certification_Level")
     new_order <- c(first_cols,
@@ -227,8 +230,9 @@ tryCatch(
 
     tbl_species <- tbl_species2[,new_order]
     #setdiff(names(tbl_species2), names(tbl_species)) # check that dropped unwanted columns
+    #head(tbl_species)
 
-    # tbl_buffer_stressors
+    #--- tbl_buffer_stressors
     stress_tbls <- rbind(xref_Buffer_Stressor, xref_Hydro_Period_Stressor,
                          xref_Substrate_Stressor, xref_Vegetation_Stressor)
 
