@@ -1,49 +1,48 @@
-#' @title makeDataPackage: Imports data from ACAD RAM backend and converts to data package format
+#' @title makeDataPackageRAM: Imports and compiles views for wetland RAM data package
 #'
-#' @description This function imports all tables in the wetland RAM backend and combines them into flattened views for the data package. Each view is added to a VIEWS_WETLAND environment in your workspace, or to your global environment based on whether new_env = TRUE or FALSE.
+#' @description This function imports RAM-related tables in the wetland RAM backend and combines them into flattened views for the data package. Each view is added to a VIEWS_WETLAND environment in your workspace, or to your global environment based on whether new_env = TRUE or FALSE.
 #'
-#' @importFrom dplyr all_of arrange collect filter full_join group_by left_join mutate rename summarize tbl
+#' @importFrom dplyr all_of arrange collect filter full_join group_by left_join mutate rename right_join summarize tbl
 #' @importFrom purrr reduce
 #' @importFrom tidyr pivot_wider
 #'
-#' @param data_type
-#' \describe{
-#' \item{"RAM"}{Default. Only imports the data collected in rapid assessment sites.}
-#' \item{"WELL"}{Only imports water level data collected in sentinel site wells.}
-#' \item{"all"}{Imports all data tables. Note importing all files can be slow.}
-#' }
+#'@param export_protected Logical. If TRUE, all records are exported. If FALSE (Default), only non-protected
+#'species are exported.
 #'
-#'@param export_protected Logical. If TRUE, all records are exported. If FALSE (Default), only non-protected species are exported.
-#'
-#' @param type Select whether to use the default Data Source Named database (DSN) to import data or a different database. If "DSN" is selected, must specify name in odbc argument.
+#' @param type Select whether to use the default Data Source Named database (DSN) to import data or a
+#' different database.
+#' If "DSN" is selected, must specify name in odbc argument.
 #' \describe{
 #' \item{"DSN"}{Default. DSN database. If odbc argument is not specified, will default to "RAM_BE"}
 #' \item{"file"}{A different database than default DSN}
 #' }
 #'
-#' @param odbc DSN of the database when using type = DSN. If not specified will default to "RAM_BE", which is the front end of the MS Access RAM database that contains the queries to import.
+#' @param odbc DSN of the database when using type = DSN. If not specified will default to "RAM_BE", which
+#' is the back end of the MS Access RAM database.
 #'
-#' @param path Quoted path of database backend file, including the name of the backend.
-#' @return Assigns database tables to global environment
+#' @param path Quoted path of database back end file, including the name of the backend.
+#' @return Assigns RAM views to specified environment
+#'
+#' @param new_env Logical. Specifies which environment to store views in. If \code{TRUE}(Default), stores
+#' views in VIEWS_RAM environment. If \code{FALSE}, stores views in global environment
 #'
 #' @examples
 #' \dontrun{
 #' # Import tables from database in specific folder:
-#' makeDataPackage(type = 'file', path = './Data/NETN_RAM_Backend.mdb')
+#' makeDataPackageRAM(type = 'file', path = './Data/NETN_RAM_Backend.mdb')
 #'
 #' # Import ODBC named database
-#' makeDataPackage(type = 'DSN', odbc = "RAM_BE")
+#' makeDataPackageRAM(type = 'DSN', odbc = "RAM_BE")
 #' }
 #'
 #' @export
 
-
-makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protected = FALSE,
-                       type = c('DSN', 'file'), odbc = 'RAM_BE', path = NA, new_env = TRUE){
+makeDataPackageRAM <- function(export_protected = FALSE,
+                               type = c('DSN', 'file'), odbc = 'RAM_BE',
+                               path = NA, new_env = TRUE){
 
   #---- error handling ----
-  data_type <- match.arg(data_type)
-  stopifnot(class(protected) == 'logical')
+  stopifnot(class(export_protected) == 'logical')
   type <- match.arg(type)
   stopifnot(class(new_env) == 'logical')
 
@@ -53,10 +52,6 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
   if(!requireNamespace("DBI", quietly = TRUE)){
     stop("Package 'DBI' needed for this function to work. Please install it.", call. = FALSE)
   }
-
-  # if(!requireNamespace("dbplyr", quietly = TRUE)){
-  #   stop("Package 'dbplyr' needed for this function to work. Please install it.", call. = FALSE)
-  # }
 
   # make sure db is on dsn list if type == DSN
   dsn_list <- odbc::odbcListDataSources()
@@ -70,11 +65,6 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
     } else {
       if(file.exists(path) == FALSE){stop("Specified path or database does not exist.")}}
   }
-
-  # if(new_env == TRUE){
-  #   VIEWS_WETLAND <<- new.env()
-  #   env = VIEWS_WETLAND
-  # } else { env = .GlobalEnv }
 
   #---- import db tables ----
   tryCatch(
@@ -94,11 +84,7 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
     )
 
   tbl_list1 <- DBI::dbListTables(db)[grepl("tbl|tlu|xref", DBI::dbListTables(db))]
-  tbl_list <- switch(data_type,
-                     "RAM" = tbl_list1[!grepl("tbl_Well|tbl_Well_Visit|tbl_Water_Level", tbl_list1)],
-                     "WELL" = tbl_list1[grepl("tbl_Well|tbl_Well_Visit|tbl_Water_Level", tbl_list1)],
-                     "all" = tbl_list1[grepl("^tbl|^xref|^tlu", tbl_list1)]) # drops queries
-  #tail(tbl_list)
+  tbl_list <- tbl_list1[!grepl("tbl_Well|tbl_Well_Visit|tbl_Water_Level", tbl_list1)] # drops well tbls and queries
 
   pb = txtProgressBar(min = 0, max = length(tbl_list), style = 3)
 
@@ -114,14 +100,12 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
 
   tbl_import <- setNames(tbl_import, tbl_list)
 
-  # if(new_env == TRUE){
-  #   VIEWS_WETLAND <<- new.env()
-  #   list2env(tbl_import, envir = VIEWS_WETLAND)
-  # } else {
-  list2env(tbl_import, envir = .GlobalEnv)#}
+  if(new_env == TRUE){VIEWS_RAM <<- new.env()}
+  env <- if(new_env == TRUE){VIEWS_RAM} else {.GlobalEnv}
 
-  #---- Combine tables into views by data types ----
-  if(data_type %in% c("RAM", "all")){
+  list2env(tbl_import, envir = environment()) # all tables into fxn env
+
+  #---- Combine tables into views ----
     #--- tbl_locations
     # Create tbl_locations by reshaping xrefs to have 1 record per location
     xref_Loc_Diff1 <- left_join(xref_Location_Difficulty, tlu_Difficulty, by = "Difficulty_ID")
@@ -377,7 +361,8 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
                      "\n",
               paste0(miss_indiv[, c("Code", "Year", "Visit_ID", "Stressor_Category")], collapse = "\n ")))}
 
-    # Alterations to Hydro Period and Stressors to Substrate don't have an overall score. Applying max Indiv per group to Overall
+    # Alterations to Hydro Period and Stressors to Substrate don't have an overall score.
+    # Applying max Indiv per group to Overall
     tbl_RAM_stress1 <- tbl_RAM_stress1 |> group_by(Code, Location_ID, Visit_ID, Panel, Date, Year,
                                                    Visit_Type, Location_Level, Stressor_Category) |>
       mutate(Severity_Overall = ifelse(
@@ -421,13 +406,7 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
     tbl_RAM_stressors <- rbind(tbl_RAM_stress1, tbl_hstress3) |> arrange(Code, Year, Location_Level, Stressor_Category) |>
       filter(Severity_Indiv > 0)
 
-
-  }
-    if(data_type %in% c("WELL", "all")){
-
-
-  }
-
+  # Remove protected species if specified
   if(export_protected == FALSE){
     num_spp_prot <- filter(tbl_species_list, Protected_species == TRUE)
     num_spp2_prot <- filter(tbl_species_by_strata, Protected_species == TRUE)
@@ -442,8 +421,7 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
 
     tbl_species_list <- filter(tbl_species_list, Protected_species == FALSE)
     tbl_species_by_strata <- filter(tbl_species_by_strata, Protected_species == FALSE)
-   }
-
+   } else {warning("Note that protected species are included in views. These are not for internal or approved use only.")}
 
   close(pb)
 
@@ -453,6 +431,15 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
         paste0("Import complete. Views are located in VIEWS_WETLAND environment."),
         paste0("Import complete. Views are located in global environment.")
         ))
+
+  final_tables <- list(tbl_locations, tbl_visits, tbl_RAM_stressors,
+                       tbl_AA_char, tbl_species_list, tbl_species_by_strata)
+
+  final_tables <- setNames(final_tables,
+                           c("tbl_locations", "tbl_visits", "tbl_RAM_stressors",
+                             "tbl_AA_char", "tbl_species_list", "tbl_species_by_strata"))
+
+  list2env(final_tables, envir = env)
 
   } # End of function
 
