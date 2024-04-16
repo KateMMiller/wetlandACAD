@@ -147,7 +147,7 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
     loc_tbl_list <- list(tbl_Location, xref_Loc_Diff, xref_Loc_Req, xref_Loc_Hydro_wide)
     tbl_locations1 <- reduce(loc_tbl_list, left_join, by = "Location_ID") |> arrange(Code)
 
-    tbl_locations2 <- left_join(tbl_locations,
+    tbl_locations2 <- left_join(tbl_locations1,
                                 tlu_Predominant_Category |> rename(FWS_Class_Code = Code),
                                 by = "Predominant_Category_ID")
 
@@ -170,7 +170,7 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
                                        "Directions", "Location_Comments", "Access_Comments",
                                        "Notes_AA2", "Access_Difficulty", "Access_Requirement",
                                        "Wetland_Hydro_Comments")]
-    tbl_locations <- tbl_locations |> arrange(Code)
+    tbl_locations <- arrange(tbl_locations, Code)
 
     #--- tbl_visits
     tbl_Visit <- tbl_Visit |> mutate(Year = substr(Date, 1, 4))
@@ -248,7 +248,7 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
 
     #setdiff(names(tbl_visits6), names(tbl_visits)) # dropped unwanted names
 
-    #--- tbl_AA_characterization
+    #--- tbl_AA_char
     # Topo Complexity and Hydro sources
     tbl_topo1 <- left_join(xref_Topo_Complexity, tlu_Topo_Complexity, by = "Topography_ID")
     tbl_topo2 <- right_join(tbl_visits[,first_cols], tbl_topo1, by = "Visit_ID") |>
@@ -268,12 +268,12 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
 
     tbl_AA_char <- rbind(tbl_topo2, tbl_water2) |> arrange(Code, Year, Type, Feature)
 
-    #--- tbl_plant_species
+    #--- tbl_species_list
     tbl_species1 <- left_join(xref_Species_List |> rename(TSN = Plant_ID),
                               tlu_Plant |> select(Accepted_Latin_Name, TSN_Accepted, TSN, Latin_Name, Common,
                                                   Order, Family, Genus, PLANTS_Code, CoC_ME_ACAD, ACAD_ED,
                                                   Exotic, Invasive, Aquatic, Fern_Ally, Graminoid, Herbaceous,
-                                                  Moss_Lichen, Shrub, Tree, Vine,  Author,
+                                                  Moss_Lichen, Shrub, Tree, Vine, Synonym, Author,
                                                   Canopy_Exclusion, Favorites, Protected_species),
                               by = c("TSN"))
 
@@ -315,13 +315,31 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
                    "Exotic", "Invasive", "PLANTS_Code", "CoC_ME_ACAD",
                    "ACAD_ED", "Aquatic", "Fern_Ally", "Graminoid", "Herbaceous", "Moss_Lichen", "Shrub",
                    "Tree", "Vine", "Canopy_Exclusion",
-                   "TSN_Accepted", "Accepted_Latin_Name", "Author", "Protected_species")
+                   "TSN_Accepted", "Accepted_Latin_Name", "Synonym", "Author", "Protected_species")
 
-    tbl_species <- tbl_species2[,new_order]
+    tbl_species_list <- tbl_species2[,new_order]
     #setdiff(names(tbl_species2), names(tbl_species)) # check that dropped unwanted columns
     #head(tbl_species)
 
-    #--- tbl_buffer_stressors
+    #--- tbl_species_by_strata
+    tbl_vert1 <- left_join(xref_Vert_Complexity, tlu_Vert_Complexity, by = "Vert_Complexity_ID")
+    tbl_vert2 <- left_join(tbl_vert1, tlu_Strata, by = "Strata_ID")
+    tbl_vert2$Vert_Complexity[tbl_vert2$Vert_Complexity_ID == 6] <- "0%"
+
+    tbl_pcomp1 <- left_join(xref_Plant_Complexity, tlu_Strata, by = "Strata_ID")
+    tbl_pcomp2 <- left_join(tbl_pcomp1, tlu_Plant, by = "TSN")
+    tbl_pcomp3 <- right_join(tbl_visits[,first_cols], tbl_pcomp2, by = "Visit_ID")
+
+    tbl_species_by_strata <-
+      tbl_pcomp3[,c(first_cols, "Strata", "Strata_ID", "Latin_Name", "Common", "Percent_Cover",
+                    "TSN", "Order", "Family", "Genus", "Exotic", "Invasive", "PLANTS_Code",
+                    "CoC_ME_ACAD", "ACAD_ED", "Aquatic", "Fern_Ally", "Graminoid", "Herbaceous",
+                    "Moss_Lichen", "Shrub", "Tree", "Vine", "Canopy_Exclusion", "TSN_Accepted",
+                    "Accepted_Latin_Name", "Synonym", "Author", "Protected_species")]
+
+    #setdiff(names(tbl_pcomp3), names(tbl_species_by_strata))
+
+    #--- tbl_RAM_stressors
     stress_tbls <- rbind(xref_Buffer_Stressor, xref_Hydro_Period_Stressor,
                          xref_Substrate_Stressor, xref_Vegetation_Stressor)
 
@@ -400,25 +418,9 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
 
     tbl_hstress3 <- tbl_hstress2[, names(tbl_RAM_stress1)]
 
-    tbl_RAM_stress <- rbind(tbl_RAM_stress1, tbl_hstress3) |> arrange(Code, Year, Location_Level, Stressor_Category) |>
+    tbl_RAM_stressors <- rbind(tbl_RAM_stress1, tbl_hstress3) |> arrange(Code, Year, Location_Level, Stressor_Category) |>
       filter(Severity_Indiv > 0)
 
-    head(xref_Visit_Water)
-
-    #++++++++++++++ ENDED HERE ++++++++++++++++++++
-
-    head(xref_Buffer_Stressor)
-    head(xref_Hydro_Period_Stressor)
-    head(xref_Substrate_Stressor)
-    head(xref_Vegetation_Stressor)
-    head(tlu_Stressor)
-
-    head(xref_Visit_Hydrologic_Stressor)
-    head(xref_Visit_Water)
-
-    head(tlu_Stressor)
-
-    head(xref_Buffer_Width)
 
   }
     if(data_type %in% c("WELL", "all")){
@@ -426,15 +428,22 @@ makeDataPackage <- function(data_type = c("RAM", "WELL", "all"), export_protecte
 
   }
 
-  if(export_protected == TRUE){ #Keep all records
-  } else {#Use tlu_Species$Protected_species column to filter protected species out of tbl_species and
-    #RAM data with species attached.
-    }
+  if(export_protected == FALSE){
+    num_spp_prot <- filter(tbl_species_list, Protected_species == TRUE)
+    num_spp2_prot <- filter(tbl_species_by_strata, Protected_species == TRUE)
 
-  if(export_protected == TRUE){ #Keep all records
-  } else {#Use tlu_Species$Protected_species column to filter protected species out of tbl_species and
-    #RAM data with species attached.
-    }
+    spp_drops <- data.frame(table(num_spp_prot$Latin_Name))
+    colnames(spp_drops) <- c("Latin_Name", "Num_Sites")
+
+    warning(paste0("Protected species were removed from this export, with ", nrow(num_spp_prot),
+                   " records removed from tbl_species_list, and ", nrow(num_spp2_prot),
+                   " records removed from tbl_species_by_strata. Species removed from tbl_species_list were: ",
+                   paste0(spp_drops$Latin_Name, "(", spp_drops$Num_Sites, ")", collapse = "; ")))
+
+    tbl_species_list <- filter(tbl_species_list, Protected_species == FALSE)
+    tbl_species_by_strata <- filter(tbl_species_by_strata, Protected_species == FALSE)
+   }
+
 
   close(pb)
 
