@@ -125,7 +125,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                                                 Wetland_Hydrology_Comments, present),
                                        names_from = Wetland_Hydro,
                                        values_from = present, values_fill = 0) |>
-      group_by(Location_ID) |> summarize(Wetland_Hydro_Comments =
+      group_by(Location_ID) |> mutate(Wetland_Hydro_Comments =
                                            paste0(Wetland_Hydrology_Comments, collapse = ": "))
 
     loc_tbl_list <- list(tbl_Location, xref_Loc_Diff, xref_Loc_Req, xref_Loc_Hydro_wide)
@@ -153,7 +153,9 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                                        "HGM_Class", "HGM_Sub_Class", "AA_Layout", "AA_Area",
                                        "Directions", "Location_Comments", "Access_Comments",
                                        "Notes_AA2", "Access_Difficulty", "Access_Requirement",
-                                       "Wetland_Hydro_Comments")]
+                                       "Saturated_Soils", "Standing_Water", "Shallow_Roots",
+                                       "Water_Marks", "Water_Carried_Debris", "Bare_Areas",
+                                       "Floating_Mat", "Wetland_Hydro_Comments")]
     tbl_locations <- arrange(tbl_locations, Code)
 
     #--- tbl_visits
