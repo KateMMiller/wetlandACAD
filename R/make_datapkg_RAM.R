@@ -1,4 +1,4 @@
-#' @title makeDataPackageRAM: Imports and compiles views for wetland RAM data package
+#' @title make_datapkg_RAM: Imports and compiles views for wetland RAM data package
 #'
 #' @description This function imports RAM-related tables in the wetland RAM backend and combines them into flattened views for the data package. Each view is added to a VIEWS_WETLAND environment in your workspace, or to your global environment based on whether new_env = TRUE or FALSE.
 #'
@@ -29,15 +29,15 @@
 #' @examples
 #' \dontrun{
 #' # Import tables from database in specific folder:
-#' makeDataPackageRAM(type = 'file', path = './Data/NETN_RAM_Backend.mdb')
+#' make_datapkg_RAM(type = 'file', path = './Data/NETN_RAM_Backend.mdb')
 #'
-#' # Import ODBC named database
-#' makeDataPackageRAM(type = 'DSN', odbc = "RAM_BE")
+#' # Import ODBC named database into global env with protected species
+#' make_datapkg_RAM(type = 'DSN', odbc = "RAM_BE", new_env = F, export_protected = T)
 #' }
 #'
 #' @export
 
-makeDataPackageRAM <- function(export_protected = FALSE,
+make_datapkg_RAM <- function(export_protected = FALSE,
                                type = c('DSN', 'file'), odbc = 'RAM_BE',
                                path = NA, new_env = TRUE){
 
@@ -417,11 +417,11 @@ makeDataPackageRAM <- function(export_protected = FALSE,
     warning(paste0("Protected species were removed from this export, with ", nrow(num_spp_prot),
                    " records removed from tbl_species_list, and ", nrow(num_spp2_prot),
                    " records removed from tbl_species_by_strata. Species removed from tbl_species_list were: ",
-                   paste0(spp_drops$Latin_Name, "(", spp_drops$Num_Sites, ")", collapse = "; ")))
+                   paste0(spp_drops$Latin_Name, " (", spp_drops$Num_Sites, ")", collapse = "; ")))
 
     tbl_species_list <- filter(tbl_species_list, Protected_species == FALSE)
     tbl_species_by_strata <- filter(tbl_species_by_strata, Protected_species == FALSE)
-   } else {warning("Note that protected species are included in views. These are not for internal or approved use only.")}
+   } else {warning("Note that protected species are included in views. These are for internal or NPS approved use only.")}
 
   close(pb)
 

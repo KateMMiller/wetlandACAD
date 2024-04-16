@@ -42,7 +42,7 @@ Collate:
     'compile_sent_WL.R'
     'get_NADP_precip.R'
     'importQueries.R'
-    'makeDataPackageRAM.R'
+    'make_datapkg_RAM.R'
     'plot_hydro_site_year.R'
     'prep_well_data.R'
     'prep_conv_table.R'
