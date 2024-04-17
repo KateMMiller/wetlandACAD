@@ -304,11 +304,14 @@ make_datapkg_RAM <- function(export_protected = FALSE,
     #head(tbl_species)
     setTxtProgressBar(pb, length(tbl_list) + 2)
 
-    #--- tbl_species_by_strata
+    #--- tbl_vertical_complexity
     tbl_vert1 <- left_join(xref_Vert_Complexity, tlu_Vert_Complexity, by = "Vert_Complexity_ID")
-    tbl_vert2 <- left_join(tbl_vert1, tlu_Strata, by = "Strata_ID")
-    tbl_vert2$Vert_Complexity[tbl_vert2$Vert_Complexity_ID == 6] <- "0%"
+    tbl_vert2 <- left_join(tbl_vert1, tlu_Strata, by = "Strata_ID") |> rename(Cover_Class = Vert_Complexity)
+    tbl_vert2$Cover_Class[tbl_vert2$Vert_Complexity_ID == 6] <- "0%"
 
+    tbl_vertical_complexity <- right_join(tbl_visits[,first_cols], tbl_vert2, by = "Visit_ID")
+
+    #--- tbl_species_by_strata
     tbl_pcomp1 <- left_join(xref_Plant_Complexity, tlu_Strata, by = "Strata_ID")
     tbl_pcomp2 <- left_join(tbl_pcomp1, tlu_Plant, by = "TSN")
     tbl_pcomp3 <- right_join(tbl_visits[,first_cols], tbl_pcomp2, by = "Visit_ID")
@@ -341,7 +344,8 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                                  suffix = c("_Overall", "_Indiv")) |>
                        #filter(Severity_Indiv > 0) |>
                        select(all_of(first_cols), Location_Level, Stressor_Category,
-                              Stressor, Severity_Indiv, Severity_Overall)
+                              Stressor, Severity_Indiv, Severity_Overall) |>
+                       mutate(Flag = NA_character_) # for xref_visit_hydro join
 
     miss_overall <- tbl_RAM_stress1 |> filter(Severity_Overall == 0 & Severity_Indiv > 0) |>
       select(Code, Year, Severity_Indiv, Severity_Overall, Visit_ID, Stressor_Category) |>
@@ -436,12 +440,12 @@ make_datapkg_RAM <- function(export_protected = FALSE,
         paste0("Import complete. Views are located in global environment.")
         ))
 
-  final_tables <- list(tbl_locations, tbl_visits, tbl_RAM_stressors,
-                       tbl_AA_char, tbl_species_list, tbl_species_by_strata)
+  final_tables <- list(tbl_locations, tbl_visits, tbl_visit_history, tbl_RAM_stressors,
+                       tbl_AA_char, tbl_species_list, tbl_species_by_strata, tbl_vertical_complexity)
 
   final_tables <- setNames(final_tables,
                            c("tbl_locations", "tbl_visits", "tbl_visit_history", "tbl_RAM_stressors",
-                             "tbl_AA_char", "tbl_species_list", "tbl_species_by_strata"))
+                             "tbl_AA_char", "tbl_species_list", "tbl_species_by_strata", "tbl_vertical_complexity"))
 
   list2env(final_tables, envir = env)
 
