@@ -432,7 +432,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
   close(pb)
 
   print(ifelse(new_env == TRUE,
-        paste0("Import complete. Views are located in VIEWS_WETLAND environment."),
+        paste0("Import complete. Views are located in VIEWS_RAM environment."),
         paste0("Import complete. Views are located in global environment.")
         ))
 
