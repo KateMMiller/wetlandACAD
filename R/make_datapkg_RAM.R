@@ -86,7 +86,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
   tbl_list1 <- DBI::dbListTables(db)[grepl("tbl|tlu|xref", DBI::dbListTables(db))]
   tbl_list <- tbl_list1[!grepl("tbl_Well|tbl_Well_Visit|tbl_Water_Level", tbl_list1)] # drops well tbls and queries
 
-  pb = txtProgressBar(min = 0, max = length(tbl_list), style = 3)
+  pb = txtProgressBar(min = 0, max = length(tbl_list) + 3, style = 3)
 
   tbl_import <- lapply(seq_along(tbl_list),
                        function(x){
@@ -108,9 +108,20 @@ make_datapkg_RAM <- function(export_protected = FALSE,
   #---- Combine tables into views ----
     #--- tbl_locations
     # Create tbl_locations by reshaping xrefs to have 1 record per location
+
     xref_Loc_Diff1 <- left_join(xref_Location_Difficulty, tlu_Difficulty, by = "Difficulty_ID")
+    xref_Loc_Diff1$Difficulty_Full[xref_Loc_Diff1$Difficulty_Full == "Other"] <- NA_character_
+
     xref_Loc_Diff <- xref_Loc_Diff1 |> group_by(Location_ID) |>
-      summarize(Access_Difficulty = paste0(Difficulty_Full, collapse = "; "))
+      summarize(Access_Difficulty1 = paste0(Difficulty_Full[!is.na(Difficulty_Full)], collapse = "; "),
+                Access_Difficulty2 = paste0(
+                  Location_Difficulty_Comments[!is.na(Location_Difficulty_Comments)],
+                  collapse = "; "),
+                Access_Difficulty = paste(Access_Difficulty1, Access_Difficulty2,
+                                          collapse = "; ", sep = "; ")) |>
+      select(-Access_Difficulty1, -Access_Difficulty2)
+
+    xref_Loc_Diff$Access_Difficulty <- sub("^; +", "", xref_Loc_Diff$Access_Difficulty) # clean up string
 
     xref_Loc_Req1 <- left_join(xref_Location_Requirement, tlu_Requirement, by = c("Requirement_ID" = "ID"))
     xref_Loc_Req <- xref_Loc_Req1 |> group_by(Location_ID) |>
@@ -157,9 +168,10 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                                        "Water_Marks", "Water_Carried_Debris", "Bare_Areas",
                                        "Floating_Mat", "Wetland_Hydro_Comments")]
     tbl_locations <- arrange(tbl_locations, Code)
-
+    setTxtProgressBar(pb, length(tbl_list) + 1)
     #--- tbl_visits
-    tbl_Visit <- tbl_Visit |> mutate(Year = substr(Date, 1, 4))
+    tbl_Visit <- tbl_Visit |> mutate(Year = substr(Date, 1, 4)) |>
+      mutate(limited_RAM = ifelse(AA_Point == "Yes", 1, 0))
 
     visit_tbl_list <- list(tbl_Visit,
                            tbl_Visit_Inundation |> rename(Flag_Inundation = Flag),
@@ -205,7 +217,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
 
     tbl_visits6 <- left_join(tbl_visits5, tbl_water2, by = "Visit_ID")
 
-    first_cols <- c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type")
+    first_cols <- c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM")
     mid_cols <- c("Weather",  "Prior_Weather", "Ditch_Present", "Depth_1", "Depth_2", "Depth_3",
                   "Flag_Water_Source", "Water_Source_1", "Water_Source_2", "Water_Source_3",
                   "Mosaic_Complexity", "SphagnumMoss", "Sphagnum_Cover", "Invasive_Cover_Class",
@@ -234,6 +246,10 @@ make_datapkg_RAM <- function(export_protected = FALSE,
 
     #setdiff(names(tbl_visits6), names(tbl_visits)) # dropped unwanted names
 
+    #--- tbl_visit_history
+    tbl_visit_history <- right_join(tbl_visits[,first_cols], tbl_Visit_Metadata, by = c("Location_ID", "Visit_ID")) |>
+      arrange(Code, Year, Updated_Table)
+
     #--- tbl_AA_char
     # Topo Complexity and Hydro sources
     tbl_topo1 <- left_join(xref_Topo_Complexity, tlu_Topo_Complexity, by = "Topography_ID")
@@ -252,7 +268,8 @@ make_datapkg_RAM <- function(export_protected = FALSE,
       mutate(Type = "Water_Sources") |>
       rename(Feature = Source)
 
-    tbl_AA_char <- rbind(tbl_topo2, tbl_water2) |> arrange(Code, Year, Type, Feature)
+    tbl_AA_char <- rbind(tbl_topo2, tbl_water2) |> filter(Present == 1) |>
+      arrange(Code, Year, Type, Feature) |> select(-Present)
 
     #--- tbl_species_list
     tbl_species1 <- left_join(xref_Species_List |> rename(TSN = Plant_ID),
@@ -262,40 +279,19 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                                                   Moss_Lichen, Shrub, Tree, Vine, Synonym, Author,
                                                   Canopy_Exclusion, Favorites, Protected_species),
                               by = c("TSN"))
-
-
-    tbl_species2 <- left_join(tbl_visits |> select(all_of(first_cols)), tbl_species1, by = "Visit_ID")
-
     # Change -1 to 1
     binvars <- c("Quadrat_NE", "Quadrat_SE", "Quadrat_SW", "Quadrat_NW", "Coll")
-    tbl_species2[,binvars][tbl_species2[,binvars] == -1] <- 1
+    tbl_species1[,binvars][tbl_species1[,binvars] == -1] <- 1
 
-    # Add qualifiers for plot visits that didn't run out tapes (RAM-17 all years; RAM-GM last year),
-    # so percent freq isn't calculated as /4.
-    tbl_species2$pct_freq <- 0
+    tbl_species2 <- left_join(tbl_visits |> select(all_of(first_cols)), tbl_species1, by = "Visit_ID") |>
+      mutate(quad_freq = ifelse(limited_RAM == 1, Quadrat_NE * 100,
+                                ((Quadrat_NE + Quadrat_SE +
+                                    Quadrat_SW + Quadrat_NW)/4)*100))
 
-    tbl_species2 <- left_join(tbl_visits |> select(all_of(first_cols)), tbl_species1, by = "Visit_ID")
-    # Change -1 to 1
-    binvars <- c("Quadrat_NE", "Quadrat_SE", "Quadrat_SW", "Quadrat_NW", "Coll")
-    tbl_species2[,binvars][tbl_species2[,binvars] == -1] <- 1
-
-    # Add qualifier for site visits where we don't run out tapes and only one 15 min search around site is conducted.
-    # After a check box is added to the database for this case, we can drop hard coding of it here.
-    tbl_species2$limited_RAM <- ifelse(tbl_species2$Code %in% "R-17" |
-                                      (tbl_species2$Code == "R-19" & tbl_species2$Year == 2023),
-                                       1, 0)
-    #table(tbl_species2$limited_RAM, tbl_species2$Code)
-    #table(tbl_species2$limited_RAM, tbl_species2$Year)
-
-    tbl_species2$quad_freq <- ifelse(tbl_species2$limited_RAM == 1,
-                                     tbl_species2$Quadrat_NE * 100,
-                                     ((tbl_species2$Quadrat_NE + tbl_species2$Quadrat_SE +
-                                       tbl_species2$Quadrat_SW + tbl_species2$Quadrat_NW)/4)*100)
-
-    first_cols <- c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type")
+    first_cols <- c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM")
     last_cols <- c("Protocol_Version", "Checked", "Data_Verified_By", "Certification_Level")
     new_order <- c(first_cols,
-                   "limited_RAM", "Latin_Name", "Common",
+                   "Latin_Name", "Common",
                    "Quadrat_NE", "Quadrat_SE", "Quadrat_SW", "Quadrat_NW", "quad_freq",
                    "Coll", "Comments", "TSN", "Order", "Family", "Genus",
                    "Exotic", "Invasive", "PLANTS_Code", "CoC_ME_ACAD",
@@ -306,6 +302,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
     tbl_species_list <- tbl_species2[,new_order]
     #setdiff(names(tbl_species2), names(tbl_species)) # check that dropped unwanted columns
     #head(tbl_species)
+    setTxtProgressBar(pb, length(tbl_list) + 2)
 
     #--- tbl_species_by_strata
     tbl_vert1 <- left_join(xref_Vert_Complexity, tlu_Vert_Complexity, by = "Vert_Complexity_ID")
@@ -333,15 +330,18 @@ make_datapkg_RAM <- function(export_protected = FALSE,
     tbl_stress2 <- left_join(tbl_stress1, tlu_Stressor_Category, by = "Stressor_Category_ID")
     tbl_stress3 <- right_join(tbl_visits[,first_cols], tbl_stress2, by = "Visit_ID")
 
-    tbl_stress_overall <- tbl_stress3 |> filter(Stressor %in% "Overall Ranking") |> select(-Stressor, Stressor_ID_Overall = Stressor_ID)
+    tbl_stress_overall <- tbl_stress3 |> filter(Stressor %in% "Overall Ranking") |>
+      select(-Stressor, Stressor_ID_Overall = Stressor_ID)
     tbl_stress_indiv <- tbl_stress3 |> filter(!Stressor %in% "Overall Ranking")
 
     tbl_RAM_stress1 <- full_join(tbl_stress_overall, tbl_stress_indiv,
                                  by = c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
+                                        "limited_RAM",
                                         "Location_Level", "Stressor_Category", "Stressor_Category_ID"),
                                  suffix = c("_Overall", "_Indiv")) |>
                        #filter(Severity_Indiv > 0) |>
-                       select(all_of(first_cols), Location_Level, Stressor_Category, Stressor, Severity_Indiv, Severity_Overall)
+                       select(all_of(first_cols), Location_Level, Stressor_Category,
+                              Stressor, Severity_Indiv, Severity_Overall)
 
     miss_overall <- tbl_RAM_stress1 |> filter(Severity_Overall == 0 & Severity_Indiv > 0) |>
       select(Code, Year, Severity_Indiv, Severity_Overall, Visit_ID, Stressor_Category) |>
@@ -366,7 +366,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
     # Alterations to Hydro Period and Stressors to Substrate don't have an overall score.
     # Applying max Indiv per group to Overall
     tbl_RAM_stress1 <- tbl_RAM_stress1 |> group_by(Code, Location_ID, Visit_ID, Panel, Date, Year,
-                                                   Visit_Type, Location_Level, Stressor_Category) |>
+                                                   Visit_Type, limited_RAM, Location_Level, Stressor_Category) |>
       mutate(Severity_Overall = ifelse(
         Stressor_Category %in% c("Alterations to Hydroperiod", "Stressors to Substrate"),
         max(Severity_Indiv, na.rm = T), Severity_Overall)) |>
@@ -374,7 +374,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
 
     stress_check <- tbl_RAM_stress1 |>
       group_by(Code, Location_ID, Visit_ID, Panel, Date, Year,
-               Visit_Type, Location_Level, Stressor_Category) |>
+               Visit_Type, limited_RAM, Location_Level, Stressor_Category) |>
       mutate(check_indiv = ifelse(max(Severity_Indiv, na.rm = T) > max(Severity_Overall), 1, 0)) |>
       ungroup() |>
       filter(check_indiv > 0) |>
@@ -405,7 +405,8 @@ make_datapkg_RAM <- function(export_protected = FALSE,
 
     tbl_hstress3 <- tbl_hstress2[, names(tbl_RAM_stress1)]
 
-    tbl_RAM_stressors <- rbind(tbl_RAM_stress1, tbl_hstress3) |> arrange(Code, Year, Location_Level, Stressor_Category) |>
+    tbl_RAM_stressors <- rbind(tbl_RAM_stress1, tbl_hstress3) |>
+      arrange(Code, Year, Location_Level, Stressor_Category) |>
       filter(Severity_Indiv > 0)
 
   # Remove protected species if specified
@@ -425,9 +426,10 @@ make_datapkg_RAM <- function(export_protected = FALSE,
     tbl_species_by_strata <- filter(tbl_species_by_strata, Protected_species == FALSE)
    } else {warning("Note that protected species are included in views. These are for internal or NPS approved use only.")}
 
-  close(pb)
 
   #final tables to add to new env or global env: tbl_locations, tbl_visits
+  setTxtProgressBar(pb, length(tbl_list) + 3)
+  close(pb)
 
   print(ifelse(new_env == TRUE,
         paste0("Import complete. Views are located in VIEWS_WETLAND environment."),
@@ -438,7 +440,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                        tbl_AA_char, tbl_species_list, tbl_species_by_strata)
 
   final_tables <- setNames(final_tables,
-                           c("tbl_locations", "tbl_visits", "tbl_RAM_stressors",
+                           c("tbl_locations", "tbl_visits", "tbl_visit_history", "tbl_RAM_stressors",
                              "tbl_AA_char", "tbl_species_list", "tbl_species_by_strata"))
 
   list2env(final_tables, envir = env)
