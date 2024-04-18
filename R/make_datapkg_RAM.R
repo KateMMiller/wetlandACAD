@@ -1,6 +1,8 @@
 #' @title make_datapkg_RAM: Imports and compiles views for wetland RAM data package
 #'
-#' @description This function imports RAM-related tables in the wetland RAM backend and combines them into flattened views for the data package. Each view is added to a VIEWS_WETLAND environment in your workspace, or to your global environment based on whether new_env = TRUE or FALSE.
+#' @description This function imports RAM-related tables in the wetland RAM backend and combines them
+#' into flattened views for the data package. Each view is added to a VIEWS_RAM environment in your
+#' workspace, or to your global environment based on whether new_env = TRUE or FALSE.
 #'
 #' @importFrom dplyr all_of arrange collect filter full_join group_by left_join mutate rename right_join summarize tbl
 #' @importFrom purrr reduce
@@ -20,11 +22,17 @@
 #' @param odbc DSN of the database when using type = DSN. If not specified will default to "RAM_BE", which
 #' is the back end of the MS Access RAM database.
 #'
-#' @param path Quoted path of database back end file, including the name of the backend.
-#' @return Assigns RAM views to specified environment
+#' @param db_path Quoted path of database back end file, including the name of the backend.
 #'
 #' @param new_env Logical. Specifies which environment to store views in. If \code{TRUE}(Default), stores
 #' views in VIEWS_RAM environment. If \code{FALSE}, stores views in global environment
+#'
+#' @param export_data Logical. If TRUE, writes views to disk. If FALSE (Default), views are only
+#' stored in specified R environment.
+#'
+#' @param export_path Quoted path to export views to. If blank, exports to working directory.
+#'
+#' @param zip Logical. If TRUE, exports a zip file. If FALSE (Default), exports individual csvs.
 #'
 #' @examples
 #' \dontrun{
@@ -35,22 +43,41 @@
 #' make_datapkg_RAM(type = 'DSN', odbc = "RAM_BE", new_env = F, export_protected = T)
 #' }
 #'
+#' @return Assigns RAM views to specified environment
 #' @export
 
 make_datapkg_RAM <- function(export_protected = FALSE,
                                type = c('DSN', 'file'), odbc = 'RAM_BE',
-                               path = NA, new_env = TRUE){
+                               db_path = NA, new_env = TRUE, export_data = FALSE,
+                               export_path = NA, zip = FALSE){
 
   #---- error handling ----
   stopifnot(class(export_protected) == 'logical')
   type <- match.arg(type)
   stopifnot(class(new_env) == 'logical')
+  stopifnot(class(export_data) == 'logical')
+  stopifnot(class(zip) == 'logical')
+
+  if(export_data == TRUE){
+    if(is.na(export_path)){export_path <- getwd()
+    } else if(!dir.exists(export_path)){stop("Specified export_path does not exist.")}
+
+    # Normalize path for zip
+    export_pathn <- normalizePath(export_path)
+
+    # Add / to end of path if it wasn't specified.
+    export_pathn <- if(!grepl("/$", export_pathn)){paste0(export_pathn, "\\")}
+  }
+
 
   if(!requireNamespace("odbc", quietly = TRUE)){
     stop("Package 'odbc' needed for this function to work. Please install it.", call. = FALSE)
   }
   if(!requireNamespace("DBI", quietly = TRUE)){
     stop("Package 'DBI' needed for this function to work. Please install it.", call. = FALSE)
+  }
+  if(!requireNamespace("zip", quietly = TRUE) & zip == TRUE){
+    stop("Package 'zip' needed to export to zip file. Please install it.", call. = FALSE)
   }
 
   # make sure db is on dsn list if type == DSN
@@ -61,9 +88,9 @@ make_datapkg_RAM <- function(export_protected = FALSE,
 
   # check for db if type = file
   if(type == "file"){
-    if(is.na(path)){stop("Must specify a path to the database for type = file option.")
+    if(is.na(db_path)){stop("Must specify a path to the database for type = file option.")
     } else {
-      if(file.exists(path) == FALSE){stop("Specified path or database does not exist.")}}
+      if(file.exists(db_path) == FALSE){stop("Specified path or database does not exist.")}}
   }
 
   #---- import db tables ----
@@ -413,6 +440,9 @@ make_datapkg_RAM <- function(export_protected = FALSE,
       arrange(Code, Year, Location_Level, Stressor_Category) |>
       filter(Severity_Indiv > 0)
 
+    setTxtProgressBar(pb, length(tbl_list) + 3)
+    close(pb)
+
   # Remove protected species if specified
   if(export_protected == FALSE){
     num_spp_prot <- filter(tbl_species_list, Protected_species == TRUE)
@@ -421,24 +451,23 @@ make_datapkg_RAM <- function(export_protected = FALSE,
     spp_drops <- data.frame(table(num_spp_prot$Latin_Name))
     colnames(spp_drops) <- c("Latin_Name", "Num_Sites")
 
-    warning(paste0("Protected species were removed from this export, with ", nrow(num_spp_prot),
+    prot_mess <- paste0("Protected species were removed from this export, with ", nrow(num_spp_prot),
                    " records removed from tbl_species_list, and ", nrow(num_spp2_prot),
                    " records removed from tbl_species_by_strata. Species removed from tbl_species_list were: ",
-                   paste0(spp_drops$Latin_Name, " (", spp_drops$Num_Sites, ")", collapse = "; ")))
+                   paste0(spp_drops$Latin_Name, " (", spp_drops$Num_Sites, ")", collapse = "; "))
+
+    cat(paste0("\033[0;", 31, "m", prot_mess, "\033[0m","\n"))
+
 
     tbl_species_list <- filter(tbl_species_list, Protected_species == FALSE)
     tbl_species_by_strata <- filter(tbl_species_by_strata, Protected_species == FALSE)
-   } else {warning("Note that protected species are included in views. These are for internal or NPS approved use only.")}
+  } else {
+    prot_mess = "Protected species are included in views. These are for internal or NPS approved use only."
+    cat(paste0("\033[0;", 31, "m", prot_mess, "\033[0m","\n"))
+        }
 
 
   #final tables to add to new env or global env: tbl_locations, tbl_visits
-  setTxtProgressBar(pb, length(tbl_list) + 3)
-  close(pb)
-
-  print(ifelse(new_env == TRUE,
-        paste0("Import complete. Views are located in VIEWS_RAM environment."),
-        paste0("Import complete. Views are located in global environment.")
-        ))
 
   final_tables <- list(tbl_locations, tbl_visits, tbl_visit_history, tbl_RAM_stressors,
                        tbl_AA_char, tbl_species_list, tbl_species_by_strata, tbl_vertical_complexity)
@@ -448,6 +477,56 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                              "tbl_AA_char", "tbl_species_list", "tbl_species_by_strata", "tbl_vertical_complexity"))
 
   list2env(final_tables, envir = env)
+
+  if(export_data == TRUE){
+    # Export files
+    if(zip == FALSE){
+      invisible(lapply(seq_along(final_tables),
+        function(x){
+          dtbl = final_tables[[x]]
+          write.csv(dtbl, paste0(export_pathn, names(final_tables)[[x]], ".csv"),
+                    row.names = FALSE)
+         }))
+    } else if(zip == TRUE){ #create tmp dir to export csvs, bundle to zip, then delete tmp folder
+
+      dir.create(tmp <- tempfile())
+
+      invisible(lapply(seq_along(final_tables),
+        function(x){
+        dtbl = final_tables[[x]]
+        write.csv(dtbl,
+                  paste0(tmp, "\\", names(final_tables)[[x]], ".csv"),
+                  row.names = FALSE)}))
+
+      file_list <- list.files(tmp)
+
+      zip::zipr(zipfile = paste0(export_pathn, "NETN_Wetland_RAM_Data_", format(Sys.Date(), "%Y%m%d"), ".zip"),
+                root = tmp,
+                files = file_list)
+      # csvs will be deleted as soon as R session is closed b/c tempfile
+    }
+  }
+
+  end_mess1 <- "Data package complete. Views are located in VIEWS_RAM environment. "
+  end_mess2 <- "Data package complete. Views are located in global environment. "
+  end_mess3 <- paste0("Files saved to: ", export_pathn, " ")
+  end_mess4 <- paste0("Zip file saved to: ", export_pathn,
+                     "NETN_Wetland_RAM_Data_", format(Sys.Date(), "%Y%m%d"), ".zip ")
+
+  if(export_data == FALSE){
+    if(new_env == TRUE){print(end_mess1)
+    } else if(new_env == FALSE){print(end_mess2)}
+  } else if(export_data == TRUE){
+    if(new_env == TRUE & zip == TRUE){
+      print(paste0(end_mess1, end_mess4))
+    } else if(new_env == FALSE & zip == TRUE){
+      print(paste0(end_mess2, end_mess4))
+    } else if(new_env == TRUE & zip == FALSE){
+      print(paste0(end_mess1, end_mess3))
+    } else if(new_env == FALSE & zip == FALSE){
+      print(paste0(end_mess2, end_mess3))
+    }
+    }
 
   } # End of function
 

@@ -43,6 +43,7 @@ Collate:
     'get_NADP_precip.R'
     'importQueries.R'
     'make_datapkg_RAM.R'
+    'make_datapkg_WL.R'
     'plot_hydro_site_year.R'
     'prep_well_data.R'
     'prep_conv_table.R'

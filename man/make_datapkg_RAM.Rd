@@ -8,8 +8,11 @@ make_datapkg_RAM(
   export_protected = FALSE,
   type = c("DSN", "file"),
   odbc = "RAM_BE",
-  path = NA,
-  new_env = TRUE
+  db_path = NA,
+  new_env = TRUE,
+  export_data = FALSE,
+  export_path = NA,
+  zip = FALSE
 )
 }
 \arguments{
@@ -27,16 +30,25 @@ If "DSN" is selected, must specify name in odbc argument.
 \item{odbc}{DSN of the database when using type = DSN. If not specified will default to "RAM_BE", which
 is the back end of the MS Access RAM database.}
 
-\item{path}{Quoted path of database back end file, including the name of the backend.}
+\item{db_path}{Quoted path of database back end file, including the name of the backend.}
 
 \item{new_env}{Logical. Specifies which environment to store views in. If \code{TRUE}(Default), stores
 views in VIEWS_RAM environment. If \code{FALSE}, stores views in global environment}
+
+\item{export_data}{Logical. If TRUE, writes views to disk. If FALSE (Default), views are only
+stored in specified R environment.}
+
+\item{export_path}{Quoted path to export views to. If blank, exports to working directory.}
+
+\item{zip}{Logical. If TRUE, exports a zip file. If FALSE (Default), exports individual csvs.}
 }
 \value{
 Assigns RAM views to specified environment
 }
 \description{
-This function imports RAM-related tables in the wetland RAM backend and combines them into flattened views for the data package. Each view is added to a VIEWS_WETLAND environment in your workspace, or to your global environment based on whether new_env = TRUE or FALSE.
+This function imports RAM-related tables in the wetland RAM backend and combines them
+into flattened views for the data package. Each view is added to a VIEWS_RAM environment in your
+workspace, or to your global environment based on whether new_env = TRUE or FALSE.
 }
 \examples{
 \dontrun{
