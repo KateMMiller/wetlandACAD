@@ -467,8 +467,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
         }
 
 
-  #final tables to add to new env or global env: tbl_locations, tbl_visits
-
+  # final tables to add to new env or global env and print to disk
   final_tables <- list(tbl_locations, tbl_visits, tbl_visit_history, tbl_RAM_stressors,
                        tbl_AA_char, tbl_species_list, tbl_species_by_strata, tbl_vertical_complexity)
 
@@ -509,14 +508,15 @@ make_datapkg_RAM <- function(export_protected = FALSE,
 
   end_mess1 <- "Data package complete. Views are located in VIEWS_RAM environment. "
   end_mess2 <- "Data package complete. Views are located in global environment. "
-  end_mess3 <- paste0("Files saved to: ", export_pathn, " ")
-  end_mess4 <- paste0("Zip file saved to: ", export_pathn,
-                     "NETN_Wetland_RAM_Data_", format(Sys.Date(), "%Y%m%d"), ".zip ")
 
   if(export_data == FALSE){
     if(new_env == TRUE){print(end_mess1)
     } else if(new_env == FALSE){print(end_mess2)}
   } else if(export_data == TRUE){
+    end_mess3 <- paste0("Files saved to: ", export_pathn, " ")
+    end_mess4 <- paste0("Zip file saved to: ", export_pathn,
+                        "NETN_Wetland_RAM_Data_", format(Sys.Date(), "%Y%m%d"), ".zip ")
+
     if(new_env == TRUE & zip == TRUE){
       print(paste0(end_mess1, end_mess4))
     } else if(new_env == FALSE & zip == TRUE){
