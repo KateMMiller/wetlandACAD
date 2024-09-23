@@ -329,6 +329,8 @@ make_datapkg_RAM <- function(export_protected = FALSE,
     tbl_species_list <- tbl_species2[,new_order]
     #setdiff(names(tbl_species2), names(tbl_species)) # check that dropped unwanted columns
     #head(tbl_species)
+
+    names(tbl_species_list)[names(tbl_species_list) == "Coll"] <- "Collected"
     setTxtProgressBar(pb, length(tbl_list) + 2)
 
     #--- tbl_vertical_complexity
