@@ -9,7 +9,7 @@
 #' \item{"file"}{A different database than default DSN}
 #' }
 #'
-#' @param odbc DSN of the database when using type = DSN. If not specified will defaut to "RAM_FE", which is the front end of the MS Access RAM database that contains the queries to import.
+#' @param odbc DSN of the database when using type = DSN. If not specified will default to "RAM_FE", which is the front end of the MS Access RAM database that contains the queries to import.
 #'
 #' @param path Quoted path of database backend file, including the name of the backend.
 #' @return Assigns database tables to global environment

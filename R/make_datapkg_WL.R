@@ -1,11 +1,11 @@
-#' @title make_datapkg_WL: Imports and compiles views for wetland water level data package
+#' @title importWaterLevel: Imports and compiles views for wetland water level data package
 #'
 #' @description This function imports water level-related tables in the wetland RAM backend and
 #' combines them into flattened views for the data package. Each view is added to a VIEWS_WL
 #' environment in your workspace, or to your global environment based on whether new_env = TRUE or FALSE.
 #'
 #' @importFrom dplyr arrange filter left_join mutate rename right_join select
-#' @importFrom purrr
+#' @importFrom purrr reduce
 #' @importFrom lubridate month year
 #'
 #' @param type Select whether to use the default Data Source Named database (DSN) to import data or a
@@ -39,16 +39,16 @@
 #' @examples
 #' \dontrun{
 #' # Import tables from database in specific folder:
-#' make_datapkg_WL(type = 'file', db_path = './Data/NETN_RAM_Backend.mdb')
+#' importWaterLevel(type = 'file', db_path = './Data/NETN_RAM_Backend.mdb')
 #'
 #' # Export zip with Accepted or Certified records only
-#' make_datapkg_WL(export_data = T, zip = T, export_all = F)
+#' importWaterLevel(export_data = T, zip = T, export_all = F)
 #' }
 #'
 #' @return Assigns RAM views to specified environment
 #' @export
 
-make_datapkg_WL <- function(export_protected = FALSE,
+importWaterLevel <- function(export_protected = FALSE,
                             type = c('DSN', 'file'), odbc = 'RAM_BE',
                             db_path = NA, new_env = TRUE, export_data = FALSE,
                             export_all = FALSE, export_path = NA, zip = FALSE){
