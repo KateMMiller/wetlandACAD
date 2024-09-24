@@ -1,4 +1,4 @@
-#' @title make_datapkg_RAM: Imports and compiles views for wetland RAM data package
+#' @title importRAM: Imports and compiles views for wetland RAM data package
 #'
 #' @description This function imports RAM-related tables in the wetland RAM backend and combines them
 #' into flattened views for the data package. Each view is added to a VIEWS_RAM environment in your
@@ -8,7 +8,7 @@
 #' @importFrom purrr reduce
 #' @importFrom tidyr pivot_wider
 #'
-#'@param export_protected Logical. If TRUE, all records are exported. If FALSE (Default), only non-protected
+#' @param export_protected Logical. If TRUE, all records are exported. If FALSE (Default), only non-protected
 #'species are exported.
 #'
 #' @param type Select whether to use the default Data Source Named database (DSN) to import data or a
@@ -17,6 +17,7 @@
 #' \describe{
 #' \item{"DSN"}{Default. DSN database. If odbc argument is not specified, will default to "RAM_BE"}
 #' \item{"file"}{A different database than default DSN}
+#' \item{"csv"}{Import csv views that have already been compiled as data package.}
 #' }
 #'
 #' @param odbc DSN of the database when using type = DSN. If not specified will default to "RAM_BE", which
@@ -37,19 +38,19 @@
 #' @examples
 #' \dontrun{
 #' # Import tables from database in specific folder:
-#' make_datapkg_RAM(type = 'file', path = './Data/NETN_RAM_Backend.mdb')
+#' importRAM(type = 'file', path = './Data/NETN_RAM_Backend.mdb')
 #'
 #' # Import ODBC named database into global env with protected species
-#' make_datapkg_RAM(type = 'DSN', odbc = "RAM_BE", new_env = F, export_protected = T)
+#' importRAM(type = 'DSN', odbc = "RAM_BE", new_env = F, export_protected = T)
 #' }
 #'
 #' @return Assigns RAM views to specified environment
 #' @export
 
-make_datapkg_RAM <- function(export_protected = FALSE,
-                               type = c('DSN', 'file'), odbc = 'RAM_BE',
-                               db_path = NA, new_env = TRUE, export_data = FALSE,
-                               export_path = NA, zip = FALSE){
+importRAM <- function(export_protected = FALSE,
+                      type = c('DSN', 'file'), odbc = 'RAM_BE',
+                      db_path = NA, new_env = TRUE, export_data = FALSE,
+                      export_path = NA, zip = FALSE){
 
   #---- error handling ----
   stopifnot(class(export_protected) == 'logical')
@@ -80,6 +81,7 @@ make_datapkg_RAM <- function(export_protected = FALSE,
     stop("Package 'zip' needed to export to zip file. Please install it.", call. = FALSE)
   }
 
+  if(type %in% c("DSN", "file")){
   # make sure db is on dsn list if type == DSN
   dsn_list <- odbc::odbcListDataSources()
 
@@ -195,7 +197,11 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                                        "Water_Marks", "Water_Carried_Debris", "Bare_Areas",
                                        "Floating_Mat", "Wetland_Hydro_Comments")]
     tbl_locations <- arrange(tbl_locations, Code)
+    names(tbl_locations)[names(tbl_locations) == "Easting"] <- "xCoordinate"
+    names(tbl_locations)[names(tbl_locations) == "Northing"] <- "yCoordinate"
+
     setTxtProgressBar(pb, length(tbl_list) + 1)
+
     #--- tbl_visits
     tbl_Visit <- tbl_Visit |> mutate(Year = substr(Date, 1, 4)) |>
       mutate(limited_RAM = ifelse(AA_Point == "Yes", 1, 0))
@@ -270,8 +276,10 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                    notes, last_cols)
 
     tbl_visits <- tbl_visits6[, new_order]
+    names(tbl_visits)[names(tbl_visits) == "Sphagnum_Cover"] <- "Bryophyte_Cover"
+    tbl_visits$Year <- as.integer(tbl_visits$Year)
 
-    #setdiff(names(tbl_visits6), names(tbl_visits)) # dropped unwanted names
+    #settbl_visits#setdiff(names(tbl_visits6), names(tbl_visits)) # dropped unwanted names
 
     #--- tbl_visit_history
     tbl_visit_history <- right_join(tbl_visits[,first_cols], tbl_Visit_Metadata, by = c("Location_ID", "Visit_ID")) |>
@@ -328,9 +336,8 @@ make_datapkg_RAM <- function(export_protected = FALSE,
 
     tbl_species_list <- tbl_species2[,new_order]
     #setdiff(names(tbl_species2), names(tbl_species)) # check that dropped unwanted columns
-    #head(tbl_species)
-
     names(tbl_species_list)[names(tbl_species_list) == "Coll"] <- "Collected"
+
     setTxtProgressBar(pb, length(tbl_list) + 2)
 
     #--- tbl_vertical_complexity
@@ -474,8 +481,8 @@ make_datapkg_RAM <- function(export_protected = FALSE,
                        tbl_AA_char, tbl_species_list, tbl_species_by_strata, tbl_vertical_complexity)
 
   final_tables <- setNames(final_tables,
-                           c("tbl_locations", "tbl_visits", "tbl_visit_history", "tbl_RAM_stressors",
-                             "tbl_AA_char", "tbl_species_list", "tbl_species_by_strata", "tbl_vertical_complexity"))
+                           c("locations", "visits", "visit_history", "RAM_stressors",
+                             "AA_char", "species_list", "species_by_strata", "vertical_complexity"))
 
   list2env(final_tables, envir = env)
 
@@ -529,6 +536,10 @@ make_datapkg_RAM <- function(export_protected = FALSE,
       print(paste0(end_mess2, end_mess3))
     }
     }
+
+  } else if(type == "csv"){
+  #+++ BUILD THIS OUT+++ Add zip import as an option
+  }
 
   } # End of function
 

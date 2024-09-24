@@ -13,7 +13,7 @@ importQueries(type = c("DSN", "file"), odbc = "RAM_FE", path = NA)
 \item{"file"}{A different database than default DSN}
 }}
 
-\item{odbc}{DSN of the database when using type = DSN. If not specified will defaut to "RAM_FE", which is the front end of the MS Access RAM database that contains the queries to import.}
+\item{odbc}{DSN of the database when using type = DSN. If not specified will default to "RAM_FE", which is the front end of the MS Access RAM database that contains the queries to import.}
 
 \item{path}{Quoted path of database backend file, including the name of the backend.}
 }

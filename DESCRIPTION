@@ -27,7 +27,7 @@ Suggests:
     zip
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Collate:
     'NWCA16_download.R'
     'NWCA16_import.R'
@@ -42,8 +42,9 @@ Collate:
     'compile_sent_WL.R'
     'get_NADP_precip.R'
     'importQueries.R'
-    'make_datapkg_RAM.R'
+    'importRAM.R'
     'make_datapkg_WL.R'
     'plot_hydro_site_year.R'
     'prep_well_data.R'
     'prep_conv_table.R'
+    'sumVegMMI.R'
