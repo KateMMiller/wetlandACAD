@@ -19,7 +19,7 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
   #---- Error Handling ----
   site_list <- paste0("R-", sprintf("%02d", 1:40))
   site <- match.arg(site, c("all", site_list), several.ok = TRUE)
-  site <- if(site == "all"){site_list} else {site}
+  site <- if(any(site == "all")){site_list} else {site}
 
   stopifnot(class(panel) %in% c("numeric", "integer"), panel %in% c(1, 2, 3, 4))
   stopifnot(class(years) %in% c("numeric", "integer"), years >= 2012)
