@@ -76,7 +76,7 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
   if(nrow(vmmi_qaqc) == 0){
     stop("Arguments returned a data frame with no records. Be sure you specified RAM years, and not EPA NWCA years.")}
 
-  vmmi_final <- left_join(loc, vmmi_qaqc, by = c("Code", "Location_ID", "Panel")) |>
+  vmmi_final <- left_join(vmmi_qaqc, loc, by = c("Code", "Location_ID", "Panel")) |>
     select(Code, Location_ID, Visit_ID, Panel, xCoordinate, yCoordinate, UTM_Zone, Date, Year, Visit_Type,
            limited_RAM, meanC, Bryophyte_Cover, Invasive_Cover, Cover_Tolerant = sum_cov_tol,
            vmmi, vmmi_rating)
