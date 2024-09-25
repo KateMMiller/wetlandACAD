@@ -71,7 +71,8 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
 
   vmmi_site <- filter(vmmi_calc, Code %in% site)
   vmmi_year <- filter(vmmi_site, Year %in% years)
-  vmmi_qaqc <- if(QAQC == FALSE){filter(vmmi_year, Visit_Type == "VS")} else {vmmi_year}
+  vmmi_panel <- filter(vmmi_year, Panel %in% panel)
+  vmmi_qaqc <- if(QAQC == FALSE){filter(vmmi_panel, Visit_Type == "VS")} else {vmmi_panel}
 
   if(nrow(vmmi_qaqc) == 0){
     stop("Arguments returned a data frame with no records. Be sure you specified RAM years, and not EPA NWCA years.")}

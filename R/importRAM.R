@@ -59,6 +59,8 @@ importRAM <- function(export_protected = FALSE,
   stopifnot(class(export_data) == 'logical')
   stopifnot(class(zip) == 'logical')
 
+  if(!requireNamespace("sf", quietly = T)){stop("Package 'sf' needed to generate lat/long coordinates. Please install it.", call. = FALSE)}
+
   if(export_data == TRUE){
     if(is.na(export_path)){export_path <- getwd()
     } else if(!dir.exists(export_path)){stop("Specified export_path does not exist.")}
@@ -185,10 +187,24 @@ importRAM <- function(export_protected = FALSE,
 
     tbl_locations5 <- left_join(tbl_locations4 |> rename(AA_Area = Area),
                                 tlu_AA_Layout |> rename(AA_Layout = Shape),
-                                by = "Layout_ID")
+                                by = "Layout_ID") |>
+      mutate(X = Easting, Y = Northing)
 
-    tbl_locations <- tbl_locations5[,c("Code", "Location_ID", "Panel", "Date_Established",
+    latlon <- sf::st_as_sf(tbl_locations5, coords = c("X", "Y"), crs = 26919) |>
+      sf::st_transform(crs = 4269) #NAD83; WGS84 is 4326
+
+    latlon_df <- latlon |>
+      mutate(Code = Code,
+             Location_ID = Location_ID,
+             Latitude = sf::st_coordinates(latlon)[,2],
+             Longitude = sf::st_coordinates(latlon)[,1]) |>
+      data.frame() |> select(Code, Location_ID, Latitude, Longitude)
+
+    tbl_locations6 <- left_join(tbl_locations5, latlon_df, by = c("Code", "Location_ID"))
+
+    tbl_locations <- tbl_locations6[,c("Code", "Location_ID", "Panel", "Date_Established",
                                        "Contact_ID", "Easting", "Northing",
+                                       "Latitude", "Longitude",
                                        "UTM_Zone", "Description", "FWS_Class_Code",
                                        "HGM_Class", "HGM_Sub_Class", "AA_Layout", "AA_Area",
                                        "Directions", "Location_Comments", "Access_Comments",
@@ -196,6 +212,7 @@ importRAM <- function(export_protected = FALSE,
                                        "Saturated_Soils", "Standing_Water", "Shallow_Roots",
                                        "Water_Marks", "Water_Carried_Debris", "Bare_Areas",
                                        "Floating_Mat", "Wetland_Hydro_Comments")]
+
     tbl_locations <- arrange(tbl_locations, Code)
     names(tbl_locations)[names(tbl_locations) == "Easting"] <- "xCoordinate"
     names(tbl_locations)[names(tbl_locations) == "Northing"] <- "yCoordinate"
