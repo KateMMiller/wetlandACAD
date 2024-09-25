@@ -41,7 +41,6 @@ Collate:
     'conv_kpa_cm.R'
     'compile_sent_WL.R'
     'get_NADP_precip.R'
-    'importQueries.R'
     'importRAM.R'
     'importWaterLevel.R'
     'plot_hydro_site_year.R'
