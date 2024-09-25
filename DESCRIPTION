@@ -47,4 +47,5 @@ Collate:
     'plot_hydro_site_year.R'
     'prep_well_data.R'
     'prep_conv_table.R'
+    'sumSpeciesList.R'
     'sumVegMMI.R'
