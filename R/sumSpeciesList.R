@@ -54,7 +54,7 @@ sumSpeciesList <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Da
                       error = function(e){stop("The tbl_species_list table was not found. Please import wetland RAM views.")}
                       )
   visit <- get("visits", envir = env)[,c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM")]
-  loc <- get("locations", envir = env)[,c("Code", "Location_ID", "Panel", "xCoordinate", "yCoordinate", "UTM_Zone")]
+  loc <- get("locations", envir = env)[,c("Code", "Location_ID", "Panel", "xCoordinate", "yCoordinate", "UTM_Zone", "Latitude", "Longitude")]
 
   locev <- left_join(loc, visit, by = c("Code", "Location_ID", "Panel"))
 
@@ -81,8 +81,11 @@ sumSpeciesList <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Da
     stop("Arguments returned a data frame with no records. Be sure you specified RAM years, and not EPA NWCA years.")}
 
   spp_final <- spp_prot |>
-    select(Code, Location_ID, Visit_ID, Panel, xCoordinate, yCoordinate, UTM_Zone, Date, Year, Visit_Type,
-           limited_RAM, TSN, Latin_Name, Common, quad_freq, PLANTS_Code, CoC_ME_ACAD, Invasive, Protected_species, Coef_wetness)
+    select(Code, Location_ID, Visit_ID, Panel,
+           xCoordinate, yCoordinate, UTM_Zone, Latitude, Longitude,
+           Date, Year, Visit_Type, limited_RAM,
+           TSN, Latin_Name, Common, quad_freq,
+           PLANTS_Code, CoC_ME_ACAD, Invasive, Protected_species, Coef_wetness)
 
   return(spp_final)
 
