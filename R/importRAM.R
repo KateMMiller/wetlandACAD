@@ -495,11 +495,13 @@ importRAM <- function(export_protected = FALSE,
 
   # final tables to add to new env or global env and print to disk
   final_tables <- list(tbl_locations, tbl_visits, tbl_visit_history, tbl_RAM_stressors,
-                       tbl_AA_char, tbl_species_list, tbl_species_by_strata, tbl_vertical_complexity)
+                       tbl_AA_char, tbl_species_list, tbl_species_by_strata, tbl_vertical_complexity,
+                       tlu_Plant)
 
   final_tables <- setNames(final_tables,
                            c("locations", "visits", "visit_history", "RAM_stressors",
-                             "AA_char", "species_list", "species_by_strata", "vertical_complexity"))
+                             "AA_char", "species_list", "species_by_strata", "vertical_complexity",
+                             "tlu_Plant"))
 
   list2env(final_tables, envir = env)
 
