@@ -95,7 +95,8 @@ prep_well_data<-function(path = NULL, year = as.numeric(format(Sys.Date(), "%Y")
   # Add site code and join location to water level data
   if(quietly == FALSE) {cat("Preparing and reshaping data from long to wide.")}
 
-  raw_wl2 <- merge(well_loc[ , c("ID", "Site_Code")], raw_wl, by.x = "ID", by.y = "Well_ID", all.x = FALSE, all.y = TRUE)
+  raw_wl2 <- merge(well_loc[ , c("ID", "Site_Code")], raw_wl,
+                   by.x = "ID", by.y = "Well_ID", all.x = FALSE, all.y = TRUE)
 
 
   raw_wl3 <- raw_wl2 %>% mutate(Year = year(Measure_Date_Time),
@@ -137,7 +138,8 @@ prep_well_data<-function(path = NULL, year = as.numeric(format(Sys.Date(), "%Y")
   wl_wide2 <- wl_wide %>% rename_at(cols, list(~paste0(.,"_AbsPres"))) %>%
     rename(timestamp = Measure_Date_Time)
 
-  col_order <- c("timestamp", "doy", "WMTN_BARO_AbsPres", "SHED_BARO_AbsPres", "BIGH_AbsPres",
+  col_order <- c("timestamp", "doy", "WMTN_BARO_AbsPres", "HQ_BARO_AbsPres", #"SHED_BARO_AbsPres",
+                 "BIGH_AbsPres",
                  "DUCK_AbsPres", "GILM_AbsPres", "HEBR_AbsPres", "HODG_AbsPres", "LIHU_AbsPres",
                  "NEMI_AbsPres", "WMTN_AbsPres")
 

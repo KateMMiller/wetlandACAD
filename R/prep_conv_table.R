@@ -112,11 +112,11 @@ if(quietly == FALSE) {cat("Creating conversion table")}
 # Convert raw wl pressure data and convert it to cm of water above the logger
 well_prep2 <- well_prep %>% mutate(BIGH_cm = (BIGH_AbsPres-WMTN_BARO_AbsPres)*10.197,
                                    DUCK_cm = (DUCK_AbsPres-WMTN_BARO_AbsPres)*10.197,
-                                   GILM_cm = (GILM_AbsPres-SHED_BARO_AbsPres)*10.197,
+                                   GILM_cm = (GILM_AbsPres-HQ_BARO_AbsPres)*10.197,
                                    HEBR_cm = (HEBR_AbsPres-WMTN_BARO_AbsPres)*10.197,
                                    HODG_cm = (HODG_AbsPres-WMTN_BARO_AbsPres)*10.197,
-                                   LIHU_cm = (LIHU_AbsPres-SHED_BARO_AbsPres)*10.197,
-                                   NEMI_cm = (NEMI_AbsPres-SHED_BARO_AbsPres)*10.197,
+                                   LIHU_cm = (LIHU_AbsPres-HQ_BARO_AbsPres)*10.197,
+                                   NEMI_cm = (NEMI_AbsPres-HQ_BARO_AbsPres)*10.197,
                                    WMTN_cm = (WMTN_AbsPres-WMTN_BARO_AbsPres)*10.197
                                    ) %>%
   select(timestamp, doy, BIGH_cm:WMTN_cm)
@@ -171,7 +171,7 @@ if(quietly == FALSE) {cat("....")}
 # Spring measurements
 #--------------------------
 spring_visit <- well_visit3 %>% filter(season == "spring") %>%
-                                filter(!Site_Code %in% c("SHED_BARO", "WMTN_BARO"))
+                                filter(!Site_Code %in% c("SHED_BARO", "WMTN_BARO", "HQ_BARO"))
 
 baro_log_times <- sort(unique(spring_visit$water_depth_time))
 
@@ -192,10 +192,11 @@ spring_meas2 <- spring_meas %>% mutate(spring_log_WL = WL_cm - (ground),
                                        season = "spring") %>%
                                 rename("visit_time" = "water_depth_time")
 
-conv_tbl_spring <- spring_meas2 %>% select(visit_time, season, Site_Code, wellabs, ground, corfac) %>%
-                                    mutate(spring_visit_time = visit_time,
-                                           BARO_cor = case_when(Site_Code %in% east ~ "SHED_BARO_AbsPres",
-                                                                Site_Code %in% west ~ "WMTN_BARO_AbsPres"))
+conv_tbl_spring <- spring_meas2 %>%
+  select(visit_time, season, Site_Code, wellabs, ground, corfac) %>%
+  mutate(spring_visit_time = visit_time,
+         BARO_cor = case_when(Site_Code %in% east ~ "HQ_BARO_AbsPres", # changed from SHED_BARO in 10/2022
+         Site_Code %in% west ~ "WMTN_BARO_AbsPres"))
 
 spring_dates <- conv_tbl_spring %>% select(Site_Code, spring_visit_time)
 
@@ -250,7 +251,7 @@ fall_meas2 <- fall_meas %>% mutate(last_log_WL = last_log_cm - (ground),
 conv_tbl_fall1 <- fall_meas2 %>% select(visit_time, season, Site_Code, wellabs, ground, corfac)
 
 conv_tbl_fall <- left_join(conv_tbl_fall1, spring_dates, by=c("Site_Code"))%>%
-                 mutate(BARO_cor = case_when(Site_Code %in% east ~ "SHED_BARO_AbsPres",
+                 mutate(BARO_cor = case_when(Site_Code %in% east ~ "HQ_BARO_AbsPres",
                                              Site_Code %in% west ~ "WMTN_BARO_AbsPres"))
 
 conv_table <- if(visits == "both"){
