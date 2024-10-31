@@ -11,6 +11,20 @@
 #' @param QAQC Logical. Include QAQC visits (TRUE) or drop QAQC visits (FALSE; default).
 #'
 #' @return Returns a data frame with vegetation MMIs for each site.
+#'
+#' @examples
+#' \dontrun{
+#' # import RAM data with protected records- Note that to calculate VMMI correctly,
+#' # protected species records must be included
+#' importRAM(export_protected = T)
+#'
+#' # Calculate veg MMI for all sites and all years
+#' vegmmi <- sumVegMMI()
+#'
+#' # Calculate veg MMI for 2024 only
+#' vegmmi24 <- sumVegMMI(years = 2024)
+#'
+#' }
 #' @export
 
 sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(), "%Y"),

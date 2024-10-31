@@ -26,3 +26,17 @@ Returns a data frame with vegetation MMIs for each site.
 \description{
 This function calculates the Vegetation Multimetric Index (VMMI) for each Rapid Assessment Monitoring (RAM) site in Acadia National Park following Miller, K.M., B.R. Mitchell, and B.J. McGill. 2016. Constructing multimetric indices and testing ability of landscape metrics to assess condition of freshwater wetlands in the Northeastern US. Ecological Indicators. 66:143-152. VMMI ratings of good, fair and poor are also included. Function can filter on site, year, and QAQC status.
 }
+\examples{
+\dontrun{
+# import RAM data with protected records- Note that to calculate VMMI correctly,
+# protected species records must be included
+importRAM(export_protected = T)
+
+# Calculate veg MMI for all sites and all years
+vegmmi <- sumVegMMI()
+
+# Calculate veg MMI for 2024 only
+vegmmi24 <- sumVegMMI(years = 2024)
+
+}
+}
