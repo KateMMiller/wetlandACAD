@@ -9,7 +9,8 @@ sumSpeciesList(
   panel = 1:4,
   years = 2012:format(Sys.Date(), "\%Y"),
   QAQC = FALSE,
-  species_type = "all"
+  species_type = "all",
+  include_protected = T
 )
 }
 \arguments{
@@ -22,10 +23,30 @@ sumSpeciesList(
 \item{QAQC}{Logical. Include QAQC visits (TRUE) or drop QAQC visits (FALSE; default).}
 
 \item{species_type}{Character. Options are c("all", "native", "exotic")}
+
+\item{include_protected}{Logical. If TRUE, returns protected species. If FALSE (default), removes protected species from returned data frame.}
 }
 \value{
-Returns a data frame with vegetation MMIs for each site.
+Returns a data frame with species lists for each site.
 }
 \description{
 This function compiles species lists filtered on site, year, panel, QAQC status, and native vs exotic species.
+}
+\examples{
+\dontrun{
+# import RAM data with protected records- Note that to include protected records
+# protected species records must be included
+importRAM(export_protected = T)
+
+# Compile species list for all sites and all species
+spp_all <- sumSpeciesList(include_protected = T)
+
+# Compile species list for all sites and only non-protected species
+spp_public <- sumSpeciesList(include_protected = T)
+
+# Compile for 2024 and exotic species only
+spp_exo_24 <- sumSpeciesList(years = 2024, species_type = "exotic")
+
+}
+
 }
