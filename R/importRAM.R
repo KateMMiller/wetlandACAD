@@ -527,7 +527,9 @@ importRAM <- function(export_protected = FALSE,
 
       file_list <- list.files(tmp)
 
-      zip::zipr(zipfile = paste0(export_pathn, "NETN_Wetland_RAM_Data_", format(Sys.Date(), "%Y%m%d"), ".zip"),
+      prot <- ifelse(export_protected == TRUE, "_NPSonly", "_public")
+
+      zip::zipr(zipfile = paste0(export_pathn, "NETN_Wetland_RAM_Data_", format(Sys.Date(), "%Y%m%d"), prot, ".zip"),
                 root = tmp,
                 files = file_list)
       # csvs will be deleted as soon as R session is closed b/c tempfile
@@ -543,7 +545,7 @@ importRAM <- function(export_protected = FALSE,
   } else if(export_data == TRUE){
     end_mess3 <- paste0("Files saved to: ", export_pathn, " ")
     end_mess4 <- paste0("Zip file saved to: ", export_pathn,
-                        "NETN_Wetland_RAM_Data_", format(Sys.Date(), "%Y%m%d"), ".zip ")
+                        "NETN_Wetland_RAM_Data_", format(Sys.Date(), "%Y%m%d"), prot, ".zip ")
 
     if(new_env == TRUE & zip == TRUE){
       print(paste0(end_mess1, end_mess4))
