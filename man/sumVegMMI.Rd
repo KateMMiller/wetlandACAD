@@ -24,7 +24,7 @@ sumVegMMI(
 Returns a data frame with vegetation MMIs for each site.
 }
 \description{
-This function calculates the Vegetation Multimetric Index (VMMI) for each Rapid Assessment Monitoring (RAM) site in Acadia National Park following Miller, K.M., B.R. Mitchell, and B.J. McGill. 2016. Constructing multimetric indices and testing ability of landscape metrics to assess condition of freshwater wetlands in the Northeastern US. Ecological Indicators. 66:143-152. VMMI ratings of good, fair and poor are also included. Function can filter on site, year, and QAQC status.
+This function calculates the Vegetation Multimetric Index (VMMI) for each Rapid Assessment Monitoring (RAM) site in Acadia National Park following Miller, K.M., B.R. Mitchell, and B.J. McGill. 2016. Constructing multimetric indices and testing ability of landscape metrics to assess condition of freshwater wetlands in the Northeastern US. Ecological Indicators. 66:143-152. VMMI ratings of good, fair and poor are also included. Function can filter on site, year, and QAQC status. Coefficient of conservatism and Coeffient of wetness come from the Maine Floristic Quality Assessment of 82 - Acadian Plains Hills: https://www.maine.gov/dacf/mnap/features/coc.htm.
 }
 \examples{
 \dontrun{

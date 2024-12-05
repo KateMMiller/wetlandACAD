@@ -3,7 +3,7 @@
 #' @importFrom dplyr filter group_by left_join mutate select summarize
 #' @importFrom purrr reduce
 #'
-#' @description This function calculates the Vegetation Multimetric Index (VMMI) for each Rapid Assessment Monitoring (RAM) site in Acadia National Park following Miller, K.M., B.R. Mitchell, and B.J. McGill. 2016. Constructing multimetric indices and testing ability of landscape metrics to assess condition of freshwater wetlands in the Northeastern US. Ecological Indicators. 66:143-152. VMMI ratings of good, fair and poor are also included. Function can filter on site, year, and QAQC status.
+#' @description This function calculates the Vegetation Multimetric Index (VMMI) for each Rapid Assessment Monitoring (RAM) site in Acadia National Park following Miller, K.M., B.R. Mitchell, and B.J. McGill. 2016. Constructing multimetric indices and testing ability of landscape metrics to assess condition of freshwater wetlands in the Northeastern US. Ecological Indicators. 66:143-152. VMMI ratings of good, fair and poor are also included. Function can filter on site, year, and QAQC status. Coefficient of conservatism and Coeffient of wetness come from the Maine Floristic Quality Assessment of 82 - Acadian Plains Hills: https://www.maine.gov/dacf/mnap/features/coc.htm.
 #'
 #' @param site Character. Filter on site code. Options are "all" (default) or a vector of site codes ranging from "R-01" to "R-40".
 #' @param panel Numeric. Filter on panel number. By default, all panels are returned, and can be filtered by numbers 1 to 4.
@@ -31,17 +31,19 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
                       QAQC = FALSE){
 
   #---- Error Handling ----
-  site_list <- paste0("R-", sprintf("%02d", 1:40))
+  # Make more general for Non-NETN sites
+  env <- if(exists("VIEWS_RAM")){VIEWS_RAM} else {.GlobalEnv}
+  site_list <- tryCatch(unique(get("locations", envir = env)$Code),
+                        error = function(e){stop("The locations table was not found. Please import wetland RAM views.")})
+
   site <- match.arg(site, c("all", site_list), several.ok = TRUE)
   site <- if(any(site == "all")){site_list} else {site}
 
-  stopifnot(class(panel) %in% c("numeric", "integer"), panel %in% c(1, 2, 3, 4))
+  stopifnot(class(panel) %in% c("numeric", "integer"), panel %in% c(1, 2, 3, 4, -1))
   stopifnot(class(years) %in% c("numeric", "integer"), years >= 2012)
   stopifnot(class(QAQC) == "logical")
 
   #---- Compile Data ----
-  env <- if(exists("VIEWS_RAM")){VIEWS_RAM} else {.GlobalEnv}
-
   spplist <- tryCatch(get("species_list", envir = env)[,c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
                                                               "limited_RAM", "CoC_ME_ACAD", "TSN", "Latin_Name")],
                       error = function(e){stop("The tbl_species_list table was not found. Please import wetland RAM views.")}

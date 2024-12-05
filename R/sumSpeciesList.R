@@ -36,19 +36,21 @@ sumSpeciesList <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Da
                            QAQC = FALSE, species_type = "all", include_protected = T){
 
   #---- Error Handling ----
-  site_list <- paste0("R-", sprintf("%02d", 1:40))
+  # Make more general for Non-NETN sites
+  env <- if(exists("VIEWS_RAM")){VIEWS_RAM} else {.GlobalEnv}
+  site_list <- tryCatch(unique(get("locations", envir = env)$Code),
+                        error = function(e){stop("The locations table was not found. Please import wetland RAM views.")})
+
   site <- match.arg(site, c("all", site_list), several.ok = TRUE)
   site <- if(any(site == "all")){site_list} else {site}
 
-  stopifnot(class(panel) %in% c("numeric", "integer"), panel %in% c(1, 2, 3, 4))
+  stopifnot(class(panel) %in% c("numeric", "integer"), panel %in% c(1, 2, 3, 4, -1))
   stopifnot(class(years) %in% c("numeric", "integer"), years >= 2012)
   stopifnot(class(QAQC) == "logical")
   species_type <- match.arg(species_type, c("all", "native", "exotic"))
   stopifnot(class(include_protected) == "logical")
 
   #---- Compile Data ----
-  env <- if(exists("VIEWS_RAM")){VIEWS_RAM} else {.GlobalEnv}
-
   spplist <- tryCatch(get("species_list", envir = env)[,c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
                                                               "limited_RAM", "TSN", "Latin_Name", "quad_freq")],
                       error = function(e){stop("The tbl_species_list table was not found. Please import wetland RAM views.")}

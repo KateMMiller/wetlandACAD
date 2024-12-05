@@ -105,12 +105,12 @@ importRAM <- function(export_protected = FALSE,
     else if (type == 'file'){
       db <- DBI::dbConnect(drv=odbc::odbc(),
                            .connection_string =
-                           paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=", path))
+                           paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=", db_path))
     },
       error = function(e){
-      stop(error_mess)},
+      stop(e)},
       warning = function(w){
-      stop(error_mess)
+      stop(w)
     }
     )
 
@@ -150,7 +150,7 @@ importRAM <- function(export_protected = FALSE,
                   collapse = "; "),
                 Access_Difficulty = paste(Access_Difficulty1, Access_Difficulty2,
                                           collapse = "; ", sep = "; ")) |>
-      select(-Access_Difficulty1, -Access_Difficulty2)
+      select(-Access_Difficulty1, -Access_Difficulty2) |> as.data.frame()
 
     xref_Loc_Diff$Access_Difficulty <- sub("^; +", "", xref_Loc_Diff$Access_Difficulty) # clean up string
 
@@ -161,14 +161,35 @@ importRAM <- function(export_protected = FALSE,
     xref_Loc_Hydro1 <- left_join(xref_Location_Hydrology, tlu_Hydrology, by = "Wetland_Hydrology_ID")
     xref_Loc_Hydro1$Wetland_Hydro <- gsub(" ", "_", substr(xref_Loc_Hydro1$Wetland_Hydrology,
                                             6, nchar(xref_Loc_Hydro1$Wetland_Hydrology)))
-    xref_Loc_Hydro1$present <- 1
-    xref_Loc_Hydro_wide <- pivot_wider(xref_Loc_Hydro1 |>
+
+    # Handling adding present column if df is empty
+    xref_Loc_Hydro2 <- xref_Loc_Hydro1
+    if(nrow(xref_Loc_Hydro2) > 0){
+      xref_Loc_Hydro2$present <- 1
+    } else {
+      xref_Loc_Hydro2[1,] <- NA
+      xref_Loc_Hydro2$present <- 1
+    }
+
+    xref_Loc_Hydro_wide <- pivot_wider(xref_Loc_Hydro2 |>
                                          select(Location_ID, Wetland_Hydro,
                                                 Wetland_Hydrology_Comments, present),
                                        names_from = Wetland_Hydro,
                                        values_from = present, values_fill = 0) |>
       group_by(Location_ID) |> mutate(Wetland_Hydro_Comments =
                                            paste0(Wetland_Hydrology_Comments, collapse = ": "))
+
+    if(any(names(xref_Loc_Hydro_wide) %in% c("NA"))){
+      xref_Loc_Hydro_wide <- xref_Loc_Hydro_wide[ ,-which(names(xref_Loc_Hydro_wide) %in% "NA")]}
+
+    # Handling missing hydro options that then don't show up as columns after pivot
+    hydro_names <- c("Location_ID", "Wetland_Hydrology_Comments", "Saturated_Soils", "Standing_Water",
+                     "Shallow_Roots", "Water_Marks", "Water_Carried_Debris", "Bare_Areas", "Buttressed_Trunks",
+                     "Water_Stained_Leaves", "Oxidized_Rhizospheres", "Other", "Floating_Mat", "Wetland_Hydro_Comments")
+
+    missing_hydro <- setdiff(hydro_names, names(xref_Loc_Hydro_wide))
+    xref_Loc_Hydro_wide[missing_hydro] <- NA
+    if(nrow(xref_Loc_Hydro1) == 0){xref_Loc_Hydro_wide <- xref_Loc_Hydro_wide[0,]}
 
     loc_tbl_list <- list(tbl_Location, xref_Loc_Diff, xref_Loc_Req, xref_Loc_Hydro_wide)
     tbl_locations1 <- reduce(loc_tbl_list, left_join, by = "Location_ID") |> arrange(Code)
@@ -207,11 +228,14 @@ importRAM <- function(export_protected = FALSE,
                                        "Latitude", "Longitude",
                                        "UTM_Zone", "Description", "FWS_Class_Code",
                                        "HGM_Class", "HGM_Sub_Class", "AA_Layout", "AA_Area",
-                                       "Directions", "Location_Comments", "Access_Comments",
+                                       "Directions",
+                                       "Location_Comments", "Access_Comments",
                                        "Notes_AA2", "Access_Difficulty", "Access_Requirement",
                                        "Saturated_Soils", "Standing_Water", "Shallow_Roots",
                                        "Water_Marks", "Water_Carried_Debris", "Bare_Areas",
-                                       "Floating_Mat", "Wetland_Hydro_Comments")]
+                                       "Floating_Mat", "Buttressed_Trunks",
+                                       "Water_Stained_Leaves", "Oxidized_Rhizospheres", "Other",
+                                       "Wetland_Hydro_Comments")]
 
     tbl_locations <- arrange(tbl_locations, Code)
     names(tbl_locations)[names(tbl_locations) == "Easting"] <- "xCoordinate"
@@ -475,15 +499,23 @@ importRAM <- function(export_protected = FALSE,
     num_spp2_prot <- filter(tbl_species_by_strata, Protected_species == TRUE)
 
     spp_drops <- data.frame(table(num_spp_prot$Latin_Name))
-    colnames(spp_drops) <- c("Latin_Name", "Num_Sites")
+
+    # Handling adding Latin_Name column if df is empty
+    if(nrow(spp_drops) > 0){
+      colnames(spp_drops) <- c("Latin_Name", "Num_Sites")
+    } else if(nrow(spp_drops) == 0){
+    spp_drops <- data.frame("Latin_Name" = NA, "Num_Sites" = NA)
+    spp_drops <- spp_drops[0,]
+    }
 
     prot_mess <- paste0("Protected species were removed from this export, with ", nrow(num_spp_prot),
                    " records removed from tbl_species_list, and ", nrow(num_spp2_prot),
                    " records removed from tbl_species_by_strata. Species removed from tbl_species_list were: ",
                    paste0(spp_drops$Latin_Name, " (", spp_drops$Num_Sites, ")", collapse = "; "))
 
+    if(nrow(spp_drops) > 0){
     cat(paste0("\033[0;", 31, "m", prot_mess, "\033[0m","\n"))
-
+    }
 
     tbl_species_list <- filter(tbl_species_list, Protected_species == FALSE)
     tbl_species_by_strata <- filter(tbl_species_by_strata, Protected_species == FALSE)
