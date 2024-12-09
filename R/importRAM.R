@@ -11,19 +11,21 @@
 #' @param export_protected Logical. If TRUE, all records are exported. If FALSE (Default), only non-protected
 #'species are exported.
 #'
-#' @param type Select whether to use the default Data Source Named database (DSN) to import data or a
-#' different database.
-#' If "DSN" is selected, must specify name in odbc argument.
+#' @param type Select whether to use the default Data Source Named database (DSN) to import data, a
+#' different database, or a data package with CSVs. If "DSN" is selected, must specify name in odbc argument.
+#' If dbfile, csv, or zip are selected, must specify a filepath.
 #' \describe{
 #' \item{"DSN"}{Default. DSN database. If odbc argument is not specified, will default to "RAM_BE"}
-#' \item{"file"}{A different database than default DSN}
+#' \item{"dbfile"}{A different database than default DSN}
 #' \item{"csv"}{Import csv views that have already been compiled as data package.}
+#' \item{"zip"}{Import zip file containing csvs from a data package.}
 #' }
 #'
 #' @param odbc DSN of the database when using type = DSN. If not specified will default to "RAM_BE", which
 #' is the back end of the MS Access RAM database.
 #'
-#' @param db_path Quoted path of database back end file, including the name of the backend.
+#' @param filepath Quoted path of database back end dbfile, csvs or zip. If dbfile or zip are the type, must
+#' include the name of the database or zip file (see examples).
 #'
 #' @param new_env Logical. Specifies which environment to store views in. If \code{TRUE}(Default), stores
 #' views in VIEWS_RAM environment. If \code{FALSE}, stores views in global environment
@@ -37,29 +39,47 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Import tables from database in specific folder:
-#' importRAM(type = 'file', path = './Data/NETN_RAM_Backend.mdb')
 #'
-#' # Import ODBC named database into global env with protected species
-#' importRAM(type = 'DSN', odbc = "RAM_BE", new_env = F, export_protected = T)
+#' filepath <- "C:/NETN/R_Dev/data/wetland_data_package/"
+#' ex_path <- filepath
+#'
+#' # Import tables from database in specific folder and only export non-protected:
+#' importRAM(type = 'dbfile', filepath = paste0(filepath, "NETN_RAM_20241030.accdb"), export_path = ex_path, export_data = T)
+#'
+#' # Import ODBC named database into global env with protected species and export as zip file
+#' importRAM(type = 'DSN', odbc = "RAM_BE", new_env = F, export_protected = F, export_data = T, zip = T, export_path = ex_path)
+#'
+#' # Import csvs of data package without protected species
+#' importRAM(type = 'csv', filepath = filepath, export_data = T, export_path = ex_path, zip = T)
+#'
+#' # Import csvs of data package with protected species
+#' importRAM(type = 'csv', filepath = filepath, export_data = T, export_path = ex_path, zip = T, export_protected = T)
+#'
+#' # Import zip of data package containing csvs but don't export anything
+#' importRAM(type = 'zip', filepath = paste0(filepath, "NETN_Wetland_RAM_Data_20241209_NPSonly.zip"))
+#'
+#' # Import zip of data package containing csvs without protected species but don't export anything
+#' importRAM(type = 'zip', filepath = paste0(filepath, "NETN_Wetland_RAM_Data_20241209_public.zip"))
+#'
 #' }
 #'
-#' @return Assigns RAM views to specified environment
+#' @return Compiles and assigns RAM views to specified environment
 #' @export
 
 importRAM <- function(export_protected = FALSE,
-                      type = c('DSN', 'file'), odbc = 'RAM_BE',
-                      db_path = NA, new_env = TRUE, export_data = FALSE,
+                      type = c('DSN'), odbc = 'RAM_BE',
+                      filepath = NA, new_env = TRUE, export_data = FALSE,
                       export_path = NA, zip = FALSE){
 
   #---- error handling ----
   stopifnot(class(export_protected) == 'logical')
-  type <- match.arg(type)
+  type <- match.arg(type, c("DSN", "dbfile", "csv", "zip"))
   stopifnot(class(new_env) == 'logical')
   stopifnot(class(export_data) == 'logical')
   stopifnot(class(zip) == 'logical')
 
-  if(!requireNamespace("sf", quietly = T)){stop("Package 'sf' needed to generate lat/long coordinates. Please install it.", call. = FALSE)}
+  if(!requireNamespace("sf", quietly = T)){
+    stop("Package 'sf' needed to generate lat/long coordinates. Please install it.", call. = FALSE)}
 
   if(export_data == TRUE){
     if(is.na(export_path)){export_path <- getwd()
@@ -72,18 +92,34 @@ importRAM <- function(export_protected = FALSE,
     export_pathn <- if(!grepl("/$", export_pathn)){paste0(export_pathn, "\\")}
   }
 
+  # check that filepath was specified for non-DSN options
+  if(type %in% c('dbfile', 'csv', 'zip')){
+    if(is.na(filepath)){stop(paste0("Must specify a filepath to the database when type = 'dbfile', 'csv', or 'zip'."))
+    } else if(!file.exists(filepath)){
+      stop(paste0("Specified file path does not exist. ",
+                  ifelse(grepl("sharepoint", filepath), " Note that file paths from Sharepoint or Teams are not accessible.",
+                         "")))}}
+
+  if(type %in% "csv" & !grepl("/$", filepath)){filepath <- paste0(filepath, "/")} # add / to end of filepath if doesn't exist
+
+  # Check if type = 'csv' was specified, but .zip file is filepath
+  if(type == 'csv' & grepl(".zip", filepath)){
+    stop("Specified a zip file in filepath. Must use type = 'zip' instead of 'csv'.")}
+
 
   if(!requireNamespace("odbc", quietly = TRUE)){
     stop("Package 'odbc' needed for this function to work. Please install it.", call. = FALSE)
   }
+
   if(!requireNamespace("DBI", quietly = TRUE)){
     stop("Package 'DBI' needed for this function to work. Please install it.", call. = FALSE)
   }
+
   if(!requireNamespace("zip", quietly = TRUE) & zip == TRUE){
     stop("Package 'zip' needed to export to zip file. Please install it.", call. = FALSE)
   }
 
-  if(type %in% c("DSN", "file")){
+  if(type %in% c("DSN", "dbfile")){
   # make sure db is on dsn list if type == DSN
   dsn_list <- odbc::odbcListDataSources()
 
@@ -91,21 +127,32 @@ importRAM <- function(export_protected = FALSE,
     stop(paste0("Specified DSN ", odbc, " is not a named database source." ))}
 
   # check for db if type = file
-  if(type == "file"){
-    if(is.na(db_path)){stop("Must specify a path to the database for type = file option.")
+  if(type == "dbfile"){
+    if(is.na(filepath)){stop("Must specify a path to the database for type = file option.")
     } else {
-      if(file.exists(db_path) == FALSE){stop("Specified path or database does not exist.")}}
+      if(file.exists(paste0(filepath)) == FALSE){stop("Specified path to database does not exist.")}}
+  }
   }
 
+  # Set up objected used by all file types
+  views <- list("locations", "visits", "visit_history", "RAM_stressors",
+                "AA_char", "species_list", "species_by_strata", "vertical_complexity",
+                "tlu_Plant")
+
+
+  if(new_env == TRUE){VIEWS_RAM <<- new.env()}
+  env <- if(new_env == TRUE){VIEWS_RAM} else {.GlobalEnv}
+
   #---- import db tables ----
+  if(type %in% c("DSN", "dbfile")){
   tryCatch(
     db <- if (type == 'DSN'){
     db <- DBI::dbConnect(drv = odbc::odbc(), dsn = odbc)
     }
-    else if (type == 'file'){
+    else if (type == 'dbfile'){
       db <- DBI::dbConnect(drv=odbc::odbc(),
                            .connection_string =
-                           paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=", db_path))
+                           paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=", filepath))
     },
       error = function(e){
       stop(e)},
@@ -130,9 +177,6 @@ importRAM <- function(export_protected = FALSE,
   DBI::dbDisconnect(db)
 
   tbl_import <- setNames(tbl_import, tbl_list)
-
-  if(new_env == TRUE){VIEWS_RAM <<- new.env()}
-  env <- if(new_env == TRUE){VIEWS_RAM} else {.GlobalEnv}
 
   list2env(tbl_import, envir = environment()) # all tables into fxn env
 
@@ -536,8 +580,138 @@ importRAM <- function(export_protected = FALSE,
                              "tlu_Plant"))
 
   list2env(final_tables, envir = env)
+  }
+
+
+  if(type == "csv"){
+  # List csvs in filepath folder
+  dp_list <- list.files(filepath, pattern = ".csv")
+  # Drop csvs that don't matching names in the views
+  dp_list <- dp_list[grepl(paste0(views, collapse = "|"), dp_list)]
+  # Drop date stamp (if it exists) from file name if exists in 2 steps
+  dp_list_names <- gsub("[[:digit:]]+|.csv", "", dp_list)
+  dp_list_names <- gsub("_$","", dp_list_names)
+
+  miss_vws <- setdiff(dp_list_names, views)
+
+  # Check for missing views
+  if(length(miss_vws) > 0){stop("Missing the following views from the specified filepath: ",
+                                paste0(miss_vws, collapse = ", "))}
+
+  if(length(dp_list) > 9){
+    stop(
+      "More than one file matching the data package names were detected in the specified filepath
+    (e.g. 'visits.csv'). Must specify a filepath that only contains 1 version of each view.")
+  }
+
+  # Setup progress bar
+  pb <- txtProgressBar(min = 0, max = length(dp_list), style = 3)
+
+  # Import the file names by applying read.csv to the dp_list of file names
+  # This will return one list that includes all the datasets as individual elements
+  # The na.string = NA converts "NA" in data to blanks. The check.names = F won't
+  # replace invalid characters (eg "+") with "."
+  final_tables <- lapply(seq_along(dp_list),
+                     function(x){
+                       fname = dp_list[[x]]
+                       setTxtProgressBar(pb, x)
+                       read.csv(paste0(filepath, fname),
+                                na.string = "NA",
+                                tryLogical = TRUE,
+                                check.names = FALSE)
+                     })
+
+  # Set the names of dp_files as the shorter dp_list2 names
+  final_tables <- setNames(final_tables, dp_list_names)
+
+  # Takes every element of the dp_files list and saves it to the VIEWS_WQ or global
+  # environment as separate, named objects.
+  list2env(final_tables, envir = env)
+
+  # Close progress bar
+  close(pb)
+
+  }
+
+  if(type == "zip"){
+  # Check if can read files within the zip file
+    tryCatch(
+      {zfiles = utils::unzip(filepath, list = T)$Name
+      },
+      error = function(e){stop(paste0("Unable to import specified zip file."))})
+
+  z_list = zfiles[grepl(paste0(views, collapse = "|"), zfiles)]
+
+  # Drop date stamp (if it exists) from file name if exists in 2 steps
+  z_list_names <- gsub("[[:digit:]]+|.csv", "", z_list)
+  z_list_names <- gsub("./", "", z_list_names)
+  z_list_names <- gsub("_$","", z_list_names)
+
+  miss_vws <- setdiff(z_list_names, views)
+
+  # Check for missing views
+  if(length(miss_vws) > 0){stop("Missing the following views from the specified filepath: ",
+                                paste0(miss_vws, collapse = ", "))}
+
+  if(length(z_list) > 11){
+    stop(
+      "More than one file matching the data package names were detected in the specified filepath
+    (e.g. 'Chemistry_Data'). Must specify a filepath that only contains 1 version of each view.")
+  }
+
+  # Since the missing test passed, clean up files so only includes names in view_list, but
+  # maintain order in files
+
+  # Import views now that all tests passed
+  pb <- txtProgressBar(min = 0, max = length(z_list), style = 3)
+
+  ramviews <- unzip(filepath, junkpaths = TRUE, exdir = tempdir())
+
+  final_tables <-
+    lapply(seq_along(ramviews), function(x){
+      setTxtProgressBar(pb,x)
+      read.csv(ramviews[x], na.string = "NA", check.names = FALSE)})
+
+  final_tables <- setNames(final_tables, z_list_names)
+  list2env(final_tables, envir = env)
+  # Close progress bar
+  close(pb)
+
+  }
+
+  prot <- ifelse(export_protected == TRUE, "_NPSonly", "_public")
 
   if(export_data == TRUE){
+    if(export_protected == FALSE){
+      num_spp_prot <- filter(final_tables$species_list, Protected_species == TRUE)
+      num_spp2_prot <- filter(final_tables$species_by_strata, Protected_species == TRUE)
+
+      spp_drops <- data.frame(table(num_spp_prot$Latin_Name))
+
+      # Handling adding Latin_Name column if df is empty
+      if(nrow(spp_drops) > 0){
+        colnames(spp_drops) <- c("Latin_Name", "Num_Sites")
+      } else if(nrow(spp_drops) == 0){
+        spp_drops <- data.frame("Latin_Name" = NA, "Num_Sites" = NA)
+        spp_drops <- spp_drops[0,]
+      }
+
+      prot_mess <- paste0("Protected species were removed from this export, with ", nrow(num_spp_prot),
+                          " records removed from tbl_species_list, and ", nrow(num_spp2_prot),
+                          " records removed from tbl_species_by_strata. Species removed from tbl_species_list were: ",
+                          paste0(spp_drops$Latin_Name, " (", spp_drops$Num_Sites, ")", collapse = "; "))
+
+      if(nrow(spp_drops) > 0){
+        cat(paste0("\033[0;", 31, "m", prot_mess, "\033[0m","\n"))
+      }
+
+      final_tables$species_list <- dplyr::filter(final_tables$species_list, Protected_species == FALSE)
+      final_tables$species_by_strata <- dplyr::filter(final_tables$species_by_strata, Protected_species == FALSE)
+    } else {
+      prot_mess = "Protected species are included in views. These are for internal or NPS approved use only."
+      cat(paste0("\033[0;", 31, "m", prot_mess, "\033[0m","\n"))
+    }
+
     # Export files
     if(zip == FALSE){
       invisible(lapply(seq_along(final_tables),
@@ -558,8 +732,6 @@ importRAM <- function(export_protected = FALSE,
                   row.names = FALSE)}))
 
       file_list <- list.files(tmp)
-
-      prot <- ifelse(export_protected == TRUE, "_NPSonly", "_public")
 
       zip::zipr(zipfile = paste0(export_pathn, "NETN_Wetland_RAM_Data_", format(Sys.Date(), "%Y%m%d"), prot, ".zip"),
                 root = tmp,
@@ -589,10 +761,6 @@ importRAM <- function(export_protected = FALSE,
       print(paste0(end_mess2, end_mess3))
     }
     }
-
-  } else if(type == "csv"){
-  #+++ BUILD THIS OUT+++ Add zip import as an option
-  }
 
   } # End of function
 
