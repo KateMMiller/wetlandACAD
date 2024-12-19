@@ -568,6 +568,8 @@ importRAM <- function(export_protected = FALSE,
     cat(paste0("\033[0;", 31, "m", prot_mess, "\033[0m","\n"))
         }
 
+  # drop unneeded columns from tlu_plant
+  tlu_Plant <- tlu_Plant |> select(-Created_By, -Favorites, -Updated_By)
 
   # final tables to add to new env or global env and print to disk
   final_tables <- list(tbl_locations, tbl_visits, tbl_visit_history, tbl_RAM_stressors,
