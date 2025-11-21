@@ -2,7 +2,7 @@ Type: Package
 Package: wetlandACAD
 Title: Package for compiling, querying, summarizing and plotting
     freshwater wetland data in Acadia NP
-Version: 0.1.5
+Version: 0.1.6
 Author: Kate Miller
 Maintainer: Kate Miller <kathryn_miller@nps.gov>
 Description: This package contains functions that compile, query,
