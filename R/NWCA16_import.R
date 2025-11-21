@@ -42,7 +42,9 @@ NWCA16_import <- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = 
   } else if(!dir.exists(path)){stop("Specified path does not exist.")}
 
   # Add / to end of path if it wasn't specified.
+  pathn <- normalizePath(path)
   path <- if(substr(path, nchar(path), nchar(path)) != "/"){paste0(path, "/")} else {(paste0(path))}
+  pathn <- if(substr(pathn, nchar(pathn), nchar(pathn)) != "\\"){paste0(pathn, "\\")} else {(paste0(pathn))}
 
   # Make sure zip file exists and all the dfs are included
   if(!is.na(zip_name)){
@@ -82,11 +84,11 @@ NWCA16_import <- function(path = NA, new_env = TRUE, zip_name = NA, ACAD_only = 
       dfs <- unzip(paste0(path, zip_name), junkpaths = TRUE, exdir = tempdir())
       lapply(seq_along(data_list), function(x){
         setTxtProgressBar(pb,x)
-        read.csv(dfs[x])})
+        df <- read.csv(dfs[x], check.names = F)})
     } else if(is.na(zip_name)){
       lapply(seq_along(data_list), function(x){
         setTxtProgressBar(pb, x)
-        read.csv(paste0(path, data_list[x], ".csv"))
+        df <- read.csv(paste0(pathn, data_list[x], ".csv"), check.names = F)
       })
     }
 
