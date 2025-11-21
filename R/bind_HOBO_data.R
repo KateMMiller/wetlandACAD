@@ -71,9 +71,10 @@ bind_HOBO_data <- function(path = NA,
          Can only import one file per site per specified path.")
   }
 
-  orig_names = c("X.", "Date.Time..EDT.EST.", "Differential.Pressure....kPa.",
-                 "Absolute.Pressure....kPa.", "Temperature.....C.", "Water.Level....m.",
-                 "Barometric.Pressure....kPa.")
+  orig_names = c("X", "DateTime", "DifferentialPressurekPa",
+                 "AbsolutePressurekPa", "TemperatureC", "WaterLevelm",
+                 "BarometricPressurekPa")
+
   num_cols = 1:length(orig_names)
 
   col_names = c("V1", "Measure_Date_Time", "Differential_Pressure_kPa", "Absolute_Pressure_kPa",
@@ -87,6 +88,8 @@ bind_HOBO_data <- function(path = NA,
     df <- df1[!is.na(df1[,3]),]
 
     # Error handler for missing columns in dataframe.
+    colnames(df) <- gsub("\\.", "", names(df))
+    colnames(df) <- gsub("EDTEST|ESTEDT", "", names(df))
     missing_cols <- setdiff(orig_names, names(df))
     if(length(missing_cols) > 0){stop(
       paste0("The following columns are missing or mispelled from the imported dataset: ",
@@ -119,8 +122,7 @@ bind_HOBO_data <- function(path = NA,
 
     write.csv(fulld, paste0(path, filename), row.names = FALSE)
 
-    cat(paste0("File: ", filename, " saved to: ", "/n", "/t",
-                                    path))
+    cat(paste0("File: ", filename, " saved to: ", path))
   }
 
   return(data.frame(fulld))
