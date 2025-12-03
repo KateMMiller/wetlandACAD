@@ -2,8 +2,7 @@
 % Please edit documentation in R/prep_well_data.R
 \name{prep_well_data}
 \alias{prep_well_data}
-\title{prep_well_data: Prepares sentinel well data for conversion to water level using data tables stored in the NETN RAM database
-(for internal use).}
+\title{prep_well_data: Converts well data to water level}
 \usage{
 prep_well_data(
   path = NULL,
@@ -38,23 +37,24 @@ Returns a wide data frame with timestamp, SITENAME_AbsPres.
 \description{
 This function pulls in the water level data from the NETN RAM database,
 joins the location, well visit and water level data together into a wide
-format of the data with the timestamp as the joining column. Function requires
-all 8 sites and 2 barometric loggers to run, and only includes data between the
-spring and fall well visit per year. \strong{Must have a the NETN RAM backend
-database named as a DSN.} Function is primarily for internal use.
+format of the data with the timestamp as the joining column. Function only includes
+data between the spring and fall well visit per year. At least 1 site of water level
+data is required. \strong{Must have a the NETN RAM backend database named as a DSN.} Function has been
+updated for new loggers that log water level in cm and do not require pressure corrections.
+Function is primarily for internal use.
 }
 \examples{
 \dontrun{
 # Export growing season only data to a table
-dir = c('C:/Water_level_data/growing_season_2019')
-prep_well_data(path = dir, year = 2019, export = TRUE, growing_season = TRUE)
+dir = c('C:/Water_level_data/growing_season_2025')
+prep_well_data(path = dir, year = 2025, export = TRUE, growing_season = TRUE)
 
 # Assign output from all 2018 data, including flagged records, to global environment
-welld_2018 <- prep_well_data(year = 2018, rejected = TRUE, growing_season = FALSE,
+welld_2018 <- prep_well_data(year = 2025, rejected = TRUE, growing_season = FALSE,
                              export = FALSE)
 
 # Run for 2019 growing season data without printing messages in the console, and save output to file
-welld_2018 <- prep_well_data(year = 2019, growing_season = TRUE, export = TRUE,
+welld_2018 <- prep_well_data(year = 2025, growing_season = TRUE, export = TRUE,
                              quietly = TRUE)
 }
 
