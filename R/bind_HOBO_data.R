@@ -113,8 +113,12 @@ bind_HOBO_data <- function(path = NA,
    fulld$timestamp = as.POSIXct(fulld$Measure_Date_Time,
                                 format = "%m/%d/%Y %H:%M:%S",
                                 tz = "America/New_York")
-   fulld$Flag = "A"
+   fulld$Flag = "R"
    fulld$Flag_Note = NA
+
+   fulld$Water_Level_cm <- fulld$Water_Level_m*100
+   fulld_final <- fulld[,c("V1", "Measure_Date_Time", "Differential_Pressure_kPa", "Absolute_Pressure_kPa",
+                           "Degrees_C", "Water_Level_cm", "Baro_Pressure_kPa")]
 
   if(export == TRUE){
     filename <- paste0("Raw_HOBO_data_",
