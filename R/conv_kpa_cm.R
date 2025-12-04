@@ -2,11 +2,13 @@
 #'
 #' @importFrom dplyr mutate
 #'
-#' @description This function converts absolute pressure in kPa to cm of water.
+#' @description This function converts absolute pressure in kPa to cm of water. Has
+#' been updated to work with new logger data.
 #'
 #' @param df data frame with pressure data
-#' @param pres Quoted field name that corresponds absolute pressure from a water level logger
-#' @param baro Quoted field name of the atmostpheric barometric pressure correction field
+#' @param pres Quoted field name that corresponds to the differential pressure from
+#' a water level logger. The differential pressure being the Absolute - Barometric,
+#' which the new loggers calculate automatically.
 #'
 #' @examples
 #' \dontrun{
@@ -20,13 +22,12 @@
 #'
 #' @export
 
-conv_kpa_cm<-function(df, pres, baro){
+conv_kpa_cm<-function(df, pres){
   df <- data.frame(df)
 
   col1 <- df[ , pres]
-  col2 <- df[ , baro]
 
-  df[, paste0(substr(pres,1,4), "_cm")] <- as.numeric((col1 - col2)*10.197)
+  df[, paste0(substr(pres,1,4), "_cm")] <- as.numeric(col1*10.197)
 
   return(df)
 }

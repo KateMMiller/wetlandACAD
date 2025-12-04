@@ -4,21 +4,22 @@
 \alias{conv_kpa_cm}
 \title{conv_kpa_cm: converts absolute pressure to cm of water above the logger}
 \usage{
-conv_kpa_cm(df, pres, baro)
+conv_kpa_cm(df, pres)
 }
 \arguments{
 \item{df}{data frame with pressure data}
 
-\item{pres}{Quoted field name that corresponds absolute pressure from a water level logger}
-
-\item{baro}{Quoted field name of the atmostpheric barometric pressure correction field}
+\item{pres}{Quoted field name that corresponds to the differential pressure from
+a water level logger. The differential pressure being the Absolute - Barometric,
+which the new loggers calculate automatically.}
 }
 \value{
 Returns a data frame with a new column labeled with SITECODE_cm, which represents
 cm of water above the logger.
 }
 \description{
-This function converts absolute pressure in kPa to cm of water.
+This function converts absolute pressure in kPa to cm of water. Has
+been updated to work with new logger data.
 }
 \examples{
 \dontrun{
