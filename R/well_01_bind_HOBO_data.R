@@ -1,4 +1,4 @@
-#' @title bind_HOBO_data: Binds raw HOBO well data from csv
+#' @title well_01_bind_HOBO_data: Binds raw HOBO well data from csv
 #'
 #' @importFrom purrr list_rbind map
 #'
@@ -37,14 +37,14 @@
 #' /dontrun{
 #' dir = 'C:/Users/KMMiller/OneDrive - DOI/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2025/'
 #'
-#' well_data <- bind_HOBO_data(path)
+#' well_data <- well_01_bind_HOBO_data(path)
 #' }
 #'
 #' @return Returns a long data frame of raw water level data.
 #'
 #' @export
 
-bind_HOBO_data <- function(path = NA,
+well_01_bind_HOBO_data <- function(path = NA,
                            export = TRUE,
                            site_codes = c("BIGH", "DUCK", "GILM", "HEBR",
                                           "HODG", "LIHU", "NEMI", "WMTN"),
@@ -113,7 +113,7 @@ bind_HOBO_data <- function(path = NA,
    fulld$timestamp = as.POSIXct(fulld$Measure_Date_Time,
                                 format = "%m/%d/%Y %H:%M:%S",
                                 tz = "America/New_York")
-   fulld$Flag = "R"
+   fulld$Flag = "P" # for provisional
    fulld$Flag_Note = NA
 
    fulld$Water_Level_cm <- fulld$Water_Level_m*100

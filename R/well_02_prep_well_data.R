@@ -1,4 +1,4 @@
-#' @title prep_well_data: Converts well data to water level
+#' @title well_02_prep_well_data: Converts well data to water level
 #'
 #' @importFrom dplyr filter mutate rename right_join select
 #' @importFrom lubridate year yday force_tz
@@ -8,9 +8,9 @@
 #' joins the location, well visit and water level data together into a wide
 #' format of the data with the timestamp as the joining column. Function only includes
 #' data between the spring and fall well visit per year. At least 1 site of water level
-#' data is required. \strong{Must have a the NETN RAM backend database named as a DSN.} Function has been
-#' updated for new loggers that log water level in cm and do not require pressure corrections.
-#' Function is primarily for internal use.
+#' data is required. \strong{Must have a the NETN RAM backend database named as a DSN.}
+#' Function has been updated for new loggers that log water level in cm and do not require
+#' pressure corrections. Function is primarily for internal use.
 #'
 #' @param path Quoted path of the folder where the exported Hobo tables are located.
 #' @param year Numeric. The year you are preparing the data for. Function will only run 1 year at a time.
@@ -28,14 +28,14 @@
 #' \dontrun{
 #' # Export growing season only data to a table
 #' dir = c('C:/Water_level_data/growing_season_2025')
-#' prep_well_data(path = dir, year = 2025, export = TRUE, growing_season = TRUE)
+#' well_02_prep_well_data(path = dir, year = 2025, export = TRUE, growing_season = TRUE)
 #'
 #' # Assign output from all 2018 data, including flagged records, to global environment
-#' welld_2018 <- prep_well_data(year = 2025, rejected = TRUE, growing_season = FALSE,
+#' welld_2018 <- well_02_prep_well_data(year = 2025, rejected = TRUE, growing_season = FALSE,
 #'                              export = FALSE)
 #'
 #' # Run for 2019 growing season data without printing messages in the console, and save output to file
-#' welld_2018 <- prep_well_data(year = 2025, growing_season = TRUE, export = TRUE,
+#' welld_2018 <- well_02_prep_well_data(year = 2025, growing_season = TRUE, export = TRUE,
 #'                              quietly = TRUE)
 #' }
 #'
@@ -44,7 +44,7 @@
 #' @export
 #'
 
-prep_well_data <- function(path = NULL, year = as.numeric(format(Sys.Date(), "%Y")),
+well_02_prep_well_data <- function(path = NULL, year = as.numeric(format(Sys.Date(), "%Y")),
                            rejected = FALSE, growing_season = TRUE,
                            export = TRUE, quietly = FALSE){
 
@@ -99,7 +99,7 @@ prep_well_data <- function(path = NULL, year = as.numeric(format(Sys.Date(), "%Y
 
   raw_wl3 <- raw_wl2 |> mutate(Year = year(Measure_Date_Time),
                                doy  = yday(Measure_Date_Time))  |>
-    select(-ID, -ID.y, -Degrees_C)  |>
+    select(-ID, -Degrees_C) |>
     rename(AbsPres = Absolute_Pressure_kPa)  |>
     filter(Year == year)
 
@@ -116,8 +116,8 @@ prep_well_data <- function(path = NULL, year = as.numeric(format(Sys.Date(), "%Y
   }
 
   raw_wl4 <- if(rejected == FALSE){
-    raw_wl3 |> filter(Flag != "R") |> select(-Flag, -Flag_Note)
-  } else if(rejected == TRUE) {raw_wl3 |> select(-Flag, -Flag_Note)}
+    raw_wl3 |> filter(Flag != "R") |> select(-Flag, -Flag_Note, -ID.y)
+  } else if(rejected == TRUE) {raw_wl3 |> select(-Flag, -Flag_Note, -ID.y)}
 
   raw_wl5 <- if(growing_season == TRUE){
     raw_wl4 |> filter(doy > 134 & doy < 275)
@@ -125,7 +125,7 @@ prep_well_data <- function(path = NULL, year = as.numeric(format(Sys.Date(), "%Y
 
   if(quietly == FALSE) {cat("..")}
 
-  #wl_wide <- raw_wl6 %>% pivot_wider(names_from = c(Site_Code), values_from = c(AbsPres)) # names are AbsPres_SITE
+  #wl_wide <- raw_wl6 |>  pivot_wider(names_from = c(Site_Code), values_from = c(AbsPres)) # names are AbsPres_SITE
   wl_wide <- raw_wl5 |> select(Measure_Date_Time, Water_Level_cm, Year, doy, Site_Code) |>
     pivot_wider(names_from = Site_Code, values_from = Water_Level_cm)
 

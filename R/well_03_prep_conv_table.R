@@ -1,11 +1,10 @@
-#' @include prep_well_data.R
+#' @include well_02_prep_well_data.R
 #'
 #' @title prep_conv_table: Prepares conversion table to calculate water level
 #' relative to the wetland surface
 #'
-#' @importFrom dplyr arrange between case_when desc filter first full_join group_by last left_join mutate rename right_join select summarise
+#' @importFrom dplyr between case_when filter mutate right_join select
 #' @importFrom lubridate force_tz hour month year ymd
-#' @importFrom stringr str_c str_pad
 #' @importFrom tidyr pivot_longer spread
 #'
 #' @description This function pulls in the spring and fall visit data and the
@@ -41,12 +40,12 @@
 #' \dontrun{
 #' # Create conversion table for fall-only data
 #' dir = c('C:/Water_level_data/growing_season_2019')
-#' conv_tbl_19 <- prep_conv_table(path = dir, year = 2019, visits = "fall", export = TRUE)
+#' conv_tbl_19 <- well_03_prep_conv_table(path = dir, year = 2019, visits = "fall", export = TRUE)
 #'
 #' # Create conversion table that averages spring and fall visit without
 #' # printing messages in the console or saving output to file.
 #' dir = c('C:/Water_level_data/growing_season_2019')
-#' conv_tbl_19 <- prep_conv_table(path = dir, year = 2019, visits = "both",
+#' conv_tbl_19 <- well_03_rep_conv_table(path = dir, year = 2019, visits = "both",
 #'                                export = FALSE, quietly = TRUE)
 #' }
 #'
@@ -54,7 +53,7 @@
 #'
 #' @export
 
-prep_conv_table <- function(path = NA, year = as.numeric(format(Sys.Date(), "%Y")),
+well_03_prep_conv_table <- function(path = NA, year = as.numeric(format(Sys.Date(), "%Y")),
                             visits = 'both', export = TRUE, quietly = FALSE){
 
   #----------------
@@ -98,8 +97,8 @@ if(quietly == FALSE) {cat("..")}
 
 # Take imported raw water level data for the year specified and make it wide
 #well_prep <- prep_well_data(year = year, growing_season = FALSE, export = FALSE)
-well_prep <- force(prep_well_data(path = path, year = year, growing_season = FALSE,
-                                  export = FALSE, quietly = TRUE))
+well_prep <- force(well_02_prep_well_data(path = path, year = year, growing_season = FALSE,
+                                          export = FALSE, quietly = TRUE))
 
 if(quietly == FALSE) {cat("..")}
 
@@ -130,25 +129,22 @@ well_visit2 <- right_join(well_loc |> select(ID, Site_Code, Logger_Length, MP_to
 
 #------------------------------------------------------------------------------
 # Preparing data, so we can compare the water level measurement from the logger
-# to the field WL measurement. Because several sites are checked after the
-# WMTN_BARO logger is downloaded in the fall, we have to find the last non-NA
-# measurement logged by the WMTN_BARO for those sites to compare with (last_logger_info).
+# to the field WL measurement.
 #------------------------------------------------------------------------------
 
 # Preparing visit data for spring and fall
-well_visit3 <- well_visit2  |>  mutate(Year = lubridate::year(Visit_Date),
-                                      month = lubridate::month(Visit_Date),
-                                      season = case_when(between(month, 4, 6) ~ "spring", # changed to 7 for 2020
-                                                         between(month, 9, 11) ~ "fall",
-                                                         TRUE ~ "offseason"),
-                                      hour = lubridate::hour(Time),
-                                      water_depth_time = stringr::str_c(ymd(Visit_Date), " ",
-                                                        str_pad(hour, 2, side='left', pad = "0"),
-                                                        ":00", sep = ""),
-                                      ground = (Logger_Length + MP_to_Bolt) - Stick_Up_at_MP) |>
-                               filter(Year %in% year) |>
-                               select(Site_Code, Visit_Date, Year, month,
-                                      water_depth_time, season, Water_Depth, ground, Stick_Up_at_MP)
+well_visit3 <- well_visit2 |> mutate(Year = lubridate::year(Visit_Date),
+                                     month = lubridate::month(Visit_Date),
+                                     season = ifelse(between(month, 4, 6), "spring", # changed to 7 for 2020
+                                                ifelse(between(month, 9, 11), "fall", "offseason")),
+                                     hour = lubridate::hour(Time),
+                                     water_depth_time = paste0(ymd(Visit_Date), " ",
+                                                               sprintf("%02d", hour),
+                                                               ":00"),
+                                     ground = (Logger_Length + MP_to_Bolt) - Stick_Up_at_MP) |>
+  filter(Year %in% year) |>
+  select(Site_Code, Visit_Date, Year, month,
+         water_depth_time, season, Water_Depth, ground, Stick_Up_at_MP)
 
 # Fixing the time format
 well_visit3$water_depth_time <- as.POSIXct(well_visit3$water_depth_time,
@@ -156,7 +152,7 @@ well_visit3$water_depth_time <- as.POSIXct(well_visit3$water_depth_time,
                                            tz = "America/New_York" )
 
 # Check for offseason visits
-if(dim(well_visit3  |>  filter(season %in% "offseason") %>% droplevels())[1]>0){
+if(dim(well_visit3 |> filter(season %in% "offseason") %>% droplevels())[1]>0){
         message(paste("Warning: There are well visits outside of spring or fall periods. ",
                   "Offseason measurements are omitted from this function",
                   sep = "\n"))
@@ -164,8 +160,10 @@ if(dim(well_visit3  |>  filter(season %in% "offseason") %>% droplevels())[1]>0){
 
 
 # prep raw water level for year of interest
-raw_wl_yr1 <- raw_wl |>  mutate(logger_time = force_tz(Measure_Date_Time, tzone = "America/New_York")) |>
-                         filter(year(logger_time) == year)  |>  select(-ID)
+raw_wl_yr1 <- raw_wl |> mutate(logger_time = force_tz(Measure_Date_Time, tzone = "America/New_York")) |>
+                        filter(year(logger_time) == year) |>
+                        select(-ID)
+
 raw_wl_yr <- left_join(raw_wl_yr1, well_loc[,c("ID", "Site_Code")], by = c("Well_ID" = "ID"))
 
 if(quietly == FALSE) {cat("....")}
@@ -175,79 +173,78 @@ if(quietly == FALSE) {cat("....")}
 #--------------------------
 spring_visit <- well_visit3 |> filter(season %in% "spring")
 
-baro_log_times <- sort(unique(spring_visit$water_depth_time))
+wd_times <- sort(unique(spring_visit$water_depth_time))
 
-spr_wl_long <- well_prep |> filter(timestamp %in% baro_log_times) |>
+spr_wl_long <- well_prep |> filter(timestamp %in% wd_times) |>
   select(-Year) |>
-  pivot_longer(cols = -c(timestamp, doy), names_to = "Site_Code1", values_to = "WL_cm")  |>
+  pivot_longer(cols = -c(timestamp, doy), names_to = "Site_Code1", values_to = "raw_WL_cm")  |>
   mutate(Site_Code = substr(Site_Code1, 1, 4)) |>
   select(-Site_Code1)
 
-spring_meas <- left_join(spring_visit, spr_wl_long[ ,c("timestamp", "WL_cm", "Site_Code")],
+spring_meas <- left_join(spring_visit, spr_wl_long[ ,c("timestamp", "raw_WL_cm", "Site_Code")],
                          by = c("water_depth_time" = "timestamp", "Site_Code" = "Site_Code"))
 
-spring_meas2 <- spring_meas |>  mutate(spring_log_WL = WL_cm - (ground),
+spring_meas2 <- spring_meas |>  mutate(spring_log_WL = raw_WL_cm - (ground),
                                        field_WL = Stick_Up_at_MP - Water_Depth,
                                        corfac = spring_log_WL - field_WL,
-                                       wellabs = paste(Site_Code, "AbsPres", sep = "_"),
+                                       wellabs = paste(Site_Code, "raw_WL", sep = "_"),
                                        season = "spring") |>
                                 rename("visit_time" = "water_depth_time")
-#++++ ENDED HERE ++++
 
 conv_tbl_spring <- spring_meas2 |>
   select(visit_time, season, Site_Code, wellabs, ground, corfac) |>
-  mutate(spring_visit_time = visit_time,
-         BARO_cor = case_when(Site_Code %in% east ~ "HQ_BARO_AbsPres", # changed from SHED_BARO in 10/2022
-         Site_Code %in% west ~ "WMTN_BARO_AbsPres"))
+  mutate(spring_visit_time = visit_time)#,
+         # BARO_cor = case_when(Site_Code %in% east ~ "HQ_BARO_AbsPres", # changed from SHED_BARO in 10/2022
+         # Site_Code %in% west ~ "WMTN_BARO_AbsPres"))
 
 spring_dates <- conv_tbl_spring %>% select(Site_Code, spring_visit_time)
 
 #--------------------------
 # Fall measurements
 #--------------------------
-# The WMTN_BARO logger is often downloaded before DUCK, HEBR, and HODG are downloaded.
+# XXXX The WMTN_BARO logger is often downloaded before DUCK, HEBR, and HODG are downloaded.
 # To compare the field WL measurements in those sites, with the logger WL, we need
 # to add the ability to lag the logger water level data by up to 2 hours (not likely
-# to change all that much in 2 hours).
+# to change all that much in 2 hours). XXXX
 
-well_prep_desc <- well_prep2 %>% mutate(timestamp = force_tz(timestamp, "America/New_York")) %>%
-                                          arrange(desc(timestamp))
+# Need to update to work with raw WL data that are converted to relative to stick up.
+
+well_prep_desc <- well_prep |> mutate(timestamp = force_tz(timestamp, "America/New_York")) |>
+                                      arrange(desc(timestamp))
 
 last_log_info <- function(site_col){
   site <- substr(site_col, 1, 4)
-  df <- well_prep_desc %>% select(timestamp, site_col)
+  df <- well_prep_desc[,c("timestamp", site_col)]
   df2 <- na.omit(df)[1,]
   df2$Site_Code <- site
   colnames(df2) <- c("last_log_time", "last_log_cm", "Site_Code")
   return(df2)
 }
 
-last_log_fall <- rbind(last_log_info("BIGH_cm"),
-                       last_log_info("DUCK_cm"),
-                       last_log_info("GILM_cm"),
-                       last_log_info("HEBR_cm"),
-                       last_log_info("HODG_cm"),
-                       last_log_info("LIHU_cm"),
-                       last_log_info("NEMI_cm"),
-                       last_log_info("WMTN_cm"))
+last_log_fall <- rbind(last_log_info("BIGH_WL_raw"),
+                       last_log_info("DUCK_WL_raw"),
+                       last_log_info("GILM_WL_raw"),
+                       last_log_info("HEBR_WL_raw"),
+                       last_log_info("HODG_WL_raw"),
+                       last_log_info("LIHU_WL_raw"),
+                       last_log_info("NEMI_WL_raw"),
+                       last_log_info("WMTN_WL_raw"))
 
 # pull out fall visit
-fall_visit <- well_visit3 %>% filter(season == "fall" &
-                                     !Site_Code %in% c("WMTN_BARO", "SHED_BARO")) %>%
-                              droplevels()
+fall_visit <- well_visit3 |> filter(season == "fall") |> droplevels()
 
 # combine fall visit data with barometric logger data
 fall_meas <- left_join(fall_visit, last_log_fall, by = c("Site_Code"))
 
-fall_check <-fall_meas %>% mutate(time_diff = (water_depth_time - last_log_time)) %>%
-                           filter(time_diff > 2)
+fall_check <- fall_meas |> mutate(time_diff = (water_depth_time - last_log_time)) |>
+                           filter(time_diff > 2*60*60) # measured in seconds, filtered in hours.
 
 
-fall_meas2 <- fall_meas %>% mutate(last_log_WL = last_log_cm - (ground),
-                                          field_WL = Stick_Up_at_MP - Water_Depth,
-                                          corfac = last_log_WL - field_WL,
-                                   wellabs = paste(Site_Code, "AbsPres", sep = "_"),
-                                   season = "fall") %>%
+fall_meas2 <- fall_meas |> mutate(last_log_WL = last_log_cm - (ground),
+                                  field_WL = Stick_Up_at_MP - Water_Depth,
+                                  corfac = last_log_WL - field_WL,
+                                  wellabs = paste(Site_Code, "AbsPres", sep = "_"),
+                                  season = "fall") |>
   rename("visit_time" = "water_depth_time")
 
 conv_tbl_fall1 <- fall_meas2 %>% select(visit_time, season, Site_Code, wellabs, ground, corfac)
