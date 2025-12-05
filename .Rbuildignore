@@ -1,2 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^data/.+$
+^testing_scripts/.+$
+^reports/.+$
+^LICENSE\.md$
