@@ -2,7 +2,7 @@ Type: Package
 Package: wetlandACAD
 Title: Package for compiling, querying, summarizing and plotting
     freshwater wetland data in Acadia NP
-Version: 0.1.5
+Version: 0.1.6
 Author: Kate Miller
 Maintainer: Kate Miller <kathryn_miller@nps.gov>
 Description: This package contains functions that compile, query,
@@ -37,14 +37,10 @@ Collate:
     'NWCA21_vegMMI.R'
     'bind_HOBO_data.R'
     'calc_WL_stats.R'
-    'conv_WL.R'
-    'conv_kpa_cm.R'
-    'compile_sent_WL.R'
+    'compile_WL_data.R'
     'get_NADP_precip.R'
     'importRAM.R'
     'importWaterLevel.R'
     'plot_hydro_site_year.R'
-    'prep_well_data.R'
-    'prep_conv_table.R'
     'sumSpeciesList.R'
     'sumVegMMI.R'

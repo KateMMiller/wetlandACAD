@@ -2,34 +2,58 @@
 % Please edit documentation in R/bind_HOBO_data.R
 \name{bind_HOBO_data}
 \alias{bind_HOBO_data}
-\title{bind_HOBO_data: Binds sentinel well data using data files that are exported from
-HoboWare as .csv files (for internal use).}
+\title{bind_HOBO_data: Binds raw HOBO well data from csv}
 \usage{
-bind_HOBO_data(path, export = TRUE)
+bind_HOBO_data(
+  path = NA,
+  export = TRUE,
+  site_codes = c("BIGH", "DUCK", "GILM", "HEBR", "HODG", "LIHU", "NEMI", "WMTN"),
+  well_id = c(11, 9, 12, 15, 16, 13, 14, 10)
+)
 }
 \arguments{
 \item{path}{Quoted path of the folder where the exported Hobo tables are located.}
 
-\item{export}{\code{TRUE} or \code{FALSE}. Export csv file to specified path. Defaults to \code{TRUE}.}
+\item{export}{/code{TRUE} or /code{FALSE}. Export csv file to specified path. Defaults to /code{TRUE}.}
+
+\item{site_codes}{Quoted string of 4-letter site codes which are assumed to be in the file names
+of the water level csvs to be imported. If importing all 8 sentinel sites without changes, default
+settings do not need to be changed. If sites differ from default settings, in length or name, then both
+site_codes and well_id must be specified and match in length.}
+
+\item{well_id}{Numbered list of Well_ID matching tbl_Well in MS Access RAM database. If importing
+all 8 sentinel sites without changes, default settings do not need to be changed. This is the primary
+key used to link water level data to well visit data tables. The well_id should match the Well_ID record
+from the tbl_Wells for a given site in the MS Access RAM backend.}
 }
 \value{
-Returns a long data frame with ID (blank for Access to assign autonumber), Well_ID,
-timestamp, Absolute_Pressure_kPa, Degrees_C, and site.
+Returns a long data frame of raw water level data.
 }
 \description{
-This function finds the well data files based on a specified path
-and partial matching of files based on site name, reads these files into R,
-adds Well_ID and site name to each file, then binds them together and prepares
-the data to be imported into the MS Access RAM backend table: tbl_Water_Level.
-If appending to the Access table is not needed, then drop the first column 'ID',
-which is left blank so that Access can assign an auto number for the primary key.
-This function is mostly for internal use to generate a long format of the data
-to append to the MS Access table. Function requires all 8 sites and 2 barometric
-loggers to run. Mostly for internal use.
+This function imports individual raw HOBO well data files that were exported
+as csvs in the HOBO app. Using the specified path in the function and assuming file structure
+is such that the spring (October to April data) visit files are in a separate folder from fall
+visit files, and that each site's file name contains with its 4-letter code (e.g. Duck Pond
+Peatland's code is DUCK) as specified in the site_codes argument. The individual site data are
+row bound to match the raw water level table that originally was tbl_Water_Level in the MS Access
+RAM backend, but is now a stand-alone csv.
+
+This function generates a long format of the raw water level data to append to the existing water
+level table. By default, function imports all 8 sentinel sites by their code. Changing site_codes
+and well_id allows you to import differing number and names of sites. Note that each imported file
+must contain the following columns: # (Index column), Date-Time (EDT/EST),
+Differential Pressure (kPa), Absolute Pressure (kPa), Temperature (C), Water Level (m),
+Barometric Pressure (kPa). If this hard coding causes difficulty, will revise function to be more
+generic in future.
+
+Note that this function has been updated to work with data collected by MX2001 water level loggers
+with built-in atmospheric pressure correction. Use package version 0.1.5 to compile water
+level for HOBO U20 Loggers with external atmospheric pressure correction.
 }
 \examples{
-\dontrun{
-dir = c('C:/Water_level_data/growing_season_2019')
+/dontrun{
+dir = 'C:/Users/KMMiller/OneDrive - DOI/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2025/'
+
 well_data <- bind_HOBO_data(path)
 }
 
