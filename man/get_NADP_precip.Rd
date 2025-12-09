@@ -26,7 +26,7 @@ Returns a data frame with Date, hour (0-23), timestamp (Y-M-D H:M:S), and precip
 }
 \description{
 This function uses start date, end date and stationID to download NADP
-hourly precipitation data, and converts preciptation from inches to cm. Note that
+hourly precipitation data, and converts precipitation from inches to cm. Note that
 some stations may have different download links, and may not always work. The link
 used to download the NADP data was generated for station: ME98.
 }

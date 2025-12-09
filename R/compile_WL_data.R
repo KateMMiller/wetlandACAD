@@ -93,7 +93,7 @@ well_visit2 <- right_join(well_loc |> select(ID, Site_Code, Logger_Length, MP_to
   filter(Year %in% year)
 
 # Check for offseason visits
-if(dim(well_visit2 |> filter(season %in% "offseason") %>% droplevels())[1]>0){
+if(dim(well_visit2 |> filter(season %in% "offseason") |> droplevels())[1]>0){
   message(paste("Warning: There are well visits outside of spring or fall periods. ",
                 "Offseason measurements are omitted from this function",
                 sep = "\n"))
