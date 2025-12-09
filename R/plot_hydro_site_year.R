@@ -1,7 +1,6 @@
 #' @title plot_hydro_site_year: Plots a hydrograph by each year within a site
 #'
-#' @importFrom dplyr select
-#' @importFrom magrittr %>%
+#' @importFrom dplyr filter select
 #' @import ggplot2
 #'
 #' @description This function creates hydrographs of each year within a site. This function
@@ -27,14 +26,16 @@
 #' @export
 
 plot_hydro_site_year <- function(df, yvar, site, years = 2013:as.numeric(format(Sys.Date(), "%Y"))){
+
   minWL <- min(df[,yvar], na.rm = TRUE)
-  df <- df %>% filter(Year %in% years) %>%
-               filter(doy > 134 & doy < 275) %>%
-               select(doy_h, yvar, Year, lag.precip) %>% droplevels()
 
-  colnames(df)<-c('doy_h', 'WL', 'Year', 'lag.precip')
+  df <- df |> filter(Year %in% years) |>
+              filter(doy > 134 & doy < 275) |>
+              select(doy_h, yvar, Year, lag.precip) |> droplevels()
 
-  p <- ggplot(df,aes(x = doy_h, y = WL, group = Year))+
+  colnames(df) <- c('doy_h', 'WL', 'Year', 'lag.precip')
+
+  p <- ggplot(df, aes(x = doy_h, y = WL, group = Year))+
           geom_line(col = 'black')+
           geom_line(aes(x = doy_h, y = lag.precip*5 + minWL, group = Year), col ='blue')+
           facet_wrap(~Year, nrow = length(unique(df$Year)))+

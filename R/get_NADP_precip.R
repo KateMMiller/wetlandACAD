@@ -2,12 +2,10 @@
 #'
 #' @importFrom XML readHTMLTable
 #' @importFrom dplyr select filter mutate
-#' @importFrom magrittr %>%
-#' @importFrom stringr str_sub
 #' @importFrom lubridate date year
 #'
 #' @description This function uses start date, end date and stationID to download NADP
-#' hourly precipitation data, and converts preciptation from inches to cm. Note that
+#' hourly precipitation data, and converts precipitation from inches to cm. Note that
 #' some stations may have different download links, and may not always work. The link
 #' used to download the NADP data was generated for station: ME98.
 #'
@@ -48,14 +46,15 @@ get_NADP_precip <- function(start_date = paste0("04/01/", as.numeric(format(Sys.
 
   if(quietly == FALSE) {cat("Formatting precip data")}
 
-  precip_tbl2<-precip_tbl %>% filter(Date!='Totals:') %>% droplevels() %>%
-                              mutate(hour = str_sub(Hour,1,2),
-                                     timestamp = as.POSIXct(paste0(Date, " ", hour, ":00:00"),
-                                       format = "%Y-%m-%d %H:%M:%S", tz = "America/New_York"),
-                                     Date = lubridate::date(timestamp),
-                                     Year = lubridate::year(timestamp),
-                                     precip_in = as.numeric(`Precip (in)`), precip_cm = precip_in  *2.54) %>%
-                              select(timestamp, Date, Year, hour, precip_cm)
+  precip_tbl2<-precip_tbl |> filter(Date!='Totals:') |> droplevels() |>
+                             mutate(hour = substr(Hour,1,2),
+                                    timestamp = as.POSIXct(paste0(Date, " ", hour, ":00:00"),
+                                      format = "%Y-%m-%d %H:%M:%S", tz = "America/New_York"),
+                                    Date = lubridate::date(timestamp),
+                                    Year = lubridate::year(timestamp),
+                                    precip_in = as.numeric(`Precip (in)`),
+                                    precip_cm = precip_in * 2.54) |>
+                             select(timestamp, Date, Year, hour, precip_cm)
 
   if(quietly == FALSE) {cat("....Done.")}
 
