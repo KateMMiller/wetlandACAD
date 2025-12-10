@@ -5,7 +5,6 @@
 #' @importFrom dplyr arrange case_when filter group_by mutate select summarize
 #' @importFrom tidyr everything fill pivot_longer pivot_wider
 #' @importFrom purrr map_df map_dfr
-#' @importFrom stringr str_extract str_replace
 #'
 #' @param path Quoted path of folder containing data files.
 #'
@@ -52,6 +51,9 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
     stop("Package 'readxl' needed for this function to work. Please install it.", call. = FALSE)
   }
 
+  if(!requireNamespace("stringr", quietly = T)){
+    stop("Package 'stringr' needed to generate lat/long coordinates. Please install it.", call. = FALSE)}
+
   options(scipen = 100) # For TSNs
 
   # Get site list
@@ -74,9 +76,9 @@ NWCA21_vegMMI <- function(path = NA, new_env = TRUE, export_spp = TRUE){
   read_v2_long <- function(path, site_name){
     df <- suppressWarnings(as.data.frame(rjson::fromJSON(file = paste0(path, "/", site_name, "_1_V-2.json")))[,-(1:9)] |>
                              pivot_longer(cols = everything(), names_to = 'header', values_to = 'value')  |>
-                             mutate(veg_plot = str_replace(header, "^.+_(\\d+)_.+$", "\\1"), #deletes all but number b/t _##_
+                             mutate(veg_plot = stringr::str_replace(header, "^.+_(\\d+)_.+$", "\\1"), #deletes all but number b/t _##_
                                     veg_plot = as.numeric(veg_plot),
-                                    row_num =  as.numeric(str_extract(header, "\\(?[0-9]+\\)?")), # extract first set of digits
+                                    row_num =  as.numeric(stringr::str_extract(header, "\\(?[0-9]+\\)?")), # extract first set of digits
                                     site_name = site_name) |>
                              filter(!is.na(veg_plot)))
 

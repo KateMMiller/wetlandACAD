@@ -4,26 +4,24 @@
 \alias{calc_WL_stats}
 \title{calc_WL_stats: Calculates growing season water level statistics.}
 \usage{
-calc_WL_stats(df, from = 2013, to = 2019)
+calc_WL_stats(df, years = 2013:as.numeric(format(Sys.Date(), "\%Y")))
 }
 \arguments{
 \item{df}{Data frame containing water level and precipitation data}
 
-\item{from}{Year to start analysis, ranging from 2013-2019}
-
-\item{to}{Year to stop analysis, ranging from 2013-2019}
+\item{years}{Year to start analysis, ranging from 2013 to current year}
 }
 \value{
 Returns a data frame with water level growing season statistics.
 }
 \description{
 This function calculates growing season water level statistics by site
-and by year for sentinel wetlands in Acadia NP. Metrics follow Miller & Weed 2017
+and by year for sentinel wetlands in Acadia NP. Metrics follow Miller & Weed 2017.
 }
 \examples{
 \dontrun{
-well_data <- read.csv("well_prec_data_2013-2019.csv")
-gs_wl_stats <- calc_WL_stats(df = well_data, from = 2017, to = 2019)
+well_data <- read.csv("../data/well_prec_data_2013-2025.csv")
+gs_wl_stats <- calc_WL_stats(df = well_data, years = 2013:2025)
 }
 
 }

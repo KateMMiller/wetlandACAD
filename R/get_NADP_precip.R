@@ -1,10 +1,10 @@
-#' @title get_NADP_precip: Downloads and cleans hourly precipitation data from NADP
+#' @title get_NADP_precip: Download and clean hourly precipitation data from NADP
 #'
 #' @importFrom XML readHTMLTable
-#' @importFrom dplyr select filter mutate
+#' @importFrom dplyr filter mutate select
 #' @importFrom lubridate date year
 #'
-#' @description This function uses start date, end date and stationID to download NADP
+#' @description This function uses start date, end date, and stationID to download NADP
 #' hourly precipitation data, and converts precipitation from inches to cm. Note that
 #' some stations may have different download links, and may not always work. The link
 #' used to download the NADP data was generated for station: ME98.
@@ -12,8 +12,8 @@
 #' @param start_date Quoted date for first day of period (eg "04/01/2018")
 #' @param end_date Quoted date for last day of period (eg "10/31/2018")
 #' @param stationID Quoted name of station to pull data from (eg "ME98" is ACAD's weather station)
-#' @param quietly \code{TRUE} or \code{FALSE}. If \code{FALSE}, code will not print progress into console.
-#' Defaults to \code{FALSE}
+#' @param quietly \code{TRUE} or \code{FALSE}. If \code{FALSE} (Default), code will not print progress into console.
+#'
 #'
 #' @examples
 #' \dontrun{

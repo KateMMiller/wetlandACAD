@@ -1,17 +1,21 @@
 #' @title compile_WL_data: Converts well data to water level
 #'
-#' @importFrom dplyr filter mutate rename right_join select
-#' @importFrom lubridate year yday force_tz
+#' @importFrom dplyr between filter left_join mutate right_join select slice_max
+#' @importFrom lubridate yday year ymd force_tz
 #' @importFrom tidyr pivot_wider
 #'
 #' @description This function pulls in the water level data from the NETN RAM database,
 #' joins the location, well visit, and raw logger pressure data to calculate water level
 #' relative to wetland surface. Function only includes data between the spring and fall
 #' well visit per year. At least 1 site of water level data is required.
-#' \strong{Must have a the NETN RAM backend database named as a DSN.}
-#' Function has been updated for new loggers that return differential pressure, which
-#' is the difference between absolute pressure and barometric pressure. Function is
-#' primarily for internal use, and only works with data collected from 10/28/2024 and later.
+#' \strong{Must have the NETN RAM backend database named as a DSN.}
+#'
+#' Note that this function has been updated to work with data collected by MX2001 water level loggers
+#' with built-in atmospheric pressure correction, and requires the differential pressure metric.
+#' Use package version 0.1.5 to compile water level for HOBO U20 Loggers with external
+#' atmospheric pressure correction.
+#'
+#' Function is primarily for internal use, and only works with data collected from 10/28/2024 and later.
 #' Data collected prior to 10/28/2024 should be analyzed using version 0.1.5 of this package.
 #'
 #' @param path Quoted path of the folder where the exported Hobo tables are located.
@@ -127,10 +131,10 @@ wl_well <- left_join(raw_wl_yr,
 # first and last logger measurement
 last_wl <-
     wl_well |> group_by(Site_Code) |>
-      slice_max(Measure_Date_Time) |>
-      mutate(season = "fall") |>
-      data.frame() |>
-  select(Site_Code, water_depth_time = Measure_Date_Time, season, WL_cm)
+               slice_max(Measure_Date_Time) |>
+               mutate(season = "fall") |>
+               data.frame() |>
+               select(Site_Code, water_depth_time = Measure_Date_Time, season, WL_cm)
 
 first_wl <- left_join(well_visit2 |> filter(season == "spring") |>
                         select(Site_Code, water_depth_time, season),
@@ -145,9 +149,9 @@ well_visit_wl <- well_visit2 |>
   select(ID, Site_Code, Visit_Date, Year, water_depth_time, season, ground, Stick_Up_at_MP, Field_WL)
 
 wl_field_check <- left_join(well_visit_wl, first_last_wl,
-                      by = c("Site_Code", "season"),
-                      suffix = c("_visit", "_logger")) |>
-  mutate(wl_diff = WL_cm - Field_WL)
+                            by = c("Site_Code", "season"),
+                            suffix = c("_visit", "_logger")) |>
+                  mutate(wl_diff = WL_cm - Field_WL)
 
 assign("wl_field_check", wl_field_check, envir = .GlobalEnv)
 # measurements aren't great for WMTN, but not sure why.
