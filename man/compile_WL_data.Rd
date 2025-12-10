@@ -39,10 +39,14 @@ This function pulls in the water level data from the NETN RAM database,
 joins the location, well visit, and raw logger pressure data to calculate water level
 relative to wetland surface. Function only includes data between the spring and fall
 well visit per year. At least 1 site of water level data is required.
-\strong{Must have a the NETN RAM backend database named as a DSN.}
-Function has been updated for new loggers that return differential pressure, which
-is the difference between absolute pressure and barometric pressure. Function is
-primarily for internal use, and only works with data collected from 10/28/2024 and later.
+\strong{Must have the NETN RAM backend database named as a DSN.}
+
+Note that this function has been updated to work with data collected by MX2001 water level loggers
+with built-in atmospheric pressure correction, and requires the differential pressure metric.
+Use package version 0.1.5 to compile water level for HOBO U20 Loggers with external
+atmospheric pressure correction.
+
+Function is primarily for internal use, and only works with data collected from 10/28/2024 and later.
 Data collected prior to 10/28/2024 should be analyzed using version 0.1.5 of this package.
 }
 \examples{

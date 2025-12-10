@@ -13,9 +13,7 @@ Imports:
     dplyr,
     ggplot2,
     lubridate,
-    magrittr,
     purrr,
-    stringr,
     tidyr,
     XML
 Suggests:
@@ -24,6 +22,7 @@ Suggests:
     odbc,
     readxl,
     rjson,
+    stringr,
     zip
 Encoding: UTF-8
 LazyData: true

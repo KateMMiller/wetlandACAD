@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_NADP_precip.R
 \name{get_NADP_precip}
 \alias{get_NADP_precip}
-\title{get_NADP_precip: Downloads and cleans hourly precipitation data from NADP}
+\title{get_NADP_precip: Download and clean hourly precipitation data from NADP}
 \usage{
 get_NADP_precip(
   start_date = paste0("04/01/", as.numeric(format(Sys.Date(), "\%Y"))),
@@ -18,14 +18,13 @@ get_NADP_precip(
 
 \item{stationID}{Quoted name of station to pull data from (eg "ME98" is ACAD's weather station)}
 
-\item{quietly}{\code{TRUE} or \code{FALSE}. If \code{FALSE}, code will not print progress into console.
-Defaults to \code{FALSE}}
+\item{quietly}{\code{TRUE} or \code{FALSE}. If \code{FALSE} (Default), code will not print progress into console.}
 }
 \value{
 Returns a data frame with Date, hour (0-23), timestamp (Y-M-D H:M:S), and precip_cm
 }
 \description{
-This function uses start date, end date and stationID to download NADP
+This function uses start date, end date, and stationID to download NADP
 hourly precipitation data, and converts precipitation from inches to cm. Note that
 some stations may have different download links, and may not always work. The link
 used to download the NADP data was generated for station: ME98.
