@@ -69,20 +69,21 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
                         by = c("Code", "Location_ID", "Visit_ID", "Panel", "Year", "Visit_Type"))
 
   vmmi_calc <- comb |>
-    mutate(meanC_adj1 = ifelse(meanC < 3.015, 3.015, ifelse(meanC > 7.346, 7.346, meanC)),
-           meanC_adj2 = ((meanC_adj1 - 3.015)/(7.346 - 3.015)) * 10,
+    mutate(meanC_adj1 = ifelse(meanC < 3.00087, 3.00087, ifelse(meanC > 7.060764, 7.060764, meanC)),
+           meanC_adj2 = ((meanC_adj1 - 3.00087)/(7.060764 - 3.00087)) * 10,
 
-           covtol_adj1 = ifelse(sum_cov_tol < 0.386, 0, ifelse(sum_cov_tol > 136.645, 136.645, sum_cov_tol)),
-           covtol_adj2 = ((((covtol_adj1 - 0.386)/(136.645 - 0.386))*10) - 10) * -1,
+           covtol_adj1 = ifelse(sum_cov_tol < 1.106, 0, ifelse(sum_cov_tol > 150.551, 150.551, sum_cov_tol)),
+           covtol_adj2 = ((((covtol_adj1 - 1.106)/(150.551 - 1.106))*10) - 10) * -1,
 
-           invcov_adj1 = ifelse(Invasive_Cover > 38.45, 38.45, Invasive_Cover),
-           invcov_adj2 = ((((invcov_adj1/38.45) * 10) - 10))*-1,
+           invcov_adj1 = ifelse(Invasive_Cover > 76.585, 76.585, Invasive_Cover),
+           invcov_adj2 = ((((invcov_adj1/76.585) * 10) - 10))*-1,
 
-           bryo_adj1 = ifelse(Bryophyte_Cover > 98.48, 98.48, Bryophyte_Cover),
-           bryo_adj2 = (bryo_adj1/98.48) * 10,
+           bryo_adj1 = ifelse(Bryophyte_Cover > 98.98, 98.98, Bryophyte_Cover),
+           bryo_adj2 = (bryo_adj1/98.98) * 10,
 
-           vmmi = (((meanC_adj2 + covtol_adj2 + invcov_adj2 + bryo_adj2) - 0.389)/(40 - 0.389)) * 100,
-           vmmi_rating = ifelse(vmmi > 65.22746, "Good", ifelse(vmmi < 52.785, "Poor", "Fair"))
+           vmmi = (((meanC_adj2 + covtol_adj2 + invcov_adj2 + bryo_adj2) - 0.2667)/(40 - 0.2667)) * 100,
+           vmmi_rating_orig = ifelse(vmmi > 65.22746, "Good", ifelse(vmmi < 52.785, "Poor", "Fair")),
+           vmmi_rating = ifelse(vmmi > 60.94853, "Good", ifelse(vmmi < 41.48136, "Poor", "Fair"))
            )
 
   vmmi_site <- filter(vmmi_calc, Code %in% site)
@@ -96,7 +97,7 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
   vmmi_final <- left_join(vmmi_qaqc, loc, by = c("Code", "Location_ID", "Panel")) |>
     select(Code, Location_ID, Visit_ID, Panel, xCoordinate, yCoordinate, UTM_Zone, Date, Year, Visit_Type,
            limited_RAM, meanC, Bryophyte_Cover, Invasive_Cover, Cover_Tolerant = sum_cov_tol,
-           vmmi, vmmi_rating)
+           vmmi, vmmi_rating, vmmi_rating_orig)
 
   return(vmmi_final)
 
