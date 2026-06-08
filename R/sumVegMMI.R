@@ -33,7 +33,7 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
   #---- Error Handling ----
   # Make more general for Non-NETN sites
   env <- if(exists("VIEWS_RAM")){VIEWS_RAM} else {.GlobalEnv}
-  site_list <- tryCatch(unique(get("locations", envir = env)$Code),
+  site_list <- tryCatch(unique(get("locations", envir = env)$SiteCode),
                         error = function(e){stop("The locations table was not found. Please import wetland RAM views.")})
 
   site <- match.arg(site, c("all", site_list), several.ok = TRUE)
@@ -44,29 +44,27 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
   stopifnot(class(QAQC) == "logical")
 
   #---- Compile Data ----
-  spplist <- tryCatch(get("species_list", envir = env)[,c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
-                                                              "limited_RAM", "CoC_ME_ACAD", "TSN", "Latin_Name")],
+  spplist <- tryCatch(get("species_list", envir = env)[,c("SiteCode", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
+                                                              "limited_RAM", "CoC_ME_ACAD", "TSN", "ScientificName")],
                       error = function(e){stop("The tbl_species_list table was not found. Please import wetland RAM views.")}
                       )
-  strata <- get("species_by_strata", envir = env)[,c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
-                                                         "limited_RAM", "CoC_ME_ACAD", "TSN", "Latin_Name", "Percent_Cover")]
+  strata <- get("species_by_strata", envir = env)[,c("SiteCode", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
+                                                     "limited_RAM", "CoC_ME_ACAD", "TSN", "ScientificName", "Percent_Cover")]
 
-  visit <- get("visits", envir = env)[,c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM",
-                                             "Bryophyte_Cover", "Invasive_Cover")]
-  loc <- get("locations", envir = env)[,c("Code", "Location_ID", "Panel", "xCoordinate", "yCoordinate", "UTM_Zone")]
+  visit <- get("visits", envir = env)[,c("SiteCode", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM",
+                                         "Bryophyte_Cover", "Invasive_Cover")]
+  loc <- get("locations", envir = env)[,c("SiteCode", "Location_ID", "Panel", "xCoordinate", "yCoordinate", "UTM_Zone")]
 
   covtol <- strata |>
     mutate(cov_tol = ifelse(CoC_ME_ACAD <= 4, Percent_Cover, 0)) |>
-    group_by(Code, Location_ID, Visit_ID, Panel, Year, Visit_Type) |>
     summarize(sum_cov_tol = sum(cov_tol, na.rm = T),
-              .groups = "drop")
+              .by = c(SiteCode, Location_ID, Visit_ID, Panel, Year, Visit_Type))
 
-  meanC <- spplist |> group_by(Code, Location_ID, Visit_ID, Panel, Year, Visit_Type) |>
-    summarize(meanC = mean(CoC_ME_ACAD, na.rm = T),
-              .groups = "drop")
+  meanC <- spplist |> summarize(meanC = mean(CoC_ME_ACAD, na.rm = T),
+              .by = c(SiteCode, Location_ID, Visit_ID, Panel, Year, Visit_Type))
 
   comb <- purrr::reduce(list(visit, meanC, covtol), left_join,
-                        by = c("Code", "Location_ID", "Visit_ID", "Panel", "Year", "Visit_Type"))
+                        by = c("SiteCode", "Location_ID", "Visit_ID", "Panel", "Year", "Visit_Type"))
 
   vmmi_calc <- comb |>
     mutate(meanC_adj1 = ifelse(meanC < 3.00087, 3.00087, ifelse(meanC > 7.060764, 7.060764, meanC)),
@@ -86,7 +84,7 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
            vmmi_rating = ifelse(vmmi > 60.94853, "Good", ifelse(vmmi < 41.48136, "Poor", "Fair"))
            )
 
-  vmmi_site <- filter(vmmi_calc, Code %in% site)
+  vmmi_site <- filter(vmmi_calc, SiteCode %in% site)
   vmmi_year <- filter(vmmi_site, Year %in% years)
   vmmi_panel <- filter(vmmi_year, Panel %in% panel)
   vmmi_qaqc <- if(QAQC == FALSE){filter(vmmi_panel, Visit_Type == "VS")} else {vmmi_panel}
@@ -94,8 +92,8 @@ sumVegMMI <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Date(),
   if(nrow(vmmi_qaqc) == 0){
     stop("Arguments returned a data frame with no records. Be sure you specified RAM years, and not EPA NWCA years.")}
 
-  vmmi_final <- left_join(vmmi_qaqc, loc, by = c("Code", "Location_ID", "Panel")) |>
-    select(Code, Location_ID, Visit_ID, Panel, xCoordinate, yCoordinate, UTM_Zone, Date, Year, Visit_Type,
+  vmmi_final <- left_join(vmmi_qaqc, loc, by = c("SiteCode", "Location_ID", "Panel")) |>
+    select(SiteCode, Location_ID, Visit_ID, Panel, xCoordinate, yCoordinate, UTM_Zone, Date, Year, Visit_Type,
            limited_RAM, meanC, Bryophyte_Cover, Invasive_Cover, Cover_Tolerant = sum_cov_tol,
            vmmi, vmmi_rating, vmmi_rating_orig)
 

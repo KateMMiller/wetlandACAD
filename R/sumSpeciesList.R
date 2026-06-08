@@ -38,7 +38,7 @@ sumSpeciesList <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Da
   #---- Error Handling ----
   # Make more general for Non-NETN sites
   env <- if(exists("VIEWS_RAM")){VIEWS_RAM} else {.GlobalEnv}
-  site_list <- tryCatch(unique(get("locations", envir = env)$Code),
+  site_list <- tryCatch(unique(get("locations", envir = env)$SiteCode),
                         error = function(e){stop("The locations table was not found. Please import wetland RAM views.")})
 
   site <- match.arg(site, c("all", site_list), several.ok = TRUE)
@@ -51,24 +51,25 @@ sumSpeciesList <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Da
   stopifnot(class(include_protected) == "logical")
 
   #---- Compile Data ----
-  spplist <- tryCatch(get("species_list", envir = env)[,c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
-                                                              "limited_RAM", "TSN", "Latin_Name", "quad_freq")],
+  spplist <- tryCatch(get("species_list", envir = env)[,c("SiteCode", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
+                                                              "limited_RAM", "TSN", "ScientificName", "quad_freq")],
                       error = function(e){stop("The tbl_species_list table was not found. Please import wetland RAM views.")}
                       )
-  visit <- get("visits", envir = env)[,c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM")]
-  loc <- get("locations", envir = env)[,c("Code", "Location_ID", "Panel", "xCoordinate", "yCoordinate", "UTM_Zone", "Latitude", "Longitude")]
+  visit <- get("visits", envir = env)[,c("SiteCode", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM")]
+  loc <- get("locations", envir = env)[,c("SiteCode", "Location_ID", "Panel", "xCoordinate", "yCoordinate", "UTM_Zone", "Latitude", "Longitude")]
 
-  locev <- left_join(loc, visit, by = c("Code", "Location_ID", "Panel"))
+  locev <- left_join(loc, visit, by = c("SiteCode", "Location_ID", "Panel"))
 
-  spp_loc <- left_join(locev, spplist, by = c("Code", "Location_ID", "Panel", "Visit_ID",
+  spp_loc <- left_join(locev, spplist, by = c("SiteCode", "Location_ID", "Panel", "Visit_ID",
                                               "Visit_Type", "limited_RAM", "Date", "Year"))
-  spp_site <- filter(spp_loc, Code %in% site)
+  spp_site <- filter(spp_loc, SiteCode %in% site)
   spp_year <- filter(spp_site, Year %in% years)
   spp_panel <- filter(spp_year, Panel %in% panel)
   spp_qaqc <- if(QAQC == FALSE){filter(spp_panel, Visit_Type == "VS")} else {spp_panel}
 
   plants <- VIEWS_RAM$tlu_Plant
-  spp_comb <- left_join(spp_qaqc, plants, by = c("TSN", "Latin_Name"))
+
+  spp_comb <- left_join(spp_qaqc, plants, by = c("TSN", "ScientificName"))
 
   # species_type: Character. Options are c("all", "native", "exotic")
   spp_type <- switch(species_type,
@@ -83,10 +84,10 @@ sumSpeciesList <- function(site = "all", panel = 1:4, years = 2012:format(Sys.Da
     stop("Arguments returned a data frame with no records. Be sure you specified RAM years, and not EPA NWCA years.")}
 
   spp_final <- spp_prot |>
-    select(Code, Location_ID, Visit_ID, Panel,
+    select(SiteCode, Location_ID, Visit_ID, Panel,
            xCoordinate, yCoordinate, UTM_Zone, Latitude, Longitude,
            Date, Year, Visit_Type, limited_RAM,
-           TSN, Latin_Name, Common, quad_freq,
+           TSN, ScientificName, CommonName, quad_freq,
            PLANTS_Code, CoC_ME_ACAD, Invasive, Protected_species, Coef_wetness)
 
   return(spp_final)

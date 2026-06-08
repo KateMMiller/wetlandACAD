@@ -27,7 +27,7 @@
 calc_WL_stats <- function(df, years = 2013:as.numeric(format(Sys.Date(), "%Y"))){
 
 EDT <-"America/New_York"
-# ENDED HERE
+
 df$timestamp <- as.POSIXct(ifelse(df$hr == 0, paste0(df$timestamp, " 00:00:00"), df$timestamp),
                            format = "%Y-%m-%d %H:%M:%S")
 

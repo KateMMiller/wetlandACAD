@@ -136,9 +136,11 @@ importRAM <- function(export_protected = FALSE,
 
   # Set up objected used by all file types
   views <- list("locations", "visits", "visit_history", "RAM_stressors",
-                "AA_char", "species_list", "species_by_strata", "vertical_complexity",
+                "AA_characterization", "species_list", "species_by_strata", "vertical_complexity",
                 "tlu_Plant")
 
+  lead_cols <- data.frame(GroupCode = "NETN", GroupName = "Northeast Temperate Network",
+                          UnitCode = "ACAD", UnitName = "Acadia National Park")
 
   if(new_env == TRUE){VIEWS_RAM <<- new.env()}
   env <- if(new_env == TRUE){VIEWS_RAM} else {.GlobalEnv}
@@ -281,9 +283,15 @@ importRAM <- function(export_protected = FALSE,
                                        "Water_Stained_Leaves", "Oxidized_Rhizospheres", "Other",
                                        "Wetland_Hydro_Comments")]
 
-    tbl_locations <- arrange(tbl_locations, Code)
-    names(tbl_locations)[names(tbl_locations) == "Easting"] <- "xCoordinate"
-    names(tbl_locations)[names(tbl_locations) == "Northing"] <- "yCoordinate"
+    tbl_locations1 <- arrange(tbl_locations, Code)
+    names(tbl_locations1)[names(tbl_locations1) == "Easting"] <- "xCoordinate"
+    names(tbl_locations1)[names(tbl_locations1) == "Northing"] <- "yCoordinate"
+    names(tbl_locations1)[names(tbl_locations1) == "Code"] <- "SiteCode"
+    tbl_locations1$Buttressed_Trunks[is.na(tbl_locations1$Buttressed_Trunks)] <- 0
+    tbl_locations1$Water_Stained_Leaves[is.na(tbl_locations1$Water_Stained_Leaves)] <- 0
+    tbl_locations1$Oxidized_Rhizospheres[is.na(tbl_locations1$Oxidized_Rhizospheres)] <- 0
+
+    tbl_locations <- data.frame(lead_cols, tbl_locations1)
 
     setTxtProgressBar(pb, length(tbl_list) + 1)
 
@@ -336,6 +344,7 @@ importRAM <- function(export_protected = FALSE,
     tbl_visits6 <- left_join(tbl_visits5, tbl_water2, by = "Visit_ID")
 
     first_cols <- c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM")
+    first_cols_adj <- c("SiteCode", first_cols[2:length(first_cols)])
     mid_cols <- c("Weather",  "Prior_Weather", "Ditch_Present", "Depth_1", "Depth_2", "Depth_3",
                   "Flag_Water_Source", "Water_Source_1", "Water_Source_2", "Water_Source_3",
                   "Mosaic_Complexity", "SphagnumMoss", "Sphagnum_Cover", "Invasive_Cover_Class",
@@ -360,20 +369,26 @@ importRAM <- function(export_protected = FALSE,
                    #names(tbl_visits5[,!names(tbl_visits5) %in% c(first_cols, mid_cols, notes, last_cols)]),
                    notes, last_cols)
 
-    tbl_visits <- tbl_visits6[, new_order]
-    names(tbl_visits)[names(tbl_visits) == "Sphagnum_Cover"] <- "Bryophyte_Cover"
-    tbl_visits$Year <- as.integer(tbl_visits$Year)
+    tbl_visits7 <- tbl_visits6[, new_order]
+    names(tbl_visits7)[names(tbl_visits7) == "Sphagnum_Cover"] <- "Bryophyte_Cover"
+    names(tbl_visits7)[names(tbl_visits7) == "Code"] <- "SiteCode"
+    tbl_visits7$Year <- as.integer(tbl_visits7$Year)
+
+    tbl_visits <- data.frame(lead_cols, tbl_visits7)
 
     #settbl_visits#setdiff(names(tbl_visits6), names(tbl_visits)) # dropped unwanted names
 
     #--- tbl_visit_history
-    tbl_visit_history <- right_join(tbl_visits[,first_cols], tbl_Visit_Metadata, by = c("Location_ID", "Visit_ID")) |>
-      arrange(Code, Year, Updated_Table)
+    tbl_visit_history1 <- right_join(tbl_visits[,first_cols_adj], tbl_Visit_Metadata,
+                                    by = c("Location_ID", "Visit_ID")) |>
+      arrange(SiteCode, Year, Updated_Table)
+
+    tbl_visit_history <- data.frame(lead_cols, tbl_visit_history1)
 
     #--- tbl_AA_char
     # Topo Complexity and Hydro sources
     tbl_topo1 <- left_join(xref_Topo_Complexity, tlu_Topo_Complexity, by = "Topography_ID")
-    tbl_topo2 <- right_join(tbl_visits[,first_cols], tbl_topo1, by = "Visit_ID") |>
+    tbl_topo2 <- right_join(tbl_visits[,first_cols_adj], tbl_topo1, by = "Visit_ID") |>
       filter(Observed == -1) |>
       mutate(Type = "Topographic_Complexity",
              Present = ifelse(Observed == -1, 1, 0),
@@ -384,16 +399,20 @@ importRAM <- function(export_protected = FALSE,
     # Only take sources that are present. Top 3 sources (rank) is in tbl_visits
     tbl_water1 <- left_join(xref_Visit_Water, tlu_Water, by = "Water_ID") |>
       mutate(Present = ifelse(Present == -1, 1, 0)) |> select(-Water_ID, -Rank)
-    tbl_water2 <- right_join(tbl_visits[,first_cols], tbl_water1, by = "Visit_ID") |>
+    tbl_water2 <- right_join(tbl_visits[,first_cols_adj], tbl_water1, by = "Visit_ID") |>
       mutate(Type = "Water_Sources") |>
       rename(Feature = Source)
 
-    tbl_AA_char <- rbind(tbl_topo2, tbl_water2) |> filter(Present == 1) |>
-      arrange(Code, Year, Type, Feature) |> select(-Present)
+    tbl_AA_char1 <- rbind(tbl_topo2, tbl_water2) |> filter(Present == 1) |>
+      mutate(VisitDate = format(as.Date(Date, "%Y-%m-%d", tz = "America/New_York"), "%Y-%m-%d")) |>
+      arrange(SiteCode, Year, Type, Feature) |> select(-Present)
+
+    tbl_AA_char <- data.frame(lead_cols, tbl_AA_char1)
 
     #--- tbl_species_list
     tbl_species1 <- left_join(xref_Species_List |> rename(TSN = Plant_ID),
-                              tlu_Plant |> select(Accepted_Latin_Name, TSN_Accepted, TSN, Latin_Name, Common,
+                              tlu_Plant |> select(Accepted_Latin_Name, TSN_Accepted, TSN,
+                                                  Latin_Name, Common,
                                                   Order, Family, Genus, PLANTS_Code, CoC_ME_ACAD, ACAD_ED,
                                                   Exotic, Invasive, Aquatic, Fern_Ally, Graminoid, Herbaceous,
                                                   Moss_Lichen, Shrub, Tree, Vine, Synonym, Author,
@@ -403,14 +422,14 @@ importRAM <- function(export_protected = FALSE,
     binvars <- c("Quadrat_NE", "Quadrat_SE", "Quadrat_SW", "Quadrat_NW", "Coll")
     tbl_species1[,binvars][tbl_species1[,binvars] == -1] <- 1
 
-    tbl_species2 <- left_join(tbl_visits |> select(all_of(first_cols)), tbl_species1, by = "Visit_ID") |>
+    tbl_species2 <- left_join(tbl_visits |> select(all_of(first_cols_adj)), tbl_species1, by = "Visit_ID") |>
       mutate(quad_freq = ifelse(limited_RAM == 1, Quadrat_NE * 100,
                                 ((Quadrat_NE + Quadrat_SE +
                                     Quadrat_SW + Quadrat_NW)/4)*100))
 
-    first_cols <- c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM")
+    first_cols_spp <- c("SiteCode", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type", "limited_RAM")
     last_cols <- c("Protocol_Version", "Checked", "Data_Verified_By", "Certification_Level")
-    new_order <- c(first_cols,
+    new_order <- c(first_cols_spp,
                    "Latin_Name", "Common",
                    "Quadrat_NE", "Quadrat_SE", "Quadrat_SW", "Quadrat_NW", "quad_freq",
                    "Coll", "Comments", "TSN", "Order", "Family", "Genus",
@@ -419,9 +438,11 @@ importRAM <- function(export_protected = FALSE,
                    "Tree", "Vine", "Canopy_Exclusion",
                    "TSN_Accepted", "Accepted_Latin_Name", "Synonym", "Author", "Protected_species")
 
-    tbl_species_list <- tbl_species2[,new_order]
-    #setdiff(names(tbl_species2), names(tbl_species)) # check that dropped unwanted columns
-    names(tbl_species_list)[names(tbl_species_list) == "Coll"] <- "Collected"
+    tbl_species_list1 <- tbl_species2[,new_order]
+    names(tbl_species_list1)[names(tbl_species_list1) == "Coll"] <- "Collected"
+    names(tbl_species_list1)[names(tbl_species_list1) == "Latin_Name"] <- "ScientificName"
+    names(tbl_species_list1)[names(tbl_species_list1) == "Common"] <- "CommonName"
+    tbl_species_list <- data.frame(lead_cols, tbl_species_list1)
 
     setTxtProgressBar(pb, length(tbl_list) + 2)
 
@@ -430,15 +451,19 @@ importRAM <- function(export_protected = FALSE,
     tbl_vert2 <- left_join(tbl_vert1, tlu_Strata, by = "Strata_ID") |> rename(Cover_Class = Vert_Complexity)
     tbl_vert2$Cover_Class[tbl_vert2$Vert_Complexity_ID == 6] <- "0%"
 
-    tbl_vertical_complexity <- right_join(tbl_visits[,first_cols], tbl_vert2, by = "Visit_ID")
+    tbl_vertical_complexity1 <- right_join(tbl_visits[,first_cols_adj], tbl_vert2, by = "Visit_ID")
+    tbl_vertical_complexity <- data.frame(lead_cols, tbl_vertical_complexity1)
 
     #--- tbl_species_by_strata
     tbl_pcomp1 <- left_join(xref_Plant_Complexity, tlu_Strata, by = "Strata_ID")
     tbl_pcomp2 <- left_join(tbl_pcomp1, tlu_Plant, by = "TSN")
-    tbl_pcomp3 <- right_join(tbl_visits[,first_cols], tbl_pcomp2, by = "Visit_ID")
+    tbl_pcomp3 <- right_join(tbl_visits[,first_cols_adj], tbl_pcomp2, by = "Visit_ID")
+
+    names(tbl_pcomp3)[names(tbl_pcomp3) == "Latin_Name"] <- "ScientificName"
+    names(tbl_pcomp3)[names(tbl_pcomp3) == "Common"] <- "CommonName"
 
     tbl_species_by_strata <-
-      tbl_pcomp3[,c(first_cols, "Strata", "Strata_ID", "Latin_Name", "Common", "Percent_Cover",
+      tbl_pcomp3[,c(first_cols_adj, "Strata", "Strata_ID", "ScientificName", "CommonName", "Percent_Cover",
                     "TSN", "Order", "Family", "Genus", "Exotic", "Invasive", "PLANTS_Code",
                     "CoC_ME_ACAD", "ACAD_ED", "Aquatic", "Fern_Ally", "Graminoid", "Herbaceous",
                     "Moss_Lichen", "Shrub", "Tree", "Vine", "Canopy_Exclusion", "TSN_Accepted",
@@ -452,24 +477,25 @@ importRAM <- function(export_protected = FALSE,
 
     tbl_stress1 <- left_join(stress_tbls, tlu_Stressor, by = "Stressor_ID")
     tbl_stress2 <- left_join(tbl_stress1, tlu_Stressor_Category, by = "Stressor_Category_ID")
-    tbl_stress3 <- right_join(tbl_visits[,first_cols], tbl_stress2, by = "Visit_ID")
+    tbl_stress3 <- right_join(tbl_visits[,first_cols_adj], tbl_stress2, by = "Visit_ID")
 
     tbl_stress_overall <- tbl_stress3 |> filter(Stressor %in% "Overall Ranking") |>
       select(-Stressor, Stressor_ID_Overall = Stressor_ID)
+
     tbl_stress_indiv <- tbl_stress3 |> filter(!Stressor %in% "Overall Ranking")
 
     tbl_RAM_stress1 <- full_join(tbl_stress_overall, tbl_stress_indiv,
-                                 by = c("Code", "Location_ID", "Visit_ID", "Panel", "Date", "Year", "Visit_Type",
-                                        "limited_RAM",
+                                 by = c("SiteCode", "Location_ID", "Visit_ID", "Panel",
+                                        "Date", "Year", "Visit_Type", "limited_RAM",
                                         "Location_Level", "Stressor_Category", "Stressor_Category_ID"),
                                  suffix = c("_Overall", "_Indiv")) |>
                        #filter(Severity_Indiv > 0) |>
-                       select(all_of(first_cols), Location_Level, Stressor_Category,
+                       select(all_of(first_cols_adj), Location_Level, Stressor_Category,
                               Stressor, Severity_Indiv, Severity_Overall) |>
                        mutate(Flag = NA_character_) # for xref_visit_hydro join
 
     miss_overall <- tbl_RAM_stress1 |> filter(Severity_Overall == 0 & Severity_Indiv > 0) |>
-      select(Code, Year, Severity_Indiv, Severity_Overall, Visit_ID, Stressor_Category) |>
+      select(SiteCode, Year, Severity_Indiv, Severity_Overall, Visit_ID, Stressor_Category) |>
       arrange(Stressor_Category, Visit_ID)
 
     if(nrow(miss_overall) > 0){
@@ -478,32 +504,34 @@ importRAM <- function(export_protected = FALSE,
               paste0(miss_overall[, c("Code", "Year", "Visit_ID", "Stressor_Category",
                                       "Severity_Indiv", "Severity_Overall")], collapse = "\n ")))}
 
-    miss_indiv <- tbl_RAM_stress1 |> group_by(Code, Year, Visit_ID, Stressor_Category) |>
+    miss_indiv <- tbl_RAM_stress1 |>
       summarize(num_indiv_stress = sum(Severity_Indiv > 0),
-                stress_overall = sum(Severity_Overall > 0), .groups = 'drop') |>
+                stress_overall = sum(Severity_Overall > 0),
+                .by = c(SiteCode, Year, Visit_ID, Stressor_Category)) |>
       filter(num_indiv_stress == 0 & stress_overall > 0)
 
     if(nrow(miss_indiv) > 0){
       warning(paste0("The following Stressor_Category records are have an Overall ranking without an individual stressor recorded:",
                      "\n",
-              paste0(miss_indiv[, c("Code", "Year", "Visit_ID", "Stressor_Category")], collapse = "\n ")))}
+              paste0(miss_indiv[, c("SiteCode", "Year", "Visit_ID", "Stressor_Category")], collapse = "\n ")))}
 
     # Alterations to Hydro Period and Stressors to Substrate don't have an overall score.
     # Applying max Indiv per group to Overall
-    tbl_RAM_stress1 <- tbl_RAM_stress1 |> group_by(Code, Location_ID, Visit_ID, Panel, Date, Year,
-                                                   Visit_Type, limited_RAM, Location_Level, Stressor_Category) |>
+    tbl_RAM_stress1 <- tbl_RAM_stress1 |>
+      group_by(SiteCode, Location_ID, Visit_ID, Panel, Date, Year,
+               Visit_Type, limited_RAM, Location_Level, Stressor_Category) |>
       mutate(Severity_Overall = ifelse(
         Stressor_Category %in% c("Alterations to Hydroperiod", "Stressors to Substrate"),
         max(Severity_Indiv, na.rm = T), Severity_Overall)) |>
       ungroup()
 
     stress_check <- tbl_RAM_stress1 |>
-      group_by(Code, Location_ID, Visit_ID, Panel, Date, Year,
+      group_by(SiteCode, Location_ID, Visit_ID, Panel, Date, Year,
                Visit_Type, limited_RAM, Location_Level, Stressor_Category) |>
       mutate(check_indiv = ifelse(max(Severity_Indiv, na.rm = T) > max(Severity_Overall), 1, 0)) |>
       ungroup() |>
       filter(check_indiv > 0) |>
-      select(Code, Year, Visit_ID, Stressor, Stressor_Category, Severity_Indiv, Severity_Overall)
+      select(SiteCode, Year, Visit_ID, Stressor, Stressor_Category, Severity_Indiv, Severity_Overall)
 
     if(nrow(stress_check) > 0){warning(
     paste0("The following records have an overall severity less than the highest recorded individual severity:",
@@ -515,7 +543,7 @@ importRAM <- function(export_protected = FALSE,
     tbl_hstress1 <- left_join(xref_Visit_Hydrologic_Stressor, tlu_Hydrologic_Stressor,
                              by = c("Hydrologic_Stressor_ID", "Hydrologic_Stressor_Category_ID"))
 
-    tbl_hstress2 <- right_join(tbl_visits[,first_cols], tbl_hstress1, by = c("Visit_ID" = "Visit_Id"))
+    tbl_hstress2 <- right_join(tbl_visits[,first_cols_adj], tbl_hstress1, by = c("Visit_ID" = "Visit_Id"))
     tbl_hstress2$Location_Level = "AA"
     tbl_hstress2$Stressor_Category = "Hydrological"
     tbl_hstress2$Stressor = tbl_hstress2$Hydrologic_Stressor
@@ -523,15 +551,14 @@ importRAM <- function(export_protected = FALSE,
     # Only have indiv ranks for each hydro stressor. Like with Alterations to Hydroperiod,
     # will take the max of each visit as Overall
     tbl_hstress2 <- tbl_hstress2 |>
-      group_by(Code, Location_ID, Visit_ID, Panel, Date, Year,
-               Visit_Type, Location_Level, Stressor_Category) |>
-      mutate(Severity_Overall = max(Severity_Indiv, na.rm = T)) |>
-      ungroup()
+      mutate(Severity_Overall = max(Severity_Indiv, na.rm = T),
+             .by = c(SiteCode, Location_ID, Visit_ID, Panel, Date, Year,
+                     Visit_Type, Location_Level, Stressor_Category))
 
     tbl_hstress3 <- tbl_hstress2[, names(tbl_RAM_stress1)]
 
     tbl_RAM_stressors <- rbind(tbl_RAM_stress1, tbl_hstress3) |>
-      arrange(Code, Year, Location_Level, Stressor_Category) |>
+      arrange(SiteCode, Year, Location_Level, Stressor_Category) |>
       filter(Severity_Indiv > 0)
 
     setTxtProgressBar(pb, length(tbl_list) + 3)
@@ -542,20 +569,20 @@ importRAM <- function(export_protected = FALSE,
     num_spp_prot <- filter(tbl_species_list, Protected_species == TRUE)
     num_spp2_prot <- filter(tbl_species_by_strata, Protected_species == TRUE)
 
-    spp_drops <- data.frame(table(num_spp_prot$Latin_Name))
+    spp_drops <- data.frame(table(num_spp_prot$ScientificName))
 
-    # Handling adding Latin_Name column if df is empty
+    # Handling adding ScientificName column if df is empty
     if(nrow(spp_drops) > 0){
-      colnames(spp_drops) <- c("Latin_Name", "Num_Sites")
+      colnames(spp_drops) <- c("ScientificName", "Num_Sites")
     } else if(nrow(spp_drops) == 0){
-    spp_drops <- data.frame("Latin_Name" = NA, "Num_Sites" = NA)
+    spp_drops <- data.frame("ScientificName" = NA, "Num_Sites" = NA)
     spp_drops <- spp_drops[0,]
     }
 
     prot_mess <- paste0("Protected species were removed from this export, with ", nrow(num_spp_prot),
                    " records removed from tbl_species_list, and ", nrow(num_spp2_prot),
                    " records removed from tbl_species_by_strata. Species removed from tbl_species_list were: ",
-                   paste0(spp_drops$Latin_Name, " (", spp_drops$Num_Sites, ")", collapse = "; "))
+                   paste0(spp_drops$ScientificName, " (", spp_drops$Num_Sites, ")", collapse = "; "))
 
     if(nrow(spp_drops) > 0){
     cat(paste0("\033[0;", 31, "m", prot_mess, "\033[0m","\n"))
@@ -569,7 +596,13 @@ importRAM <- function(export_protected = FALSE,
         }
 
   # drop unneeded columns from tlu_plant
-  tlu_Plant <- tlu_Plant |> select(-Created_By, -Favorites, -Updated_By)
+  tlu_Plant <- tlu_Plant |> select(TSN, AcceptedTSN = TSN_Accepted, ScientificName = Latin_Name,
+                                   AcceptedScientificName = Accepted_Latin_Name, AcceptedFound = Accepted_Found,
+                                   CommonName = Common,
+                                   Synonym, PLANTS_Code, Order, Family, Genus, Species, Subspecies, Rank_Name,
+                                   CoC_ME_ACAD, Coef_wetness, ACAD_ED, Exotic, Invasive,
+                                   Aquatic, Fern_Ally, Graminoid, Herbaceous, Moss_Lichen,
+                                   Shrub, Tree, Vine, Canopy_Exclusion, Author, Protected_species)
 
   # final tables to add to new env or global env and print to disk
   final_tables <- list(tbl_locations, tbl_visits, tbl_visit_history, tbl_RAM_stressors,
@@ -578,7 +611,8 @@ importRAM <- function(export_protected = FALSE,
 
   final_tables <- setNames(final_tables,
                            c("locations", "visits", "visit_history", "RAM_stressors",
-                             "AA_char", "species_list", "species_by_strata", "vertical_complexity",
+                             "AA_characterization", "species_list", "species_by_strata",
+                             "vertical_complexity",
                              "tlu_Plant"))
 
   list2env(final_tables, envir = env)
@@ -688,20 +722,20 @@ importRAM <- function(export_protected = FALSE,
       num_spp_prot <- filter(final_tables$species_list, Protected_species == TRUE)
       num_spp2_prot <- filter(final_tables$species_by_strata, Protected_species == TRUE)
 
-      spp_drops <- data.frame(table(num_spp_prot$Latin_Name))
+      spp_drops <- data.frame(table(num_spp_prot$ScientificName))
 
-      # Handling adding Latin_Name column if df is empty
+      # Handling adding ScientificName column if df is empty
       if(nrow(spp_drops) > 0){
-        colnames(spp_drops) <- c("Latin_Name", "Num_Sites")
+        colnames(spp_drops) <- c("ScientificName", "Num_Sites")
       } else if(nrow(spp_drops) == 0){
-        spp_drops <- data.frame("Latin_Name" = NA, "Num_Sites" = NA)
+        spp_drops <- data.frame("ScientificName" = NA, "Num_Sites" = NA)
         spp_drops <- spp_drops[0,]
       }
 
       prot_mess <- paste0("Protected species were removed from this export, with ", nrow(num_spp_prot),
                           " records removed from tbl_species_list, and ", nrow(num_spp2_prot),
                           " records removed from tbl_species_by_strata. Species removed from tbl_species_list were: ",
-                          paste0(spp_drops$Latin_Name, " (", spp_drops$Num_Sites, ")", collapse = "; "))
+                          paste0(spp_drops$ScientificName, " (", spp_drops$Num_Sites, ")", collapse = "; "))
 
       if(nrow(spp_drops) > 0){
         cat(paste0("\033[0;", 31, "m", prot_mess, "\033[0m","\n"))
