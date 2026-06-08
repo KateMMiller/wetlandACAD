@@ -462,13 +462,14 @@ importRAM <- function(export_protected = FALSE,
     names(tbl_pcomp3)[names(tbl_pcomp3) == "Latin_Name"] <- "ScientificName"
     names(tbl_pcomp3)[names(tbl_pcomp3) == "Common"] <- "CommonName"
 
-    tbl_species_by_strata <-
+    tbl_species_by_strata1 <-
       tbl_pcomp3[,c(first_cols_adj, "Strata", "Strata_ID", "ScientificName", "CommonName", "Percent_Cover",
                     "TSN", "Order", "Family", "Genus", "Exotic", "Invasive", "PLANTS_Code",
                     "CoC_ME_ACAD", "ACAD_ED", "Aquatic", "Fern_Ally", "Graminoid", "Herbaceous",
                     "Moss_Lichen", "Shrub", "Tree", "Vine", "Canopy_Exclusion", "TSN_Accepted",
                     "Accepted_Latin_Name", "Synonym", "Author", "Protected_species")]
 
+    tbl_species_by_strata <- data.frame(lead_cols, tbl_species_by_strata1)
     #setdiff(names(tbl_pcomp3), names(tbl_species_by_strata))
 
     #--- tbl_RAM_stressors
@@ -557,9 +558,11 @@ importRAM <- function(export_protected = FALSE,
 
     tbl_hstress3 <- tbl_hstress2[, names(tbl_RAM_stress1)]
 
-    tbl_RAM_stressors <- rbind(tbl_RAM_stress1, tbl_hstress3) |>
+    tbl_RAM_stressors2 <- rbind(tbl_RAM_stress1, tbl_hstress3) |>
       arrange(SiteCode, Year, Location_Level, Stressor_Category) |>
       filter(Severity_Indiv > 0)
+
+    tbl_RAM_stressors <- data.frame(lead_cols, tbl_RAM_stressors2)
 
     setTxtProgressBar(pb, length(tbl_list) + 3)
     close(pb)
