@@ -404,7 +404,7 @@ importRAM <- function(export_protected = FALSE,
       rename(Feature = Source)
 
     tbl_AA_char1 <- rbind(tbl_topo2, tbl_water2) |> filter(Present == 1) |>
-      mutate(VisitDate = format(as.Date(Date, "%Y-%m-%d", tz = "America/New_York"), "%Y-%m-%d")) |>
+#      mutate(VisitDate = format(as.Date(Date, "%Y-%m-%d", tz = "America/New_York"), "%Y-%m-%d")) |>
       arrange(SiteCode, Year, Type, Feature) |> select(-Present)
 
     tbl_AA_char <- data.frame(lead_cols, tbl_AA_char1)
