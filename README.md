@@ -14,7 +14,7 @@ can be found in https://irma.nps.gov/DataStore/Reference/Edit/2239342.
 specified file containing exported csvs from HOBOconnect. </li>
 <li>compile_WL_data: (step 2) converts well pressure data into water level relative to wetland surface. </li>
 <li>get_NADP_precip: downloads hourly precipitation data from the National Atmospheric Deposition Program website 
-for the McFarland Air and Research Station (stationID: ME98) to relate hourly water level to preciptiation</li>
+for the McFarland Air and Research Station (stationID: ME98) to relate hourly water level to precipitation</li>
 <li>calc_WL_stats: Calculates growing season water level statistics by year.</li>
 <li>plot_hydro_site_year: Plots hourly water level and precipitation for a given site.</li>
 </ul>
