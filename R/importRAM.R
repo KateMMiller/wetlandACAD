@@ -40,7 +40,7 @@
 #' @examples
 #' \dontrun{
 #'
-#' filepath <- "C:/NETN/R_Dev/data/wetland_data_package/"
+#' filepath <- "./data/wetland_data_package/"
 #' ex_path <- filepath
 #'
 #' # Import tables from database in specific folder and only export non-protected:

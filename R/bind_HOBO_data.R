@@ -35,7 +35,7 @@
 #'
 #' @examples
 #' /dontrun{
-#' dir = 'C:/Users/KMMiller/OneDrive - DOI/NETN/Monitoring_Projects/Freshwater_Wetland/Hobo_Data/Fall_2025/'
+#' dir = './Freshwater_Wetland/Hobo_Data/Fall_2025/'
 #'
 #' well_data <- bind_HOBO_data(path)
 #' }

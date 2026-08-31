@@ -52,7 +52,7 @@ Data collected prior to 10/28/2024 should be analyzed using version 0.1.5 of thi
 \examples{
 \dontrun{
 # Export growing season only data to a table
-dir = c('C:/Water_level_data/growing_season_2025')
+dir = c('./Water_level_data/growing_season_2025')
 compile_WL_data(path = dir, year = 2025, export = TRUE, growing_season = TRUE)
 
 # Assign output from all 2018 data, including flagged records, to global environment

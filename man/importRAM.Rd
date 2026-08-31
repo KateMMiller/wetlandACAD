@@ -56,7 +56,7 @@ workspace, or to your global environment based on whether new_env = TRUE or FALS
 \examples{
 \dontrun{
 
-filepath <- "C:/NETN/R_Dev/data/wetland_data_package/"
+filepath <- "./data/wetland_data_package/"
 ex_path <- filepath
 
 # Import tables from database in specific folder and only export non-protected:

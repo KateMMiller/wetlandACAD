@@ -39,7 +39,7 @@
 #' @examples
 #' \dontrun{
 #' # Import tables from database in specific folder:
-#' importWaterLevel(type = 'file', db_path = './Data/NETN_RAM_Backend.mdb')
+#' importWaterLevel(type = 'file', db_path = './data/NETN_RAM_Backend.mdb')
 #'
 #' # Export zip with Accepted or Certified records only
 #' importWaterLevel(export_data = T, zip = T, export_all = F)
