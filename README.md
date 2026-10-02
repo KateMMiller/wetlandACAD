@@ -1,5 +1,7 @@
-<h3>This repo has been moved to <a href="https://github.com/DOI-NPS/wetlandACAD">https://github.com/DOI-NPS/wetlandACAD</a> and is no longer being developed at this location.</h3>
 # wetlandACAD
+
+<h3>This repo has been moved to <a href="https://github.com/DOI-NPS/wetlandACAD">https://github.com/DOI-NPS/wetlandACAD</a> and is no longer being developed at this location.</h3>
+
 This R package was developed to analyze freshwater wetland data collected in Acadia National Park by the 
 Northeast Temperate Network (NETN). 
 
